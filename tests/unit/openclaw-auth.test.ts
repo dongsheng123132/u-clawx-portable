@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { mkdir, readFile, rm, writeFile } from 'fs/promises';
+import { mkdir, readFile, rm, stat, utimes, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -167,6 +167,54 @@ describe('saveProviderKeyToOpenClaw', () => {
 
     expect(manager.rpc).toHaveBeenCalledOnce();
     expect(manager.rpc).toHaveBeenCalledWith('secrets.reload', {});
+  });
+
+  it('值没变就一个字节都不写 —— 否则 Gateway 一 ready 就被自己人砸崩', async () => {
+    // 真机复现：prewarm 的 provider-auth-sync 每次 Gateway ready 都跑一遍，
+    // 便携包出厂带 18 个预置 agent，每个 agent 每个 provider 都是
+    // 「SQLite 同步写 + JSON 写」两次 I/O。Gateway 刚起来就挨这一轮，
+    // 会 exit(1)，然后重启→再 ready→再 prewarm，本地盘和 U 盘都崩成循环。
+    await writeOpenClawJson({
+      agents: { list: [{ id: 'main', name: 'Main', default: true, agentDir: '~/.openclaw/agents/main/agent' }] },
+    });
+
+    const { saveProviderKeyToOpenClaw } = await import('@electron/utils/openclaw-auth');
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await saveProviderKeyToOpenClaw('openrouter', 'sk-same');
+
+    // 把 mtime 拨回过去；真的又写了一次的话它必然被刷新。
+    const profilePath = join(testHome, '.openclaw', 'agents', 'main', 'agent', 'auth-profiles.json');
+    const past = new Date('2020-01-01T00:00:00Z');
+    await utimes(profilePath, past, past);
+    const before = (await stat(profilePath)).mtimeMs;
+
+    logSpy.mockClear();
+    await saveProviderKeyToOpenClaw('openrouter', 'sk-same');
+
+    expect((await stat(profilePath)).mtimeMs).toBe(before);
+    expect(logSpy).toHaveBeenCalledWith(
+      'Auth-profiles already current for provider "openrouter" (1 agents, no writes)',
+    );
+
+    logSpy.mockRestore();
+  });
+
+  it('值变了照常写 —— 别把跳过做成永远不更新', async () => {
+    await writeOpenClawJson({
+      agents: { list: [{ id: 'main', name: 'Main', default: true, agentDir: '~/.openclaw/agents/main/agent' }] },
+    });
+
+    const { saveProviderKeyToOpenClaw } = await import('@electron/utils/openclaw-auth');
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await saveProviderKeyToOpenClaw('openrouter', 'sk-old');
+    await saveProviderKeyToOpenClaw('openrouter', 'sk-new');
+
+    const profiles = await readAuthProfiles('main');
+    expect((profiles.profiles as Record<string, { key: string }>)['openrouter:default'].key).toBe('sk-new');
+
+    logSpy.mockRestore();
   });
 });
 

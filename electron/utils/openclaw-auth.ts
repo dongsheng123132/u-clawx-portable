@@ -1020,9 +1020,31 @@ export async function saveProviderKeyToOpenClaw(
   const agentIds = agentId ? [agentId] : await discoverAgentIds();
   if (agentIds.length === 0) agentIds.push('main');
 
+  const written: string[] = [];
+
   for (const id of agentIds) {
     const store = await readAuthProfiles(id);
     const profileId = `${provider}:default`;
+
+    // 🔴 已经是这个值就别再写一遍。
+    //
+    // 每次 writeAuthProfiles 是**两次 I/O**（SQLite 同步写 + JSON 写），而这个
+    // 循环跑遍所有 agent。U-Claw 便携包出厂带 18 个预置人格，一次
+    // `syncAllProviderAuthToRuntime()` 就是 18×N 次写；它又挂在 Gateway
+    // ready 后的 first-turn prewarm 上，于是「Gateway 一起来就被自己的主进程
+    // 砸一轮写入」，实测能把 Gateway 打到 exit(1)、然后重启、再 prewarm，
+    // 循环崩溃（本地盘和 U 盘都复现）。
+    //
+    // 兄弟函数 removeProviderKeyFromOpenClaw 早就是「改了才写」，这里补齐。
+    const existing = store.profiles[profileId];
+    const alreadyCurrent = existing?.type === 'api_key'
+      && existing.provider === provider
+      && existing.key === apiKey
+      && store.order?.[provider]?.includes(profileId) === true
+      && store.lastGood?.[provider] === profileId;
+    if (alreadyCurrent) {
+      continue;
+    }
 
     store.profiles[profileId] = { type: 'api_key', provider, key: apiKey };
 
@@ -1036,9 +1058,14 @@ export async function saveProviderKeyToOpenClaw(
     store.lastGood[provider] = profileId;
 
     await writeAuthProfiles(store, id);
+    written.push(id);
+  }
+  if (written.length === 0) {
+    console.log(`Auth-profiles already current for provider "${provider}" (${agentIds.length} agents, no writes)`);
+    return;
   }
   await reloadOpenClawSecretsIfRunning();
-  console.log(`Saved API key for provider "${provider}" to OpenClaw auth-profiles (agents: ${agentIds.join(', ')})`);
+  console.log(`Saved API key for provider "${provider}" to OpenClaw auth-profiles (agents: ${written.join(', ')})`);
 }
 
 /**
