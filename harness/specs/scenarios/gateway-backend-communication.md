@@ -44,6 +44,7 @@ conditionalProfiles:
       - channels/agents/settings UI depends on new backend response shape
       - Web Browser guest, navigation, session, permission, or data policy changes
 requiredRules:
+  - device-wallet-lifecycle
   - openclaw-config-delivery
   - renderer-main-boundary
   - backend-communication-boundary

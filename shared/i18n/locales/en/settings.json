@@ -258,6 +258,51 @@
     "installMessage": "Install the \"openclaw\" command?",
     "installDetail": "This will create ~/.local/bin/openclaw. Ensure ~/.local/bin is on your PATH if you want to run it globally."
   },
+  "deviceWallet": {
+    "title": "Device Wallet",
+    "tokenUnit": "tokens",
+    "unavailable": "Unavailable",
+    "refresh": "Refresh",
+    "balanceRefreshed": "Balance refreshed",
+    "noWallet": "This device has no wallet yet. It will be created when online, or you can enter an existing key below.",
+    "recharge": "Top up",
+    "management": "Wallet management",
+    "backupPrefix": "The server issued this key. ",
+    "backupStrong": "It is your wallet",
+    "backupSuffix": ", so back it up. Enter it on another computer to carry the balance with you.",
+    "copyKey": "Copy key",
+    "rotateKey": "Rotate key",
+    "adoptAria": "Enter an existing key",
+    "pasteKey": "Paste key",
+    "pasteTitle": "Paste from clipboard",
+    "enable": "Use key",
+    "adopted": "This key is now in use",
+    "rotated": "A new key is now in use",
+    "removeLocal": "Remove wallet from this device",
+    "removed": "Wallet removed from this device; a new empty wallet will be created when online",
+    "cancel": "Cancel",
+    "clipboardEmpty": "The clipboard is empty",
+    "clipboardUnavailable": "Could not read the clipboard. Press Ctrl+V in the field or use Paste from the context menu.",
+    "noWalletCopy": "This device has no wallet yet; one will be created when online",
+    "keyCopied": "Key copied",
+    "keyCopiedBeforeRemove": "The current key was copied. Save it before confirming removal.",
+    "rotateDialog": {
+      "title": "Rotate the wallet key?",
+      "message": "The current key will stop working immediately. Any other computer or script using it must be updated.\n\nYour balance is unchanged because it belongs to the wallet, not the key.",
+      "confirm": "Rotate"
+    },
+    "removeDialog": {
+      "title": "Remove the wallet from this device?",
+      "message": "The current key was copied to the clipboard. Save it first.\n\nThis clears only local configuration; it does not delete the server wallet or balance. The old balance will not move into the new wallet created later. Without the old key, recovery may be impossible.",
+      "confirm": "Remove locally"
+    },
+    "errors": {
+      "unknownPending": "An unknown wallet operation is unfinished. Nothing was changed; resolve it before removing the wallet.",
+      "pendingNotSettled": "The previous key rotation is still unfinished. Nothing was changed; try again later.",
+      "pendingSettled": "The previous key rotation just finished. The key changed; back it up and confirm removal again.",
+      "resetFailed": "Could not remove the local wallet"
+    }
+  },
   "about": {
     "title": "About",
     "appName": "ClawX",

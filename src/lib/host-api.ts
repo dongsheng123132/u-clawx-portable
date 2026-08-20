@@ -123,6 +123,7 @@ export const hostApi = {
     apiKey: () => invokeHost('uclaw', 'apiKey'),
     rotateKey: () => invokeHost('uclaw', 'rotateKey'),
     adoptKey: (payload: { key: string }) => invokeHost('uclaw', 'adoptKey', payload),
+    resetLocalWallet: () => invokeHost('uclaw', 'resetLocalWallet'),
   },
   shell: {
     openExternal: (url: string) => invokeHost('shell', 'openExternal', { url } satisfies ShellOpenExternalPayload),

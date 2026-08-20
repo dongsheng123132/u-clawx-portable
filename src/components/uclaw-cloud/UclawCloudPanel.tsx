@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Check, ClipboardPaste, Copy, ExternalLink, KeyRound, RefreshCw, RotateCw, WalletCards } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Check, ClipboardPaste, Copy, ExternalLink, KeyRound, RefreshCw, RotateCw, Trash2, WalletCards } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,12 +15,13 @@ import { useUclawCloudStore } from '@/stores/uclaw-cloud';
  * 没有登录、没有账号状态 —— 钱包没就绪时只提示「联网后自动获取」，
  * 不拦用户做别的事。
  */
-function formatTokens(value?: number): string {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return '不可用';
-  return `${value.toLocaleString()} 虾粮`;
+function formatTokens(value: number | undefined, locale: string, unit: string, unavailable: string): string {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return unavailable;
+  return `${value.toLocaleString(locale)} ${unit}`;
 }
 
 export function UclawCloudPanel() {
+  const { t, i18n } = useTranslation('settings');
   const wallet = useUclawCloudStore((s) => s.wallet);
   const balance = useUclawCloudStore((s) => s.balance);
   const refresh = useUclawCloudStore((s) => s.refresh);
@@ -28,10 +30,12 @@ export function UclawCloudPanel() {
   const getApiKey = useUclawCloudStore((s) => s.getApiKey);
   const rotateKey = useUclawCloudStore((s) => s.rotateKey);
   const adoptKey = useUclawCloudStore((s) => s.adoptKey);
+  const resetLocalWallet = useUclawCloudStore((s) => s.resetLocalWallet);
 
   const [refreshing, setRefreshing] = useState(false);
   const [keyCopied, setKeyCopied] = useState(false);
   const [rotateConfirmOpen, setRotateConfirmOpen] = useState(false);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [adoptValue, setAdoptValue] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -40,14 +44,32 @@ export function UclawCloudPanel() {
   }, [refresh]);
 
   const apiKeyMasked = balance?.apiKeyMasked || wallet?.apiKeyMasked || '-';
-  const balanceLabel = balance?.available ? formatTokens(balance.remainTokens) : '不可用';
+  const balanceLabel = balance?.available
+    ? formatTokens(
+        balance.remainTokens,
+        i18n.resolvedLanguage || i18n.language,
+        t('deviceWallet.tokenUnit'),
+        t('deviceWallet.unavailable'),
+      )
+    : t('deviceWallet.unavailable');
+
+  function translatedError(error: unknown): string {
+    const message = error instanceof Error ? error.message : String(error);
+    const keyByCode: Record<string, string> = {
+      DEVICE_WALLET_UNKNOWN_PENDING: 'deviceWallet.errors.unknownPending',
+      DEVICE_WALLET_PENDING_NOT_SETTLED: 'deviceWallet.errors.pendingNotSettled',
+      DEVICE_WALLET_PENDING_SETTLED: 'deviceWallet.errors.pendingSettled',
+      DEVICE_WALLET_RESET_FAILED: 'deviceWallet.errors.resetFailed',
+    };
+    return keyByCode[message] ? t(keyByCode[message]) : message;
+  }
 
   async function guarded(action: () => Promise<string>, fallback: string) {
     setBusy(true);
     try {
       toast.success((await action()) || fallback);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
+      toast.error(translatedError(error));
     } finally {
       setBusy(false);
     }
@@ -57,9 +79,9 @@ export function UclawCloudPanel() {
     setRefreshing(true);
     try {
       await refreshBalance();
-      toast.success('余额已刷新');
+      toast.success(t('deviceWallet.balanceRefreshed'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
+      toast.error(translatedError(error));
     } finally {
       setRefreshing(false);
     }
@@ -69,7 +91,7 @@ export function UclawCloudPanel() {
     try {
       await hostApi.shell.openExternal(await getRechargeUrl());
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
+      toast.error(translatedError(error));
     }
   }
 
@@ -78,23 +100,37 @@ export function UclawCloudPanel() {
   async function handlePaste() {
     try {
       const text = (await navigator.clipboard.readText())?.trim();
-      if (!text) throw new Error('剪贴板是空的');
+      if (!text) throw new Error(t('deviceWallet.clipboardEmpty'));
       setAdoptValue(text);
     } catch {
-      toast.error('读不到剪贴板，请在输入框里按 Ctrl+V，或右键选「粘贴」');
+      toast.error(t('deviceWallet.clipboardUnavailable'));
     }
   }
 
   async function handleCopyKey() {
     try {
       const key = await getApiKey();
-      if (!key) throw new Error('这台机器还没有钱包，联网后会自动获取');
+      if (!key) throw new Error(t('deviceWallet.noWalletCopy'));
       await navigator.clipboard.writeText(key);
       setKeyCopied(true);
       setTimeout(() => setKeyCopied(false), 1500);
-      toast.success('密钥已复制');
+      toast.success(t('deviceWallet.keyCopied'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
+      toast.error(translatedError(error));
+    }
+  }
+
+  async function handlePrepareReset() {
+    try {
+      const key = await getApiKey();
+      if (!key) throw new Error(t('deviceWallet.noWalletCopy'));
+      await navigator.clipboard.writeText(key);
+      setKeyCopied(true);
+      setTimeout(() => setKeyCopied(false), 1500);
+      toast.success(t('deviceWallet.keyCopiedBeforeRemove'));
+      setResetConfirmOpen(true);
+    } catch (error) {
+      toast.error(translatedError(error));
     }
   }
 
@@ -107,7 +143,7 @@ export function UclawCloudPanel() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <WalletCards className="h-5 w-5 shrink-0 text-primary" />
-            <span className="text-[15px] font-semibold text-foreground">虾盘云</span>
+            <span className="text-[15px] font-semibold text-foreground">{t('deviceWallet.title')}</span>
             <span
               data-testid="uclaw-cloud-key"
               className="truncate font-mono text-[13px] text-muted-foreground"
@@ -128,7 +164,7 @@ export function UclawCloudPanel() {
               disabled={refreshing}
             >
               <RefreshCw className={`mr-1.5 h-3.5 w-3.5${refreshing ? ' animate-spin' : ''}`} />
-              刷新
+              {t('deviceWallet.refresh')}
             </Button>
           </div>
         </div>
@@ -138,7 +174,7 @@ export function UclawCloudPanel() {
             data-testid="uclaw-cloud-no-wallet"
             className="rounded-lg bg-black/5 px-3 py-2 text-[12px] text-muted-foreground dark:bg-white/5"
           >
-            这台机器还没有钱包，联网后会自动获取；也可以在下面填入已有密钥。
+            {t('deviceWallet.noWallet')}
           </p>
         )}
 
@@ -149,14 +185,15 @@ export function UclawCloudPanel() {
           onClick={() => void handleRecharge()}
         >
           <ExternalLink className="mr-2 h-4 w-4" />
-          一键充值
+          {t('deviceWallet.recharge')}
         </Button>
 
         <div className="space-y-3 border-t border-black/10 pt-4 dark:border-white/10">
-          <span className="text-[13px] font-semibold text-foreground">密钥管理</span>
+          <span className="text-[13px] font-semibold text-foreground">{t('deviceWallet.management')}</span>
           <p className="text-[12px] leading-relaxed text-muted-foreground">
-            密钥由服务端签发，<strong className="font-medium text-foreground">它就是你的钱包</strong>，
-            请自行备份 —— 换电脑时填回去，余额跟着走。
+            {t('deviceWallet.backupPrefix')}
+            <strong className="font-medium text-foreground">{t('deviceWallet.backupStrong')}</strong>
+            {t('deviceWallet.backupSuffix')}
           </p>
 
           <div className="flex gap-2">
@@ -168,7 +205,7 @@ export function UclawCloudPanel() {
               onClick={() => void handleCopyKey()}
             >
               {keyCopied ? <Check className="mr-1.5 h-3.5 w-3.5 text-green-500" /> : <Copy className="mr-1.5 h-3.5 w-3.5" />}
-              复制密钥
+              {t('deviceWallet.copyKey')}
             </Button>
             <Button
               type="button"
@@ -179,7 +216,7 @@ export function UclawCloudPanel() {
               onClick={() => setRotateConfirmOpen(true)}
             >
               <RotateCw className="mr-1.5 h-3.5 w-3.5" />
-              换一把
+              {t('deviceWallet.rotateKey')}
             </Button>
           </div>
 
@@ -192,7 +229,7 @@ export function UclawCloudPanel() {
               spellCheck={false}
               autoComplete="off"
               className="h-9 min-w-0 flex-1 font-mono text-[12px]"
-              aria-label="填入已有密钥"
+              aria-label={t('deviceWallet.adoptAria')}
             />
             <Button
               type="button"
@@ -201,8 +238,8 @@ export function UclawCloudPanel() {
               size="icon"
               className="h-9 w-9 shrink-0 rounded-lg"
               onClick={() => void handlePaste()}
-              aria-label="粘贴密钥"
-              title="从剪贴板粘贴"
+              aria-label={t('deviceWallet.pasteKey')}
+              title={t('deviceWallet.pasteTitle')}
             >
               <ClipboardPaste className="h-3.5 w-3.5" />
             </Button>
@@ -216,10 +253,24 @@ export function UclawCloudPanel() {
                 const message = await adoptKey(adoptValue);
                 setAdoptValue('');
                 return message;
-              }, '已启用这把密钥')}
+              }, t('deviceWallet.adopted'))}
             >
               <KeyRound className="mr-1.5 h-3.5 w-3.5" />
-              启用
+              {t('deviceWallet.enable')}
+            </Button>
+          </div>
+
+          <div className="border-t border-black/10 pt-3 dark:border-white/10">
+            <Button
+              type="button"
+              data-testid="uclaw-cloud-reset-local-wallet"
+              variant="ghost"
+              className="h-9 w-full justify-start rounded-lg text-red-700 hover:bg-red-500/10 hover:text-red-700 dark:text-red-400 dark:hover:text-red-400"
+              disabled={busy || !wallet?.ready}
+              onClick={() => void handlePrepareReset()}
+            >
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              {t('deviceWallet.removeLocal')}
             </Button>
           </div>
         </div>
@@ -227,19 +278,29 @@ export function UclawCloudPanel() {
 
       <ConfirmDialog
         open={rotateConfirmOpen}
-        title="换一把密钥？"
-        message={
-          '换完之后，现在这把密钥立刻失效 —— 别处（其它电脑、脚本）如果还在用它，都要改成新的。\n\n'
-          + '余额不受影响：它记在钱包上，不记在密钥上。'
-        }
-        confirmLabel="换"
-        cancelLabel="算了"
+        title={t('deviceWallet.rotateDialog.title')}
+        message={t('deviceWallet.rotateDialog.message')}
+        confirmLabel={t('deviceWallet.rotateDialog.confirm')}
+        cancelLabel={t('deviceWallet.cancel')}
         variant="destructive"
         onConfirm={async () => {
           setRotateConfirmOpen(false);
-          await guarded(rotateKey, '已换成新密钥');
+          await guarded(rotateKey, t('deviceWallet.rotated'));
         }}
         onCancel={() => setRotateConfirmOpen(false)}
+      />
+      <ConfirmDialog
+        open={resetConfirmOpen}
+        title={t('deviceWallet.removeDialog.title')}
+        message={t('deviceWallet.removeDialog.message')}
+        confirmLabel={t('deviceWallet.removeDialog.confirm')}
+        cancelLabel={t('deviceWallet.cancel')}
+        variant="destructive"
+        onConfirm={async () => {
+          setResetConfirmOpen(false);
+          await guarded(resetLocalWallet, t('deviceWallet.removed'));
+        }}
+        onCancel={() => setResetConfirmOpen(false)}
       />
     </Card>
   );

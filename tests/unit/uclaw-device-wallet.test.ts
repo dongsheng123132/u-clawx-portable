@@ -5,6 +5,7 @@ import {
   createMemoryDeviceWalletStore,
   ensureDeviceKey,
   KEY_KIND_RANDOM,
+  resetLocalDeviceWallet,
   rotateDeviceKey,
 } from '../../electron/services/uclaw-device-wallet';
 
@@ -240,5 +241,111 @@ describe('adoptDeviceKey', () => {
     const r = await rotateDeviceKey({ store, fetch: fetchImpl, verifyKey: alwaysValid });
 
     expect(r.apiKey).toBe('sk-after');
+  });
+});
+
+describe('resetLocalDeviceWallet', () => {
+  it('先清实际消费者，再原子清空五字段；服务端不参与', async () => {
+    const store = createMemoryDeviceWalletStore({
+      key: 'sk-old',
+      keyKind: KEY_KIND_RANDOM,
+      walletId: 'wal_old',
+    });
+    const order: string[] = [];
+
+    await resetLocalDeviceWallet({
+      store,
+      beforeClear: async () => {
+        order.push(`consumer:${(await store.get()).key}`);
+      },
+    });
+
+    const saved = await store.get();
+    order.push(`wallet:${saved.key}`);
+    expect(order).toEqual(['consumer:sk-old', 'wallet:']);
+    expect(saved).toMatchObject({
+      key: '',
+      walletId: '',
+      pendingKey: '',
+      pendingKind: '',
+      pendingFrom: '',
+    });
+  });
+
+  it('消费者清除失败时本地钱包保持原样，不能假装已移除', async () => {
+    const store = createMemoryDeviceWalletStore({ key: 'sk-old', keyKind: KEY_KIND_RANDOM });
+
+    await expect(resetLocalDeviceWallet({
+      store,
+      beforeClear: async () => { throw new Error('provider clear failed'); },
+    })).rejects.toThrow('provider clear failed');
+
+    expect((await store.get()).key).toBe('sk-old');
+  });
+
+  it('未知 pending 按 C3 拒绝且一个字段都不改', async () => {
+    const store = createMemoryDeviceWalletStore({
+      key: 'sk-old',
+      keyKind: KEY_KIND_RANDOM,
+      pendingKey: 'sk-unknown',
+      pendingKind: 'future-operation',
+      pendingFrom: 'sk-old',
+    });
+    const beforeClear = vi.fn(async () => {});
+    const before = await store.get();
+
+    await expect(resetLocalDeviceWallet({ store, beforeClear }))
+      .rejects.toThrow('DEVICE_WALLET_UNKNOWN_PENDING');
+
+    expect(beforeClear).not.toHaveBeenCalled();
+    expect(await store.get()).toEqual(before);
+  });
+
+  it('已知 rotate pending 先收尾，再要求用户针对新 key 重新确认', async () => {
+    const store = createMemoryDeviceWalletStore({
+      key: 'sk-old',
+      keyKind: KEY_KIND_RANDOM,
+      pendingKey: 'sk-new',
+      pendingKind: 'rotate',
+      pendingFrom: 'sk-old',
+    });
+    const { fetchImpl, calls } = fakeServer({
+      '/device/rotate/commit': { status: 200, body: {} },
+    });
+    const beforeClear = vi.fn(async () => {});
+
+    await expect(resetLocalDeviceWallet({
+      store,
+      fetch: fetchImpl,
+      verifyKey: alwaysValid,
+      beforeClear,
+    })).rejects.toThrow('DEVICE_WALLET_PENDING_SETTLED');
+
+    expect(calls).toEqual(['/device/rotate/commit']);
+    expect(beforeClear).not.toHaveBeenCalled();
+    expect((await store.get()).key).toBe('sk-new');
+
+    await resetLocalDeviceWallet({ store, beforeClear });
+    expect(beforeClear).toHaveBeenCalledOnce();
+    expect((await store.get()).key).toBe('');
+  });
+
+  it('移除进行中触发的 ensure 必须等清完再 bind 新空钱包', async () => {
+    const store = createMemoryDeviceWalletStore({ key: 'sk-old', keyKind: KEY_KIND_RANDOM });
+    let releaseClear!: () => void;
+    const clearing = new Promise<void>((resolve) => { releaseClear = resolve; });
+    const reset = resetLocalDeviceWallet({ store, beforeClear: () => clearing });
+    const { fetchImpl, calls } = fakeServer({
+      '/device/bind': { status: 200, body: { walletId: 'wal_new', apiKey: 'sk-fresh' } },
+    });
+
+    const ensure = ensureDeviceKey({ store, fetch: fetchImpl, verifyKey: alwaysValid });
+    await Promise.resolve();
+    expect(calls).toEqual([]);
+    releaseClear();
+
+    await reset;
+    expect((await ensure).apiKey).toBe('sk-fresh');
+    expect(calls).toEqual(['/device/bind']);
   });
 });

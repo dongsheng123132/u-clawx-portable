@@ -21,6 +21,8 @@ type UclawCloudState = {
   rotateKey: () => Promise<string>;
   /** 填入一把已有凭证（换电脑 / 重装 / 找回老钱包）。 */
   adoptKey: (key: string) => Promise<string>;
+  /** 只清本机消费者与钱包状态；不删除服务端钱包或余额。 */
+  resetLocalWallet: () => Promise<string>;
 };
 
 function toMessage(error: unknown): string {
@@ -76,6 +78,15 @@ export const useUclawCloudStore = create<UclawCloudState>((set, get) => ({
     const result = await hostApi.uclaw.adoptKey({ key });
     if (!result.success) throw new Error(result.error || '密钥保存失败');
     // 换的是另一个钱包，余额整个不一样，必须重新拉。
+    await get().refresh();
+    return result.message || '';
+  },
+
+  resetLocalWallet: async () => {
+    const result = await hostApi.uclaw.resetLocalWallet();
+    if (!result.success) throw new Error(result.error || 'DEVICE_WALLET_RESET_FAILED');
+    // refresh 会按正常首启路径收敛：在线拿新空钱包，离线保持无钱包。
+    set({ wallet: null, balance: null });
     await get().refresh();
     return result.message || '';
   },

@@ -258,6 +258,51 @@
     "installMessage": "安装 \"openclaw\" 命令？",
     "installDetail": "这将创建 ~/.local/bin/openclaw。确保 ~/.local/bin 在您的 PATH 中。"
   },
+  "deviceWallet": {
+    "title": "设备钱包",
+    "tokenUnit": "虾粮",
+    "unavailable": "不可用",
+    "refresh": "刷新",
+    "balanceRefreshed": "余额已刷新",
+    "noWallet": "这台机器还没有钱包，联网后会自动获取；也可以在下面填入已有密钥。",
+    "recharge": "一键充值",
+    "management": "钱包管理",
+    "backupPrefix": "密钥由服务端签发，",
+    "backupStrong": "它就是你的钱包",
+    "backupSuffix": "，请自行备份——换电脑时填回去，余额跟着走。",
+    "copyKey": "复制密钥",
+    "rotateKey": "换一把",
+    "adoptAria": "填入已有密钥",
+    "pasteKey": "粘贴密钥",
+    "pasteTitle": "从剪贴板粘贴",
+    "enable": "启用",
+    "adopted": "已启用这把密钥",
+    "rotated": "已换成新密钥",
+    "removeLocal": "移除本机钱包",
+    "removed": "已移除本机钱包；联网时会自动获取一个新的空钱包",
+    "cancel": "算了",
+    "clipboardEmpty": "剪贴板是空的",
+    "clipboardUnavailable": "读不到剪贴板，请在输入框里按 Ctrl+V，或右键选“粘贴”",
+    "noWalletCopy": "这台机器还没有钱包，联网后会自动获取",
+    "keyCopied": "密钥已复制",
+    "keyCopiedBeforeRemove": "当前密钥已复制，请保存好再确认移除",
+    "rotateDialog": {
+      "title": "换一把密钥？",
+      "message": "换完之后，现在这把密钥立刻失效——别处（其它电脑、脚本）如果还在用它，都要改成新的。\n\n余额不受影响：它记在钱包上，不记在密钥上。",
+      "confirm": "换"
+    },
+    "removeDialog": {
+      "title": "移除本机钱包？",
+      "message": "当前密钥已复制到剪贴板，请先保存好。\n\n这只会清除本机配置，不会删除服务端钱包或余额。旧余额不会进入随后创建的新钱包；没有备份旧密钥，可能再也找不回。",
+      "confirm": "移除本机"
+    },
+    "errors": {
+      "unknownPending": "有无法识别的未完成钱包操作，本机状态未改动，请先处理后再移除",
+      "pendingNotSettled": "上次换密钥尚未完成，本机状态未改动，请稍后重试",
+      "pendingSettled": "已完成上次换密钥；当前密钥已经变化，请重新备份并再次确认移除",
+      "resetFailed": "移除本机钱包失败"
+    }
+  },
   "about": {
     "title": "关于",
     "appName": "ClawX",

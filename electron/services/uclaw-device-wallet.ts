@@ -75,6 +75,8 @@ export function createMemoryDeviceWalletStore(initial?: Partial<DeviceWalletStat
 let persistentStorePromise: Promise<DeviceWalletStore> | null = null;
 let persistentEnsurePromise: Promise<WalletResult> | null = null;
 const ensurePromisesByStore = new WeakMap<DeviceWalletStore, Promise<WalletResult>>();
+let persistentResetPromise: Promise<{ message: string }> | null = null;
+const resetPromisesByStore = new WeakMap<DeviceWalletStore, Promise<{ message: string }>>();
 
 async function createPersistentDeviceWalletStore(): Promise<DeviceWalletStore> {
   const Store = (await import('electron-store')).default;
@@ -183,6 +185,8 @@ export function ensureDeviceKey(deps: WalletDeps = {}): Promise<WalletResult> {
   // 同一次收敛，否则会同时 bind：成功的那次可能被后到的失败/空状态覆盖。
   // 显式注入 store 的测试/调用方按 store 去重；生产持久化路径用单例去重。
   if (deps.store) {
+    const resetting = resetPromisesByStore.get(deps.store);
+    if (resetting) return resetting.then(() => ensureDeviceKey(deps));
     const running = ensurePromisesByStore.get(deps.store);
     if (running) return running;
 
@@ -195,6 +199,7 @@ export function ensureDeviceKey(deps: WalletDeps = {}): Promise<WalletResult> {
     return task;
   }
 
+  if (persistentResetPromise) return persistentResetPromise.then(() => ensureDeviceKey(deps));
   if (persistentEnsurePromise) return persistentEnsurePromise;
   const task = doEnsureDeviceKey(deps).finally(() => {
     if (persistentEnsurePromise === task) persistentEnsurePromise = null;
@@ -391,4 +396,72 @@ export async function adoptDeviceKey(
     pendingFrom: '',
   });
   return { apiKey: trimmed, message: '已启用这把密钥' };
+}
+
+export type ResetLocalWalletDeps = WalletDeps & {
+  /**
+   * C5：先清掉真正消费这把 key 的 provider / image relay，再清钱包状态。
+   * 回调失败时钱包保持原样，下一次启动仍能重新收敛，不会出现“界面说已移除，
+   * Gateway 还在花旧 key”的假成功。
+   */
+  beforeClear: () => Promise<void>;
+};
+
+/**
+ * 只移除本机钱包。服务端钱包、旧 key 和余额都不删除；用户以后仍可 adopt 找回。
+ *
+ * 已知 rotate pending 会先收尾，然后用错误码要求 UI 重新确认，因为用户最初看到并
+ * 备份的是旧 key。未知 pending 按 C3 原样保留，绝不猜、绝不硬清。
+ */
+export function resetLocalDeviceWallet(
+  deps: ResetLocalWalletDeps,
+): Promise<{ message: string }> {
+  if (deps.store) {
+    const running = resetPromisesByStore.get(deps.store);
+    if (running) return running;
+    const ensureBeforeReset = ensurePromisesByStore.get(deps.store);
+    const task = doResetLocalDeviceWallet(deps, ensureBeforeReset ?? undefined).finally(() => {
+      if (resetPromisesByStore.get(deps.store!) === task) {
+        resetPromisesByStore.delete(deps.store!);
+      }
+    });
+    resetPromisesByStore.set(deps.store, task);
+    return task;
+  }
+
+  if (persistentResetPromise) return persistentResetPromise;
+  const ensureBeforeReset = persistentEnsurePromise;
+  const task = doResetLocalDeviceWallet(deps, ensureBeforeReset ?? undefined).finally(() => {
+    if (persistentResetPromise === task) persistentResetPromise = null;
+  });
+  persistentResetPromise = task;
+  return task;
+}
+
+async function doResetLocalDeviceWallet(
+  deps: ResetLocalWalletDeps,
+  ensureBeforeReset?: Promise<WalletResult>,
+): Promise<{ message: string }> {
+  await ensureBeforeReset;
+  const store = deps.store ?? (await getPersistentStore());
+  const fetchImpl = deps.fetch ?? fetch;
+  const verify = deps.verifyKey ?? defaultVerifyKey;
+  let state = await store.get();
+
+  if (state.pendingKey) {
+    if (state.pendingKind !== PENDING_ROTATE) {
+      throw new Error('DEVICE_WALLET_UNKNOWN_PENDING');
+    }
+    const settled = await finishPending(state, store, fetchImpl, verify);
+    if (settled.pendingKey) {
+      throw new Error('DEVICE_WALLET_PENDING_NOT_SETTLED');
+    }
+    state = settled;
+    // 当前 key 已经从用户首次确认时看到的那把变了，必须重新展示并确认。
+    throw new Error('DEVICE_WALLET_PENDING_SETTLED');
+  }
+
+  await deps.beforeClear();
+  await store.set({ ...EMPTY_STATE });
+  return { message: '' };
 }

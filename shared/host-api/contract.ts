@@ -853,6 +853,8 @@ export type HostApiContract = {
     rotateKey: () => UclawKeyMutationResult;
     /** 填入一把已有凭证（换电脑 / 重装 / 找回老钱包）。 */
     adoptKey: (payload: { key: string }) => UclawKeyMutationResult;
+    /** 只移除本机钱包；服务端钱包与余额保持不变。 */
+    resetLocalWallet: () => UclawKeyMutationResult;
   };
   shell: {
     openExternal: (payload: ShellOpenExternalPayload) => void;

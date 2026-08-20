@@ -9,14 +9,22 @@ U-Claw 不使用硬件指纹、授权门禁、注册或登录。首次联网启�
 - The API key is the wallet credential. Anyone holding it can spend the wallet's entire available balance; adopting a key on another computer does **not** split or limit the balance.
 - If the key may have leaked, use **Rotate key / 换一把**. Rotation moves the wallet to a newly issued key, keeps the balance, and makes the old key invalid.
 - Removing a key only from one computer would not revoke it on the server. It is therefore not a leak-response action.
+- **Remove wallet from this device** clears only ClawX-managed local consumers and wallet state. The old server wallet, key, and balance remain valid; the next online convergence creates a separate zero-balance wallet.
 - A user who adopted somebody else's key will receive `401` after the wallet owner rotates it and must obtain the new key to continue.
 - Back up the key before reinstalling or moving to another computer. U-Claw has no account recovery flow because the key itself is the credential.
 
 - API Key 就是钱包凭证。谁拿着它，谁就能使用该钱包的**全部可用余额**；在另一台电脑填入 Key，不会只分到一部分额度。
 - 怀疑泄露时必须使用 **换一把**。轮换后余额留在原钱包，新 Key 生效，旧 Key 立即失效。
 - 只从某台电脑删除本地 Key，不会吊销服务端凭证，因此不能用来处置泄露。
+- **移除本机钱包**只清理 ClawX 管理的本机消费者和钱包状态。旧服务端钱包、Key 与余额仍然有效；下次联网收敛会创建一个余额为 0 的独立新钱包。
 - 如果别人填入了你的 Key，你轮换后，对方仍使用旧 Key 的请求会返回 `401`；除非你再把新 Key 给他。
 - 重装或换机前请备份 Key。设备钱包没有注册/找回流程，因为 Key 本身就是凭证。
+
+## Local removal / 移除本机
+
+ClawX copies the current key before showing the destructive confirmation. It then clears the managed chat provider and image relay before clearing the five local wallet fields. It never calls a server-side wallet or balance deletion endpoint. Unknown pending operations are preserved; a pending rotation is settled first and requires a new confirmation against the resulting key.
+
+ClawX 会先复制当前 Key，再显示危险操作确认。执行时先清除受管理的聊天 Provider 和图像 Relay，随后才清空五个本地钱包字段；不会调用任何服务端钱包或余额删除接口。未知 pending 状态会原样保留；未完成的轮换会先收尾，并要求用户针对新 Key 再确认一次。
 
 ## Open-source boundary / 开源边界
 

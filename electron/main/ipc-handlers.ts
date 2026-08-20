@@ -156,7 +156,7 @@ function registerTypedHostHandlers(
   hostApiRegistry.registerCoreServices({
     app: createAppApi(),
     openclaw: createOpenClawApi(),
-    uclaw: createUclawApi(),
+    uclaw: createUclawApi(gatewayManager),
     shell: createShellApi(),
     webBrowser: createWebBrowserApi({ browserSession, registry }),
     dialog: createDialogApi(),

@@ -7,12 +7,20 @@ import { syncDefaultProviderToRuntime } from './providers/provider-runtime-sync'
 import { UCLAW_CLOUD_DEFAULT_API_BASE } from './providers/uclaw-cloud-endpoint';
 import { fetchAvailableModelIds } from './providers/uclaw-cloud-catalog';
 import { ensureUclawCloudImageDefaults } from './providers/uclaw-cloud-image-defaults';
+import { applyOpenAiImageRelaySettings } from '../utils/openclaw-image-generation';
 import {
   fallbackCuratedModels,
   fetchCuratedModels,
   resolveOfferedModelIds,
 } from './providers/uclaw-cloud-curation';
-import { adoptDeviceKey, ensureDeviceKey, rotateDeviceKey } from './uclaw-device-wallet';
+import { providerAccountToConfig } from './providers/provider-store';
+import { syncDeletedProviderApiKeyToRuntime } from './providers/provider-runtime-sync';
+import {
+  adoptDeviceKey,
+  ensureDeviceKey,
+  resetLocalDeviceWallet,
+  rotateDeviceKey,
+} from './uclaw-device-wallet';
 
 /**
  * 虾盘云账户 —— 把设备钱包的凭证接到 provider 上，并提供余额 / 充值链接。
@@ -106,11 +114,23 @@ function buildUclawCloudAccount(offered: string[]): ProviderAccount {
   };
 }
 
-/** 把一把凭证配到 uclaw-cloud provider 上。 */
-async function applyKeyToProvider(apiKey: string, gatewayManager?: GatewayManager): Promise<void> {
-  if (!apiKey) return;
+/** 把一把凭证配到 uclaw-cloud provider 上；null 是同一入口的清除形态。 */
+async function applyKeyToProvider(apiKey: string | null, gatewayManager?: GatewayManager): Promise<void> {
   const providerService = getProviderService();
   const existing = await providerService.getAccount(UCLAW_CLOUD_PROVIDER_ID);
+  if (!apiKey) {
+    // 先清运行时，再清本地凭证。任何一步失败都让钱包状态保持原样，避免假成功。
+    if (existing) {
+      await syncDeletedProviderApiKeyToRuntime(
+        providerAccountToConfig(existing),
+        UCLAW_CLOUD_PROVIDER_ID,
+      );
+    }
+    await providerService._deleteProviderApiKeyInternal(UCLAW_CLOUD_PROVIDER_ID);
+    // 图像生成使用独立的 ClawX-owned provider，也持有同一把钱包 key。
+    await applyOpenAiImageRelaySettings({ enabled: false });
+    return;
+  }
   const curated = (await fetchCuratedModels(resolveApiOrigin())) ?? fallbackCuratedModels();
   const account = buildUclawCloudAccount(await offeredModelIds(apiKey, curated.chat));
 
@@ -249,4 +269,13 @@ export async function adoptKey(
   const result = await adoptDeviceKey(key);
   await applyKeyToProvider(result.apiKey, gatewayManager);
   return result;
+}
+
+/** 移除本机钱包；不调用任何服务端删除/清余额接口。 */
+export async function resetLocalWallet(
+  gatewayManager?: GatewayManager,
+): Promise<{ message: string }> {
+  return resetLocalDeviceWallet({
+    beforeClear: () => applyKeyToProvider(null, gatewayManager),
+  });
 }
