@@ -1,13 +1,14 @@
-# Aquatic Precision
+# U-Claw Brand Icon
 
-## A Design Philosophy
+U-Claw uses the original red lobster badge from the earlier Windows release: a
+Segoe UI Emoji lobster centred on a white-to-pale-red rounded square. This is the
+recognisable product mark and should not be replaced with the later flat lobster
+illustration or the blue side-profile prawn.
 
-Form emerges from the intersection of marine elegance and digital utility. The curved, flowing lines of crustacean anatomy — antennae sweeping in parabolic arcs, segmented bodies articulating with mathematical grace — are distilled into their purest geometric essence. Every curve is deliberate, every terminus calculated. The result must appear as though a master iconographer spent weeks refining a single Bézier handle, achieving that impossible balance where organic life and computational precision become indistinguishable. This is meticulous craft elevated to instinct.
+The committed `icon-uclaw.png` is the cross-platform master. Keep it as a PNG so
+Windows, macOS and Linux builds do not depend on the host system's colour-emoji
+font. The transparent `src/assets/logo.png` is the matching in-app mark used by
+the setup page and sidebar.
 
-Color operates as depth. A singular chromatic voice — ocean blue deepening toward teal — creates dimensionality without shadows, volume without rendering. The palette is restrained to the point of severity: white breathes, blue speaks, and the transition between them carries all the information. Each gradient stop is calibrated with the painstaking attention of a printmaker mixing ink — not approximate, but exact. The blue is not decorative; it is structural, defining where form begins and space recedes.
-
-Space is the canvas's primary material. The icon lives within a rounded rectangle — the universal container of modern software — but the negative space within that container is sculpted with equal care. The subject does not fill its frame; it inhabits it, positioned with the same spatial intelligence that governs classical portraiture. Breathing room is not emptiness but architecture. The relationship between mark and margin is the product of countless iterations, each one bringing the composition fractionally closer to equilibrium.
-
-Scale communicates hierarchy through subtlety rather than emphasis. The primary form — the crustacean silhouette — anchors the composition with confident weight, while secondary elements (the suggestion of digital connectivity, the whisper of portable technology) exist at a smaller, subordinate scale. Nothing competes. The eye moves through the icon in a single, unbroken gesture, guided by the expert hand of someone who understands that at 16×16 pixels, only the essential survives. Every element earns its place through ruthless editorial judgment and master-level execution.
-
-Craft manifests in what is absent. The icon rejects detail in favor of recognition — a form so refined that it reads instantly at any scale, yet rewards close inspection with the precision of its construction. Corners radius consistently. Stroke weights maintain optical uniformity even where geometry would suggest otherwise. The silhouette is not drawn but engineered, each segment tested against the demands of legibility, beauty, and brand identity simultaneously. This is the work of deep expertise made invisible through its own perfection.
+Always inspect the 16×16 and 32×32 outputs after regeneration. Those sizes are
+what users actually see in Explorer, the taskbar and the system tray.

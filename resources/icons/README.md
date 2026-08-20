@@ -21,8 +21,9 @@ the next `pnpm icons` overwrites it.
 | `tray-icon-Template.png` | macOS | 22x22 status bar (the "Template" suffix is required) |
 | `tray-icon-Template@2x.png` | macOS | 44x44 retina status bar |
 
-`icon.svg` is upstream's leftover source — the 🦞 emoji rendered as text. It is
-**not** the brand and nothing generates from it any more.
+`icon.svg` records the original Windows lobster-badge design, but it is not used
+as a build input because colour-emoji rendering varies by operating system. The
+committed PNG master keeps every platform visually identical.
 
 ### Why the tray mark is a separate source
 
@@ -41,14 +42,15 @@ pnpm icons:check    # verify they still match, write nothing (exit 1 on drift)
 
 Only `sharp` is required — no ImageMagick, no librsvg install, no png2icons.
 `pnpm icons:check` is the guard worth wiring into CI: it catches a derived icon
-that was hand-edited, or a merge that restored upstream's lobster.
+that was hand-edited or no longer matches the committed brand master.
 
 ## Design Guidelines
 
 See `uclaw-design-philosophy.md` for the brand intent.
 
 ### Application Icon (`icon-uclaw.png`)
-- **Subject**: blue prawn, side profile, with the U-disk connector at the tail
+- **Subject**: the original red lobster used by the earlier U-Claw Windows build
+- **Style**: Segoe UI Emoji lobster on a white-to-pale-red rounded-square badge
 - **Corner Radius**: ~20% of width (200px on a 1024px canvas)
 - **Safe Area**: keep a 10% margin from the edges
 - **Canvas**: square, at least 1024x1024, RGBA (the generator enforces this)
