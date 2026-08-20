@@ -1,0 +1,256 @@
+// @vitest-environment node
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('electron', () => ({
+  app: {
+    getPath: () => '/tmp',
+    isPackaged: false,
+  },
+  utilityProcess: {
+    fork: vi.fn(),
+  },
+}));
+
+vi.mock('@electron/utils/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
+describe('GatewayManager diagnostics', () => {
+  const originalPlatform = process.platform;
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-14T00:00:00.000Z'));
+    Object.defineProperty(process, 'platform', { value: originalPlatform });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    Object.defineProperty(process, 'platform', { value: originalPlatform });
+  });
+
+  it('updates diagnostics on gateway message, rpc success/timeout, and socket close', async () => {
+    const { GatewayManager } = await import('@electron/gateway/manager');
+    const manager = new GatewayManager();
+
+    const ws = {
+      readyState: 1,
+      send: vi.fn(),
+      ping: vi.fn(),
+      terminate: vi.fn(),
+      on: vi.fn(),
+    };
+
+    (manager as unknown as { ws: typeof ws }).ws = ws;
+
+    (manager as unknown as { handleMessage: (message: unknown) => void }).handleMessage({
+      type: 'event',
+      event: 'gateway.ready',
+      payload: {},
+    });
+    expect(manager.getDiagnostics().lastAliveAt).toBe(Date.now());
+
+    const successPromise = manager.rpc<{ ok: boolean }>('sessions.list', {}, 1000);
+    const successRequestId = Array.from(
+      (manager as unknown as { pendingRequests: Map<string, unknown> }).pendingRequests.keys(),
+    )[0];
+    (manager as unknown as { handleMessage: (message: unknown) => void }).handleMessage({
+      type: 'res',
+      id: successRequestId,
+      ok: true,
+      payload: { ok: true },
+    });
+    await expect(successPromise).resolves.toEqual({ ok: true });
+    expect(manager.getDiagnostics().lastRpcSuccessAt).toBe(Date.now());
+    expect(manager.getDiagnostics().consecutiveRpcFailures).toBe(0);
+
+    const failurePromise = manager.rpc('system-presence', {}, 1000);
+    vi.advanceTimersByTime(1001);
+    await expect(failurePromise).rejects.toThrow('RPC timeout: system-presence');
+
+    const diagnostics = manager.getDiagnostics();
+    expect(diagnostics.lastRpcFailureAt).toBe(Date.now());
+    expect(diagnostics.lastRpcFailureMethod).toBe('system-presence');
+    expect(diagnostics.consecutiveRpcFailures).toBe(1);
+
+    (manager as unknown as { recordSocketClose: (code: number) => void }).recordSocketClose(1006);
+    expect(manager.getDiagnostics().lastSocketCloseAt).toBe(Date.now());
+    expect(manager.getDiagnostics().lastSocketCloseCode).toBe(1006);
+  });
+
+  it('does not count gateway-declared rpc errors as transport failures', async () => {
+    const { GatewayManager } = await import('@electron/gateway/manager');
+    const { buildGatewayHealthSummary } = await import('@electron/utils/gateway-health');
+    const manager = new GatewayManager();
+
+    const ws = {
+      readyState: 1,
+      send: vi.fn(),
+      ping: vi.fn(),
+      terminate: vi.fn(),
+      on: vi.fn(),
+    };
+
+    (manager as unknown as { ws: typeof ws }).ws = ws;
+    (manager as unknown as { status: { state: string; port: number } }).status = {
+      state: 'running',
+      port: 18789,
+    };
+
+    const failurePromise = manager.rpc('channels.status', {}, 1000);
+    const failureRequestId = Array.from(
+      (manager as unknown as { pendingRequests: Map<string, unknown> }).pendingRequests.keys(),
+    )[0];
+    (manager as unknown as { handleMessage: (message: unknown) => void }).handleMessage({
+      type: 'res',
+      id: failureRequestId,
+      ok: false,
+      error: { message: 'channel unavailable' },
+    });
+    await expect(failurePromise).rejects.toThrow('channel unavailable');
+
+    expect(manager.getDiagnostics().consecutiveRpcFailures).toBe(0);
+
+    const health = buildGatewayHealthSummary({
+      status: manager.getStatus(),
+      diagnostics: manager.getDiagnostics(),
+    });
+    expect(health.reasons).not.toContain('rpc_timeout');
+  });
+
+  it('records capability timeouts without counting them as core transport failures', async () => {
+    const { GatewayManager } = await import('@electron/gateway/manager');
+    const manager = new GatewayManager();
+
+    const ws = {
+      readyState: 1,
+      send: vi.fn(),
+      ping: vi.fn(),
+      terminate: vi.fn(),
+      on: vi.fn(),
+    };
+
+    (manager as unknown as { ws: typeof ws }).ws = ws;
+    (manager as unknown as { status: { state: string; port: number } }).status = {
+      state: 'running',
+      port: 18789,
+    };
+
+    const memoryPromise = manager.rpc('doctor.memory.status', {}, 1000);
+    vi.advanceTimersByTime(1001);
+    await expect(memoryPromise).rejects.toThrow('RPC timeout: doctor.memory.status');
+
+    expect(manager.getDiagnostics().consecutiveRpcFailures).toBe(0);
+    expect(manager.getCapabilitySnapshot().memory.state).toBe('degraded');
+    expect(manager.getCapabilitySnapshot().memory.error).toContain('doctor.memory.status');
+  });
+
+  it('does not let health polling mark core rpc degraded when OpenClaw health/status are slow', async () => {
+    const { GatewayManager } = await import('@electron/gateway/manager');
+    const { buildGatewayHealthSummary } = await import('@electron/utils/gateway-health');
+    const manager = new GatewayManager();
+
+    const ws = {
+      readyState: 1,
+      send: vi.fn(),
+      ping: vi.fn(),
+      terminate: vi.fn(),
+      on: vi.fn(),
+    };
+
+    (manager as unknown as { ws: typeof ws }).ws = ws;
+    (manager as unknown as { status: { state: string; port: number; gatewayReady: boolean } }).status = {
+      state: 'running',
+      port: 18789,
+      gatewayReady: true,
+    };
+
+    const healthPromise = manager.checkHealth();
+    await vi.advanceTimersByTimeAsync(3001);
+    const health = await healthPromise;
+
+    expect(health.ok).toBe(true);
+    expect(manager.getDiagnostics().consecutiveRpcFailures).toBe(0);
+    expect(manager.getCapabilitySnapshot().openclawHealth.state).toBe('degraded');
+    expect(manager.getCapabilitySnapshot().openclawStatus.state).toBe('degraded');
+
+    const summary = buildGatewayHealthSummary({
+      status: manager.getStatus(),
+      diagnostics: manager.getDiagnostics(),
+    });
+    expect(summary.reasons).not.toContain('rpc_timeout');
+  });
+
+  it('reports rpc router blocked when a fresh core probe fails after gateway was ready', async () => {
+    const { GatewayCapabilityMonitor } = await import('@electron/gateway/capability-monitor');
+    const monitor = new GatewayCapabilityMonitor();
+
+    monitor.recordCoreProbe({
+      ok: false,
+      checkedAt: Date.now(),
+      error: 'RPC timeout: system-presence',
+    });
+
+    const snapshot = monitor.buildSnapshot({
+      status: {
+        state: 'running',
+        port: 18789,
+        gatewayReady: true,
+      },
+      transportConnected: true,
+      diagnostics: {
+        consecutiveHeartbeatMisses: 0,
+        consecutiveRpcFailures: 1,
+      },
+    });
+
+    expect(snapshot.core.rpcRouter).toBe('blocked');
+  });
+
+  it('marks windows gateway health unresponsive and restarts after four heartbeat misses', async () => {
+    Object.defineProperty(process, 'platform', { value: 'win32' });
+
+    const { GatewayManager } = await import('@electron/gateway/manager');
+    const { buildGatewayHealthSummary } = await import('@electron/utils/gateway-health');
+    const manager = new GatewayManager();
+
+    const ws = {
+      readyState: 1,
+      send: vi.fn(),
+      ping: vi.fn(),
+      terminate: vi.fn(),
+      on: vi.fn(),
+    };
+
+    (manager as unknown as { ws: typeof ws }).ws = ws;
+    (manager as unknown as { shouldReconnect: boolean }).shouldReconnect = true;
+    (manager as unknown as { status: { state: string; port: number } }).status = {
+      state: 'running',
+      port: 18789,
+    };
+    const restartSpy = vi.spyOn(manager, 'restart').mockResolvedValue();
+
+    (manager as unknown as { startPing: () => void }).startPing();
+    vi.advanceTimersByTime(300_000);
+
+    expect(restartSpy).toHaveBeenCalledTimes(1);
+    expect(manager.getDiagnostics().consecutiveHeartbeatMisses).toBe(4);
+
+    const health = buildGatewayHealthSummary({
+      status: { state: 'running', port: 18789 },
+      diagnostics: manager.getDiagnostics(),
+    });
+    expect(health.state).toBe('unresponsive');
+    expect(health.reasons).toContain('gateway_unresponsive');
+
+    (manager as unknown as { connectionMonitor: { clear: () => void } }).connectionMonitor.clear();
+  });
+});

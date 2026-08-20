@@ -1,0 +1,1239 @@
+/**
+ * Tests for openclaw.json config sanitization before Gateway start.
+ *
+ * The sanitizeOpenClawConfig() function in openclaw-auth.ts relies on the
+ * Main-owned config-delivery coordinator. To avoid mocking Electron + the
+ * real HOME directory, this test uses a standalone version of the
+ * sanitization logic that mirrors the production code exactly, operating
+ * on a temp directory with real file I/O.
+ */
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdtemp, writeFile, readFile, rm, access } from 'fs/promises';
+import { constants } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
+
+let tempDir: string;
+let configPath: string;
+
+const CLAWX_DESKTOP_TOOL_DENY = [
+  'skill_workshop',
+  'web_search',
+  'gateway',
+  'nodes',
+  'create_goal',
+  'get_goal',
+  'update_goal',
+];
+
+async function writeConfig(data: unknown): Promise<void> {
+  await writeFile(configPath, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+async function readConfig(): Promise<Record<string, unknown>> {
+  const raw = await readFile(configPath, 'utf-8');
+  return JSON.parse(raw);
+}
+
+function withClawXToolDefaults<T extends Record<string, unknown>>(config: T): T & {
+  tools: Record<string, unknown>;
+  gateway: Record<string, unknown>;
+  skills: Record<string, unknown>;
+} {
+  const tools = (config.tools && typeof config.tools === 'object' && !Array.isArray(config.tools))
+    ? { ...(config.tools as Record<string, unknown>) }
+    : {};
+  const sessions = (tools.sessions && typeof tools.sessions === 'object' && !Array.isArray(tools.sessions))
+    ? { ...(tools.sessions as Record<string, unknown>) }
+    : {};
+  const exec = (tools.exec && typeof tools.exec === 'object' && !Array.isArray(tools.exec))
+    ? { ...(tools.exec as Record<string, unknown>) }
+    : {};
+  const deny = Array.isArray(tools.deny)
+    ? (tools.deny as unknown[]).filter((value): value is string => typeof value === 'string')
+    : [];
+
+  sessions.visibility = 'all';
+  exec.security = 'full';
+  exec.ask = 'off';
+  tools.profile = 'full';
+  tools.sessions = sessions;
+  tools.exec = exec;
+  tools.deny = CLAWX_DESKTOP_TOOL_DENY.reduce<string[]>(
+    (result, entry) => result.includes(entry) ? result : [...result, entry],
+    deny,
+  );
+
+  const gateway = (config.gateway && typeof config.gateway === 'object' && !Array.isArray(config.gateway))
+    ? { ...(config.gateway as Record<string, unknown>) }
+    : {};
+  const gatewayTools = (gateway.tools && typeof gateway.tools === 'object' && !Array.isArray(gateway.tools))
+    ? { ...(gateway.tools as Record<string, unknown>) }
+    : {};
+  const gatewayDeny = Array.isArray(gatewayTools.deny)
+    ? (gatewayTools.deny as unknown[]).filter((value): value is string => typeof value === 'string')
+    : [];
+  gatewayTools.deny = CLAWX_DESKTOP_TOOL_DENY.reduce<string[]>(
+    (result, entry) => result.includes(entry) ? result : [...result, entry],
+    gatewayDeny,
+  );
+  gateway.tools = gatewayTools;
+
+  const skills = (config.skills && typeof config.skills === 'object' && !Array.isArray(config.skills))
+    ? { ...(config.skills as Record<string, unknown>) }
+    : {};
+  const workshop = (skills.workshop && typeof skills.workshop === 'object' && !Array.isArray(skills.workshop))
+    ? { ...(skills.workshop as Record<string, unknown>) }
+    : {};
+  const autonomous = (workshop.autonomous && typeof workshop.autonomous === 'object' && !Array.isArray(workshop.autonomous))
+    ? { ...(workshop.autonomous as Record<string, unknown>) }
+    : {};
+  autonomous.enabled = false;
+  workshop.autonomous = autonomous;
+  skills.workshop = workshop;
+
+  const entries = (skills.entries && typeof skills.entries === 'object' && !Array.isArray(skills.entries))
+    ? { ...(skills.entries as Record<string, unknown>) }
+    : {};
+  const skillCreatorEntry = (entries['skill-creator'] && typeof entries['skill-creator'] === 'object' && !Array.isArray(entries['skill-creator']))
+    ? { ...(entries['skill-creator'] as Record<string, unknown>) }
+    : {};
+  skillCreatorEntry.enabled = true;
+  entries['skill-creator'] = skillCreatorEntry;
+  skills.entries = entries;
+
+  return {
+    ...config,
+    tools,
+    gateway,
+    skills,
+    session: {
+      ...((config.session && typeof config.session === 'object' && !Array.isArray(config.session))
+        ? (config.session as Record<string, unknown>)
+        : {}),
+      dmScope: ((config.session && typeof config.session === 'object' && !Array.isArray(config.session))
+        ? (config.session as Record<string, unknown>).dmScope
+        : undefined) === 'per-account-channel-peer'
+        ? 'per-account-channel-peer'
+        : 'per-channel-peer',
+    },
+  };
+}
+
+/**
+ * Standalone mirror of the sanitization logic in openclaw-auth.ts.
+ * Uses the same blocklist approach as the production code.
+ */
+async function sanitizeConfig(
+  filePath: string,
+  bundledPlugins?: {
+    all: string[];
+    enabledByDefault: string[];
+    providersByPluginId?: Record<string, string[]>;
+    preserveIds?: string[];
+  },
+): Promise<boolean> {
+  let raw: string;
+  try {
+    raw = await readFile(filePath, 'utf-8');
+  } catch {
+    return false;
+  }
+
+  const config = JSON.parse(raw) as Record<string, unknown>;
+  let modified = false;
+  const BUILTIN_CHANNEL_IDS = new Set([
+    'discord',
+    'telegram',
+    'whatsapp',
+    'slack',
+    'signal',
+    'imessage',
+    'matrix',
+    'line',
+    'msteams',
+    'googlechat',
+    'mattermost',
+    'qqbot',
+  ]);
+  const BUNDLED_ALLOWLIST_PRESERVE_IDS = new Set(
+    bundledPlugins?.preserveIds ?? ['browser', 'acpx', 'memory-core'],
+  );
+
+  /** Non-throwing async existence check. */
+  async function fileExists(p: string): Promise<boolean> {
+    try {
+      await access(p, constants.F_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Mirror of the production blocklist logic
+  const skills = config.skills;
+  if (skills && typeof skills === 'object' && !Array.isArray(skills)) {
+    const skillsObj = skills as Record<string, unknown>;
+    const KNOWN_INVALID_SKILLS_ROOT_KEYS = ['enabled', 'disabled'];
+    for (const key of KNOWN_INVALID_SKILLS_ROOT_KEYS) {
+      if (key in skillsObj) {
+        delete skillsObj[key];
+        modified = true;
+      }
+    }
+  }
+
+  // Mirror: prune stale absolute plugin paths under plugins (array), plugins.load (array),
+  // and plugins.load.paths (nested object shape).
+  const plugins = config.plugins;
+  if (plugins && typeof plugins === 'object' && !Array.isArray(plugins)) {
+    const pluginsObj = plugins as Record<string, unknown>;
+    if (Array.isArray(pluginsObj.load)) {
+      const validLoad: unknown[] = [];
+      for (const p of pluginsObj.load) {
+        if (typeof p === 'string' && p.startsWith('/')) {
+          if (p.includes('node_modules/openclaw/extensions') || !(await fileExists(p))) {
+            modified = true;
+          } else {
+            validLoad.push(p);
+          }
+        } else {
+          validLoad.push(p);
+        }
+      }
+      if (modified) pluginsObj.load = validLoad;
+    } else if (pluginsObj.load && typeof pluginsObj.load === 'object' && !Array.isArray(pluginsObj.load)) {
+      const loadObj = pluginsObj.load as Record<string, unknown>;
+      if (Array.isArray(loadObj.paths)) {
+        const validPaths: unknown[] = [];
+        const countBefore = loadObj.paths.length;
+        for (const p of loadObj.paths) {
+          if (typeof p === 'string' && p.startsWith('/')) {
+            if (p.includes('node_modules/openclaw/extensions') || !(await fileExists(p))) {
+              modified = true;
+            } else {
+              validPaths.push(p);
+            }
+          } else {
+            validPaths.push(p);
+          }
+        }
+        if (validPaths.length !== countBefore) {
+          loadObj.paths = validPaths;
+        }
+      }
+    }
+
+    const allow = Array.isArray(pluginsObj.allow) ? [...pluginsObj.allow as string[]] : [];
+    const entries = (
+      pluginsObj.entries && typeof pluginsObj.entries === 'object' && !Array.isArray(pluginsObj.entries)
+        ? { ...(pluginsObj.entries as Record<string, unknown>) }
+        : {}
+    ) as Record<string, unknown>;
+
+    const acpxEntry = (entries.acpx && typeof entries.acpx === 'object' && !Array.isArray(entries.acpx))
+      ? { ...(entries.acpx as Record<string, unknown>) }
+      : null;
+    const acpxConfig = (acpxEntry?.config && typeof acpxEntry.config === 'object' && !Array.isArray(acpxEntry.config))
+      ? { ...(acpxEntry.config as Record<string, unknown>) }
+      : null;
+    if (acpxConfig) {
+      for (const legacyKey of ['command', 'expectedVersion'] as const) {
+        if (legacyKey in acpxConfig) {
+          delete acpxConfig[legacyKey];
+          modified = true;
+        }
+      }
+      acpxEntry!.config = acpxConfig;
+      entries.acpx = acpxEntry!;
+      pluginsObj.entries = entries;
+    }
+
+    const installs = (
+      pluginsObj.installs && typeof pluginsObj.installs === 'object' && !Array.isArray(pluginsObj.installs)
+        ? { ...(pluginsObj.installs as Record<string, unknown>) }
+        : {}
+    ) as Record<string, unknown>;
+    const acpxInstall = (installs.acpx && typeof installs.acpx === 'object' && !Array.isArray(installs.acpx))
+      ? installs.acpx as Record<string, unknown>
+      : null;
+    if (acpxInstall) {
+      const currentBundledAcpxDir = join(tempDir, 'node_modules', 'openclaw', 'dist', 'extensions', 'acpx').replace(/\\/g, '/');
+      const sourcePath = typeof acpxInstall.sourcePath === 'string' ? acpxInstall.sourcePath : '';
+      const installPath = typeof acpxInstall.installPath === 'string' ? acpxInstall.installPath : '';
+      const normalizedSourcePath = sourcePath.replace(/\\/g, '/');
+      const normalizedInstallPath = installPath.replace(/\\/g, '/');
+      const pointsAtDifferentBundledTree = [normalizedSourcePath, normalizedInstallPath].some(
+        (candidate) => candidate.includes('/node_modules/.pnpm/openclaw@') && candidate !== currentBundledAcpxDir,
+      );
+      const pointsAtMissingPath = (sourcePath && !(await fileExists(sourcePath)))
+        || (installPath && !(await fileExists(installPath)));
+
+      if (pointsAtDifferentBundledTree || pointsAtMissingPath) {
+        delete installs.acpx;
+        modified = true;
+      }
+
+      if (Object.keys(installs).length > 0) {
+        pluginsObj.installs = installs;
+      } else {
+        delete pluginsObj.installs;
+      }
+    }
+
+    if ('whatsapp' in entries) {
+      delete entries.whatsapp;
+      pluginsObj.entries = entries;
+      modified = true;
+    }
+
+    const configuredBuiltIns = new Set<string>();
+    const channels = config.channels;
+    if (channels && typeof channels === 'object' && !Array.isArray(channels)) {
+      for (const [channelId, section] of Object.entries(channels as Record<string, Record<string, unknown>>)) {
+        if (!BUILTIN_CHANNEL_IDS.has(channelId)) continue;
+        if (!section || section.enabled === false) continue;
+        if (Object.keys(section).length > 0) {
+          configuredBuiltIns.add(channelId);
+        }
+      }
+    }
+
+    const activeProviders = new Set<string>();
+    const models = config.models as Record<string, unknown> | undefined;
+    const providers = models?.providers as Record<string, unknown> | undefined;
+    if (providers && typeof providers === 'object') {
+      for (const key of Object.keys(providers)) {
+        activeProviders.add(key);
+      }
+    }
+
+    const auth = config.auth as Record<string, unknown> | undefined;
+    const profiles = auth?.profiles as Record<string, unknown> | undefined;
+    if (profiles && typeof profiles === 'object') {
+      for (const entry of Object.values(profiles)) {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+        const provider = typeof (entry as Record<string, unknown>).provider === 'string'
+          ? (entry as Record<string, unknown>).provider as string
+          : undefined;
+        if (provider) activeProviders.add(provider);
+      }
+    }
+
+    const pluginsEntries = pluginsObj.entries && typeof pluginsObj.entries === 'object' && !Array.isArray(pluginsObj.entries)
+      ? pluginsObj.entries as Record<string, unknown>
+      : {};
+    for (const [pluginId, meta] of Object.entries(pluginsEntries)) {
+      if (pluginId.endsWith('-auth') && (meta as Record<string, unknown>).enabled) {
+        activeProviders.add(pluginId.replace(/-auth$/, ''));
+      }
+    }
+
+    const agents = config.agents as Record<string, unknown> | undefined;
+    const defaults = agents?.defaults as Record<string, unknown> | undefined;
+    const modelConfig = defaults?.model as Record<string, unknown> | undefined;
+    const primaryModel = typeof modelConfig?.primary === 'string' ? modelConfig.primary : undefined;
+    if (primaryModel?.includes('/')) {
+      activeProviders.add(primaryModel.split('/')[0]);
+    }
+
+    // Mirror production logic: bundled provider plugins are only preserved when
+    // the provider is actually active, while ClawX-critical bundled plugins are
+    // preserved via a small explicit list.
+    const bundledAll = new Set(bundledPlugins?.all ?? []);
+    const providersByPluginId = bundledPlugins?.providersByPluginId ?? {};
+    const explicitlyEnabledBundledPluginIds = Object.entries(pluginsEntries)
+      .filter(([pluginId, meta]) => bundledAll.has(pluginId) && (meta as Record<string, unknown>).enabled === true)
+      .map(([pluginId]) => pluginId);
+    const activeBundledProviderPluginIds = Object.keys(providersByPluginId).filter((pluginId) => {
+      if (activeProviders.has(pluginId)) return true;
+      return (providersByPluginId[pluginId] ?? []).some((providerId) => activeProviders.has(providerId));
+    });
+    const requiredBundledPluginIds = [...new Set([
+      ...BUNDLED_ALLOWLIST_PRESERVE_IDS,
+      ...activeBundledProviderPluginIds,
+      ...explicitlyEnabledBundledPluginIds,
+    ])].filter((pluginId) => bundledAll.has(pluginId));
+
+    const externalPluginIds = allow.filter(
+      (id) => !BUILTIN_CHANNEL_IDS.has(id) && !bundledAll.has(id),
+    );
+    const retainedBundledPluginIds = allow.filter((id) => requiredBundledPluginIds.includes(id));
+    const nextAllow = [...new Set([...externalPluginIds, ...retainedBundledPluginIds])];
+    if (nextAllow.length > 0) {
+      for (const channelId of configuredBuiltIns) {
+        if (!nextAllow.includes(channelId)) {
+          nextAllow.push(channelId);
+        }
+      }
+      for (const pluginId of requiredBundledPluginIds) {
+        if (!nextAllow.includes(pluginId)) {
+          nextAllow.push(pluginId);
+        }
+      }
+    }
+
+    if (JSON.stringify(nextAllow) !== JSON.stringify(allow)) {
+      if (nextAllow.length > 0) {
+        pluginsObj.allow = nextAllow;
+      } else {
+        delete pluginsObj.allow;
+      }
+      modified = true;
+    }
+
+    if (Array.isArray(pluginsObj.allow) && pluginsObj.allow.length === 0) {
+      delete pluginsObj.allow;
+      modified = true;
+    }
+    if (pluginsObj.entries && Object.keys(entries).length === 0) {
+      delete pluginsObj.entries;
+      modified = true;
+    }
+    const pluginKeysExcludingEnabled = Object.keys(pluginsObj).filter((key) => key !== 'enabled');
+    if (pluginsObj.enabled === true && pluginKeysExcludingEnabled.length === 0) {
+      delete pluginsObj.enabled;
+      modified = true;
+    }
+    if (Object.keys(pluginsObj).length === 0) {
+      delete config.plugins;
+      modified = true;
+    }
+  }
+
+  // Mirror: ClawX keeps Skill Workshop disabled even when OpenClaw exposes it
+  // as a built-in tool under permissive tool profiles.
+  const toolsConfig = (config.tools as Record<string, unknown> | undefined) || {};
+  let toolsModified = false;
+
+  if (toolsConfig.profile !== 'full') {
+    toolsConfig.profile = 'full';
+    toolsModified = true;
+  }
+
+  const sessions = (toolsConfig.sessions as Record<string, unknown> | undefined) || {};
+  if (sessions.visibility !== 'all') {
+    sessions.visibility = 'all';
+    toolsConfig.sessions = sessions;
+    toolsModified = true;
+  }
+
+  const deny = Array.isArray(toolsConfig.deny)
+    ? toolsConfig.deny.filter((value): value is string => typeof value === 'string')
+    : [];
+  const requiredDeny = CLAWX_DESKTOP_TOOL_DENY.reduce<string[]>(
+    (result, entry) => result.includes(entry) ? result : [...result, entry],
+    deny,
+  );
+  if (
+    !Array.isArray(toolsConfig.deny)
+    || toolsConfig.deny.length !== requiredDeny.length
+    || toolsConfig.deny.some((entry, index) => entry !== requiredDeny[index])
+  ) {
+    toolsConfig.deny = requiredDeny;
+    toolsModified = true;
+  }
+
+  const execConfig = (toolsConfig.exec as Record<string, unknown> | undefined) || {};
+  if (execConfig.security !== 'full' || execConfig.ask !== 'off') {
+    execConfig.security = 'full';
+    execConfig.ask = 'off';
+    toolsConfig.exec = execConfig;
+    toolsModified = true;
+  }
+
+  if (toolsModified) {
+    config.tools = toolsConfig;
+    modified = true;
+  }
+
+  // Mirror: session.dmScope
+  const sessionConfig = (
+    config.session && typeof config.session === 'object' && !Array.isArray(config.session)
+      ? { ...(config.session as Record<string, unknown>) }
+      : {}
+  ) as Record<string, unknown>;
+  if (sessionConfig.dmScope !== 'per-channel-peer' && sessionConfig.dmScope !== 'per-account-channel-peer') {
+    sessionConfig.dmScope = 'per-channel-peer';
+    config.session = sessionConfig;
+    modified = true;
+  }
+
+  const gateway = (
+    config.gateway && typeof config.gateway === 'object'
+      ? { ...(config.gateway as Record<string, unknown>) }
+      : {}
+  ) as Record<string, unknown>;
+  const gatewayTools = (
+    gateway.tools && typeof gateway.tools === 'object'
+      ? { ...(gateway.tools as Record<string, unknown>) }
+      : {}
+  ) as Record<string, unknown>;
+  const gatewayDeny = Array.isArray(gatewayTools.deny)
+    ? gatewayTools.deny.filter((value): value is string => typeof value === 'string')
+    : [];
+  const requiredGatewayDeny = CLAWX_DESKTOP_TOOL_DENY.reduce<string[]>(
+    (result, entry) => result.includes(entry) ? result : [...result, entry],
+    gatewayDeny,
+  );
+  if (
+    !Array.isArray(gatewayTools.deny)
+    || gatewayTools.deny.length !== requiredGatewayDeny.length
+    || gatewayTools.deny.some((entry, index) => entry !== requiredGatewayDeny[index])
+  ) {
+    gatewayTools.deny = requiredGatewayDeny;
+    gateway.tools = gatewayTools;
+    config.gateway = gateway;
+    modified = true;
+  }
+
+  let skillsConfig = (
+    config.skills && typeof config.skills === 'object' && !Array.isArray(config.skills)
+      ? { ...(config.skills as Record<string, unknown>) }
+      : {}
+  ) as Record<string, unknown>;
+  let skillsConfigModified = false;
+
+  const workshop = (
+    skillsConfig.workshop && typeof skillsConfig.workshop === 'object'
+      ? { ...(skillsConfig.workshop as Record<string, unknown>) }
+      : {}
+  ) as Record<string, unknown>;
+  const autonomous = (
+    workshop.autonomous && typeof workshop.autonomous === 'object'
+      ? { ...(workshop.autonomous as Record<string, unknown>) }
+      : {}
+  ) as Record<string, unknown>;
+  if (autonomous.enabled !== false) {
+    autonomous.enabled = false;
+    workshop.autonomous = autonomous;
+    skillsConfig.workshop = workshop;
+    skillsConfigModified = true;
+  }
+
+  const skillEntries = (
+    skillsConfig.entries && typeof skillsConfig.entries === 'object' && !Array.isArray(skillsConfig.entries)
+      ? { ...(skillsConfig.entries as Record<string, unknown>) }
+      : {}
+  ) as Record<string, Record<string, unknown>>;
+  const skillCreatorEntry = skillEntries['skill-creator'] || {};
+  if (skillCreatorEntry.enabled !== true) {
+    skillEntries['skill-creator'] = {
+      ...skillCreatorEntry,
+      enabled: true,
+    };
+    skillsConfig.entries = skillEntries;
+    skillsConfigModified = true;
+  }
+
+  if (skillsConfigModified) {
+    config.skills = skillsConfig;
+    modified = true;
+  }
+
+  // Mirror: remove stale tools.web.search.kimi.apiKey when moonshot provider exists.
+  const providers = ((config.models as Record<string, unknown> | undefined)?.providers as Record<string, unknown> | undefined) || {};
+  if (providers.moonshot) {
+    const tools = (config.tools as Record<string, unknown> | undefined) || {};
+    const web = (tools.web as Record<string, unknown> | undefined) || {};
+    const search = (web.search as Record<string, unknown> | undefined) || {};
+    const kimi = (search.kimi as Record<string, unknown> | undefined) || {};
+    const plugins = Array.isArray(config.plugins)
+      ? { load: [...config.plugins] }
+      : ((config.plugins as Record<string, unknown> | undefined) || {});
+    const entries = (plugins.entries as Record<string, unknown> | undefined) || {};
+    const moonshot = (entries.moonshot as Record<string, unknown> | undefined) || {};
+    const moonshotConfig = (moonshot.config as Record<string, unknown> | undefined) || {};
+    const currentWebSearch = (moonshotConfig.webSearch as Record<string, unknown> | undefined) || {};
+    if (Object.keys(kimi).length > 0) {
+      delete kimi.apiKey;
+      moonshotConfig.webSearch = { ...kimi, ...currentWebSearch, baseUrl: 'https://api.moonshot.cn/v1' };
+      moonshot.config = moonshotConfig;
+      entries.moonshot = moonshot;
+      plugins.entries = entries;
+      config.plugins = plugins;
+      delete search.kimi;
+      if (Object.keys(search).length === 0) {
+        delete web.search;
+      } else {
+        web.search = search;
+      }
+      if (Object.keys(web).length === 0) {
+        delete tools.web;
+      } else {
+        tools.web = web;
+      }
+      if (Object.keys(tools).length === 0) {
+        delete config.tools;
+      } else {
+        config.tools = tools;
+      }
+      modified = true;
+    }
+  }
+
+  if (modified) {
+    await writeFile(filePath, JSON.stringify(config, null, 2), 'utf-8');
+  }
+  return modified;
+}
+
+beforeEach(async () => {
+  tempDir = await mkdtemp(join(tmpdir(), 'clawx-test-'));
+  configPath = join(tempDir, 'openclaw.json');
+});
+
+afterEach(async () => {
+  await rm(tempDir, { recursive: true, force: true });
+});
+
+describe('sanitizeOpenClawConfig (blocklist approach)', () => {
+  it('removes skills.enabled at the root level of skills', async () => {
+    await writeConfig({
+      skills: {
+        enabled: true,
+        entries: {
+          'my-skill': { enabled: true, apiKey: 'abc' },
+        },
+      },
+      gateway: { mode: 'local' },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    // Root-level "enabled" should be gone
+    expect(result.skills).not.toHaveProperty('enabled');
+    // entries[key].enabled must be preserved
+    const skills = result.skills as Record<string, unknown>;
+    const entries = skills.entries as Record<string, Record<string, unknown>>;
+    expect(entries['my-skill'].enabled).toBe(true);
+    expect(entries['my-skill'].apiKey).toBe('abc');
+    // Other top-level sections are untouched (gateway gets Skill Workshop hardening)
+    expect(result.gateway).toEqual(withClawXToolDefaults({ gateway: { mode: 'local' } }).gateway);
+  });
+
+  it('removes skills.disabled at the root level of skills', async () => {
+    await writeConfig({
+      skills: {
+        disabled: false,
+        entries: { 'x': { enabled: false } },
+      },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    expect(result.skills).not.toHaveProperty('disabled');
+    const skills = result.skills as Record<string, unknown>;
+    const entries = skills.entries as Record<string, Record<string, unknown>>;
+    expect(entries['x'].enabled).toBe(false);
+  });
+
+  it('removes both enabled and disabled when present together', async () => {
+    await writeConfig({
+      skills: {
+        enabled: true,
+        disabled: false,
+        entries: { 'a': { enabled: true } },
+        allowBundled: ['web-search'],
+      },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const skills = result.skills as Record<string, unknown>;
+    expect(skills).not.toHaveProperty('enabled');
+    expect(skills).not.toHaveProperty('disabled');
+    // Valid keys are preserved
+    expect(skills.allowBundled).toEqual(['web-search']);
+    expect(skills.entries).toBeDefined();
+  });
+
+  it('does nothing when config is already valid', async () => {
+    const original = withClawXToolDefaults({
+      skills: {
+        entries: { 'my-skill': { enabled: true } },
+        allowBundled: ['web-search'],
+      },
+    });
+    await writeConfig(original);
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(false);
+
+    const result = await readConfig();
+    expect(result).toEqual(original);
+  });
+
+  it('preserves unknown valid keys (forward-compatible)', async () => {
+    // If OpenClaw adds new valid keys to skills in the future,
+    // the blocklist approach should NOT strip them.
+    const original = withClawXToolDefaults({
+      skills: {
+        entries: { 'x': { enabled: true } },
+        allowBundled: ['web-search'],
+        load: { extraDirs: ['/my/dir'], watch: true },
+        install: { preferBrew: false },
+        limits: { maxSkillsInPrompt: 5 },
+        futureNewKey: { some: 'value' },  // hypothetical future key
+      },
+    });
+    await writeConfig(original);
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(false);
+
+    const result = await readConfig();
+    expect(result).toEqual(original);
+  });
+
+  it('handles config with no skills section', async () => {
+    const original = { gateway: { mode: 'local' } };
+    await writeConfig(original);
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    expect(result).toEqual(withClawXToolDefaults(original));
+  });
+
+  it('handles empty config', async () => {
+    await writeConfig({});
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    expect(result).toEqual(withClawXToolDefaults({}));
+  });
+
+  it('returns false for missing config file', async () => {
+    const modified = await sanitizeConfig(join(tempDir, 'nonexistent.json'));
+    expect(modified).toBe(false);
+  });
+
+  it('handles skills being an array (no-op, no crash)', async () => {
+    // Edge case: skills is not an object
+    const original = { skills: ['something'] };
+    await writeConfig(original);
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    expect(result).toEqual(withClawXToolDefaults(original));
+  });
+
+  it('preserves all other top-level config sections', async () => {
+    await writeConfig({
+      skills: { enabled: true, entries: {} },
+      channels: { discord: { token: 'abc', enabled: true } },
+      plugins: { entries: { customPlugin: { enabled: true } } },
+      gateway: { mode: 'local', auth: { token: 'xyz' } },
+      agents: { defaults: { model: { primary: 'gpt-4' } } },
+      models: { providers: { openai: { baseUrl: 'https://api.openai.com' } } },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    // skills.enabled removed
+    expect(result.skills).not.toHaveProperty('enabled');
+    // All other sections unchanged
+    expect(result.channels).toEqual({ discord: { token: 'abc', enabled: true } });
+    expect(result.plugins).toEqual({ entries: { customPlugin: { enabled: true } } });
+    expect(result.gateway).toEqual(withClawXToolDefaults({
+      gateway: {
+        mode: 'local',
+        auth: { token: 'xyz' },
+      },
+    }).gateway);
+    expect(result.agents).toEqual({ defaults: { model: { primary: 'gpt-4' } } });
+  });
+
+  it('migrates tools.web.search.kimi into plugins.entries.moonshot.config.webSearch when moonshot provider exists', async () => {
+    await writeConfig({
+      models: {
+        providers: {
+          moonshot: { baseUrl: 'https://api.moonshot.cn/v1', api: 'openai-completions' },
+        },
+      },
+      tools: {
+        web: {
+          search: {
+            kimi: {
+              apiKey: 'stale-inline-key',
+              baseUrl: 'https://api.moonshot.cn/v1',
+            },
+          },
+        },
+      },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const tools = (result.tools as Record<string, unknown> | undefined) || {};
+    const web = (tools.web as Record<string, unknown> | undefined) || {};
+    const search = (web.search as Record<string, unknown> | undefined) || {};
+    const moonshot = ((((result.plugins as Record<string, unknown>).entries as Record<string, unknown>).moonshot as Record<string, unknown>).config as Record<string, unknown>).webSearch as Record<string, unknown>;
+    expect(search).not.toHaveProperty('kimi');
+    expect(moonshot).not.toHaveProperty('apiKey');
+    expect(moonshot.baseUrl).toBe('https://api.moonshot.cn/v1');
+  });
+
+  it('preserves legacy plugins array while migrating moonshot web search config', async () => {
+    await writeConfig({
+      plugins: ['/tmp/custom-plugin.js'],
+      models: {
+        providers: {
+          moonshot: { baseUrl: 'https://api.moonshot.cn/v1', api: 'openai-completions' },
+        },
+      },
+      tools: {
+        web: {
+          search: {
+            kimi: {
+              baseUrl: 'https://api.moonshot.cn/v1',
+            },
+          },
+        },
+      },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const plugins = result.plugins as Record<string, unknown>;
+    const load = plugins.load as string[];
+    const moonshot = ((((result.plugins as Record<string, unknown>).entries as Record<string, unknown>).moonshot as Record<string, unknown>).config as Record<string, unknown>).webSearch as Record<string, unknown>;
+
+    expect(load).toEqual(['/tmp/custom-plugin.js']);
+    expect(moonshot.baseUrl).toBe('https://api.moonshot.cn/v1');
+  });
+
+  it('keeps tools.web.search.kimi.apiKey when moonshot provider is absent', async () => {
+    const original = withClawXToolDefaults({
+      models: {
+        providers: {
+          openrouter: { baseUrl: 'https://openrouter.ai/api/v1', api: 'openai-completions' },
+        },
+      },
+      tools: {
+        web: {
+          search: {
+            kimi: {
+              apiKey: 'should-stay',
+            },
+          },
+        },
+      },
+    });
+    await writeConfig(original);
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(false);
+
+    const result = await readConfig();
+    expect(result).toEqual(original);
+  });
+
+  // ── plugins.load.paths regression tests (issue #607) ──────────
+
+  it('removes stale absolute paths from plugins.load.paths', async () => {
+    await writeConfig({
+      plugins: {
+        load: {
+          paths: [
+            '/nonexistent/path/to/some-plugin',
+            '/another/missing/plugin/dir',
+          ],
+        },
+        entries: { customPlugin: { enabled: true } },
+      },
+      gateway: { mode: 'local' },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const plugins = result.plugins as Record<string, unknown>;
+    const load = plugins.load as Record<string, unknown>;
+    expect(load.paths).toEqual([]);
+    // Other plugin config is preserved
+    expect(plugins.entries).toEqual({ customPlugin: { enabled: true } });
+    // Other top-level sections untouched
+    expect(result.gateway).toEqual(withClawXToolDefaults({ gateway: { mode: 'local' } }).gateway);
+  });
+
+  it('keeps configured built-in channels in plugins.allow when external plugins are enabled', async () => {
+    await writeConfig({
+      plugins: {
+        enabled: true,
+        allow: ['whatsapp', 'customPlugin'],
+        entries: {
+          whatsapp: { enabled: true },
+          customPlugin: { enabled: true },
+        },
+      },
+      channels: {
+        discord: { enabled: true, token: 'abc' },
+      },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    expect(result.channels).toEqual({ discord: { enabled: true, token: 'abc' } });
+    expect(result.plugins).toEqual({
+      enabled: true,
+      allow: ['customPlugin', 'discord'],
+      entries: {
+        customPlugin: { enabled: true },
+      },
+    });
+  });
+
+  it('removes bundled node_modules paths from plugins.load.paths', async () => {
+    await writeConfig({
+      plugins: {
+        load: {
+          paths: [
+            '/home/user/.nvm/versions/node/v22.0.0/lib/node_modules/openclaw/extensions/some-plugin',
+          ],
+        },
+      },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const plugins = result.plugins as Record<string, unknown>;
+    const load = plugins.load as Record<string, unknown>;
+    expect(load.paths).toEqual([]);
+  });
+
+  it('keeps valid existing paths in plugins.load.paths', async () => {
+    // Use tempDir itself as a "valid" path that actually exists
+    await writeConfig({
+      plugins: {
+        load: {
+          paths: [
+            tempDir,
+            '/nonexistent/stale/plugin',
+          ],
+        },
+      },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const plugins = result.plugins as Record<string, unknown>;
+    const load = plugins.load as Record<string, unknown>;
+    // tempDir exists so it should be preserved; nonexistent is pruned
+    expect(load.paths).toEqual([tempDir]);
+  });
+
+  it('preserves non-absolute entries in plugins.load.paths', async () => {
+    await writeConfig({
+      plugins: {
+        load: {
+          paths: [
+            'relative/plugin-path',
+            './another-relative',
+            '/nonexistent/absolute/path',
+          ],
+        },
+      },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const plugins = result.plugins as Record<string, unknown>;
+    const load = plugins.load as Record<string, unknown>;
+    // Relative paths are preserved (only absolute paths are checked)
+    expect(load.paths).toEqual(['relative/plugin-path', './another-relative']);
+  });
+
+  it('removes legacy acpx overrides and stale bundled install metadata', async () => {
+    await writeConfig({
+      plugins: {
+        entries: {
+          acpx: {
+            enabled: true,
+            config: {
+              permissionMode: 'approve-all',
+              nonInteractivePermissions: 'fail',
+              command: '/Users/example/project/node_modules/.pnpm/openclaw@2026.4.1/node_modules/openclaw/dist/extensions/acpx/node_modules/acpx/dist/cli.js',
+              expectedVersion: 'any',
+              pluginToolsMcpBridge: true,
+            },
+          },
+        },
+        installs: {
+          acpx: {
+            source: 'path',
+            spec: 'acpx',
+            sourcePath: '/Users/example/project/node_modules/.pnpm/openclaw@2026.4.1/node_modules/openclaw/dist/extensions/acpx',
+            installPath: '/Users/example/project/node_modules/.pnpm/openclaw@2026.4.1/node_modules/openclaw/dist/extensions/acpx',
+          },
+        },
+      },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const plugins = result.plugins as Record<string, unknown>;
+    const entries = plugins.entries as Record<string, unknown>;
+    const acpx = entries.acpx as Record<string, unknown>;
+    const acpxConfig = acpx.config as Record<string, unknown>;
+
+    expect(acpxConfig).toEqual({
+      permissionMode: 'approve-all',
+      nonInteractivePermissions: 'fail',
+      pluginToolsMcpBridge: true,
+    });
+    expect(plugins).not.toHaveProperty('installs');
+  });
+
+  it('does nothing when plugins.load.paths contains only valid paths', async () => {
+    const original = withClawXToolDefaults({
+      plugins: {
+        load: {
+          paths: [tempDir],
+          watch: true,
+        },
+        entries: { test: { enabled: true } },
+      },
+    });
+    await writeConfig(original);
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(false);
+
+    const result = await readConfig();
+    expect(result).toEqual(original);
+  });
+
+  it('preserves other keys in plugins.load alongside paths pruning', async () => {
+    await writeConfig({
+      plugins: {
+        load: {
+          paths: ['/nonexistent/stale/path'],
+          watch: true,
+          extraDirs: ['/some/dir'],
+        },
+      },
+    });
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const plugins = result.plugins as Record<string, unknown>;
+    const load = plugins.load as Record<string, unknown>;
+    expect(load.paths).toEqual([]);
+    // Other load keys are preserved
+    expect(load.watch).toBe(true);
+    expect(load.extraDirs).toEqual(['/some/dir']);
+  });
+
+  it('handles plugins.load as empty object (no paths key)', async () => {
+    const original = withClawXToolDefaults({
+      plugins: {
+        load: {},
+      },
+    });
+    await writeConfig(original);
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(false);
+  });
+
+  it('handles plugins.load.paths as empty array', async () => {
+    const original = withClawXToolDefaults({
+      plugins: {
+        load: { paths: [] },
+      },
+    });
+    await writeConfig(original);
+
+    const modified = await sanitizeConfig(configPath);
+    expect(modified).toBe(false);
+  });
+
+  // ── bundled plugin allowlist reconciliation tests ──────────────
+
+  it('adds only required bundled plugins to plugins.allow when allowlist is non-empty', async () => {
+    await writeConfig({
+      plugins: {
+        allow: ['customPlugin'],
+        entries: { customPlugin: { enabled: true } },
+      },
+    });
+
+    const bundled = {
+      all: ['browser', 'acpx', 'memory-core', 'openai', 'anthropic', 'diffs'],
+      enabledByDefault: ['browser', 'acpx', 'openai', 'anthropic'],
+      providersByPluginId: {
+        openai: ['openai'],
+        anthropic: ['anthropic'],
+      },
+    };
+
+    const modified = await sanitizeConfig(configPath, bundled);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const plugins = result.plugins as Record<string, unknown>;
+    const allow = plugins.allow as string[];
+    expect(allow).toEqual(expect.arrayContaining(['customPlugin', 'browser', 'acpx', 'memory-core']));
+    expect(allow).not.toContain('openai');
+    expect(allow).not.toContain('anthropic');
+    expect(allow).not.toContain('diffs');
+  });
+
+  it('keeps active bundled provider plugins but removes stale bundled ones from allowlist', async () => {
+    await writeConfig({
+      models: {
+        providers: {
+          openai: {},
+        },
+      },
+      plugins: {
+        allow: ['customPlugin', 'unknown-plugin', 'old-bundled', 'browser'],
+      },
+    });
+
+    const bundled = {
+      all: ['browser', 'openai', 'old-bundled'],
+      enabledByDefault: ['browser', 'openai'],
+      providersByPluginId: {
+        openai: ['openai', 'openai-codex'],
+      },
+    };
+
+    const modified = await sanitizeConfig(configPath, bundled);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const plugins = result.plugins as Record<string, unknown>;
+    const allow = plugins.allow as string[];
+    expect(allow).toContain('customPlugin');
+    expect(allow).toContain('unknown-plugin');
+    expect(allow).toContain('browser');
+    expect(allow).toContain('openai');
+    expect(allow).not.toContain('old-bundled');
+  });
+
+  it('preserves explicitly enabled bundled plugins even when they are not enabledByDefault', async () => {
+    await writeConfig({
+      plugins: {
+        allow: ['customPlugin', 'diffs'],
+        entries: {
+          diffs: { enabled: true },
+        },
+      },
+    });
+
+    const bundled = {
+      all: ['browser', 'acpx', 'memory-core', 'diffs'],
+      enabledByDefault: ['browser', 'acpx'],
+    };
+
+    const modified = await sanitizeConfig(configPath, bundled);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    const plugins = result.plugins as Record<string, unknown>;
+    const allow = plugins.allow as string[];
+    expect(allow).toEqual(expect.arrayContaining(['customPlugin', 'diffs', 'browser', 'acpx', 'memory-core']));
+  });
+
+  it('does not add bundled plugins when allowlist is empty (no external plugins)', async () => {
+    // When no external plugins exist, allowlist should be dropped entirely
+    await writeConfig({
+      plugins: {
+        allow: ['whatsapp'],  // built-in channel only
+      },
+    });
+
+    const bundled = {
+      all: ['browser', 'openai'],
+      enabledByDefault: ['browser', 'openai'],
+    };
+
+    const modified = await sanitizeConfig(configPath, bundled);
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    // plugins.allow should be removed (only built-in, no external plugins)
+    expect(result.plugins).toBeUndefined();
+  });
+
+  it('does not modify config when no bundled plugins and no allowlist', async () => {
+    const original = withClawXToolDefaults({
+      gateway: { mode: 'local' },
+    });
+    await writeConfig(original);
+
+    const modified = await sanitizeConfig(configPath, { all: ['browser'], enabledByDefault: ['browser'] });
+    expect(modified).toBe(false);
+  });
+
+  it('sets session.dmScope to per-channel-peer when unset', async () => {
+    await writeConfig(withClawXToolDefaults({}));
+
+    const modified = await sanitizeConfig(configPath, { all: ['browser'], enabledByDefault: ['browser'] });
+    expect(modified).toBe(false);
+
+    const result = await readConfig();
+    expect((result.session as Record<string, unknown>).dmScope).toBe('per-channel-peer');
+  });
+
+  it('preserves session.dmScope when already set to per-account-channel-peer', async () => {
+    await writeConfig(withClawXToolDefaults({
+      session: { dmScope: 'per-account-channel-peer' },
+    }));
+
+    const modified = await sanitizeConfig(configPath, { all: ['browser'], enabledByDefault: ['browser'] });
+    expect(modified).toBe(false);
+
+    const result = await readConfig();
+    expect((result.session as Record<string, unknown>).dmScope).toBe('per-account-channel-peer');
+  });
+
+  it('overrides session.dmScope when set to main', async () => {
+    // Write config with dmScope: 'main' but otherwise already sanitized,
+    // so only the session.dmScope change should trigger modified=true.
+    const base = withClawXToolDefaults({});
+    await writeConfig({
+      ...base,
+      session: { dmScope: 'main' },
+    });
+
+    const modified = await sanitizeConfig(configPath, { all: ['browser'], enabledByDefault: ['browser'] });
+    expect(modified).toBe(true);
+
+    const result = await readConfig();
+    expect((result.session as Record<string, unknown>).dmScope).toBe('per-channel-peer');
+  });
+});

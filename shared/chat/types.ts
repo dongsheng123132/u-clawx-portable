@@ -1,0 +1,153 @@
+/** Metadata for files attached to ACP prompts or projected by bounded ACP media compatibility. */
+export interface AttachedFileMeta {
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  preview: string | null;
+  previewStatus?: 'unavailable';
+  filePath?: string;
+  source?: 'user-upload' | 'tool-result' | 'message-ref' | 'gateway-media';
+  /**
+   * For Gateway-injected outgoing media (assistant-media). The Gateway emits
+   * an `image` content block with a relative URL like
+   * `/api/chat/media/outgoing/<sessionKey>/<attachmentId>/full`. The renderer
+   * cannot reach Gateway HTTP directly (CORS / env drift), so this URL is
+   * resolved through the Main-process proxy in `media:getThumbnails`, which
+   * looks up `~/.openclaw/media/outgoing/records/<attachmentId>.json` and
+   * loads the original file off disk.
+   */
+  gatewayUrl?: string;
+}
+
+/** Structured OpenClaw transcript message used by bounded ACP supplements. */
+export interface RawMessage {
+  role: 'user' | 'assistant' | 'system' | 'toolresult';
+  content: unknown; // string | ContentBlock[]
+  timestamp?: number;
+  id?: string;
+  toolCallId?: string;
+  toolName?: string;
+  details?: unknown;
+  isError?: boolean;
+  stopReason?: string;
+  stop_reason?: string;
+  errorMessage?: string;
+  error_message?: string;
+  /** Canonical OpenClaw-owned transcript metadata. */
+  __openclaw?: {
+    media?: Array<{
+      path?: string;
+      url?: string;
+      contentType?: string;
+      kind?: string;
+      fileName?: string;
+      sizeBytes?: number;
+      messageId?: string;
+      workspaceDir?: string;
+    }>;
+  };
+  /** Renderer metadata for user-selected files included in an ACP prompt. */
+  _attachedFiles?: AttachedFileMeta[];
+}
+
+/** Content block inside a message */
+export interface ContentBlock {
+  type: 'text' | 'image' | 'thinking' | 'tool_use' | 'tool_result' | 'toolCall' | 'toolResult';
+  text?: string;
+  thinking?: string;
+  source?: { type: string; media_type?: string; data?: string; url?: string };
+  /** Flat image format from Gateway tool results (no source wrapper) */
+  data?: string;
+  mimeType?: string;
+  /**
+   * Flat URL on an `image` block. Gateway-injected assistant-media messages
+   * use this shape: `{ type:'image', url:'/api/chat/media/outgoing/...', mimeType, width, height, alt, openUrl }`.
+   * Neither nested `source.url` nor flat `data` is set in that case; the
+   * renderer must read `block.url` directly to surface the artifact.
+   */
+  url?: string;
+  /** Optional companion of `url` — points at a higher-resolution variant. */
+  openUrl?: string;
+  /** Pixel width of the original image, used for layout hints. */
+  width?: number;
+  /** Pixel height of the original image, used for layout hints. */
+  height?: number;
+  /** Human-readable filename / alt text emitted by the Gateway. */
+  alt?: string;
+  id?: string;
+  name?: string;
+  input?: unknown;
+  arguments?: unknown;
+  content?: unknown;
+}
+
+/** Session from sessions.list */
+export interface ChatSession {
+  key: string;
+  /** OpenClaw transcript session UUID, used to identify synthetic fallback titles. */
+  sessionId?: string;
+  label?: string;
+  displayName?: string;
+  derivedTitle?: string;
+  lastMessagePreview?: string;
+  thinkingLevel?: string;
+  model?: string;
+  updatedAt?: number;
+  status?: string;
+  hasActiveRun?: boolean;
+  /** Channel provider that last delivered to this session (e.g. webchat, feishu, discord). */
+  channel?: string;
+  /** OpenClaw ACP session cwd, mirrored for display and routing. OpenClaw is the source of truth. */
+  workspacePath?: string;
+  /** Renderer-local placeholder created by New Chat before ACP has created the backing session. */
+  createdLocally?: boolean;
+}
+
+export type GatewaySessionsChangedPayload = Record<string, unknown> & {
+  sessionKey?: string;
+  key?: string;
+  reason?: string;
+  phase?: string;
+  ts?: number;
+  session?: Record<string, unknown>;
+  status?: string;
+  hasActiveRun?: boolean;
+  updatedAt?: number | null;
+};
+
+export type LoadSessionsOptions = {
+  force?: boolean;
+  gatewayGeneration?: number;
+};
+
+export interface DeleteSessionsResult {
+  deletedKeys: string[];
+  failedKeys: string[];
+}
+
+export type DeleteSessionResult =
+  | { success: true }
+  | { success: false; error: string };
+
+export interface ChatState {
+  sessions: ChatSession[];
+  currentSessionKey: string;
+  currentAgentId: string;
+  /** First user message text per session key, used as display label */
+  sessionLabels: Record<string, string>;
+  /** Last message timestamp (ms) per session key, used for sorting */
+  sessionLastActivity: Record<string, number>;
+
+  loadSessions: (options?: LoadSessionsOptions) => Promise<void>;
+  handleSessionsChanged: (payload: GatewaySessionsChangedPayload) => void;
+  switchSession: (key: string) => void;
+  selectAcpSession: (key: string, workspacePath?: string) => void;
+  newSession: () => void;
+  acknowledgeAcpSessionCreated: (key: string, workspacePath?: string, initialPrompt?: string) => void;
+  deleteSession: (key: string) => Promise<DeleteSessionResult>;
+  deleteSessions: (keys: string[]) => Promise<DeleteSessionsResult>;
+  renameSession: (key: string, label: string) => Promise<void>;
+}
+
+export const DEFAULT_CANONICAL_PREFIX = 'agent:main';
+export const DEFAULT_SESSION_KEY = `${DEFAULT_CANONICAL_PREFIX}:main`;

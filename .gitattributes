@@ -1,0 +1,5 @@
+# Harness specs are executable Markdown inputs whose frontmatter parser expects LF.
+harness/**/*.md text eol=lf
+
+# pnpm hashes patch bytes; CRLF checkout would invalidate patchedDependencies hashes.
+patches/*.patch text eol=lf

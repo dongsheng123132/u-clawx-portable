@@ -1,0 +1,127 @@
+# ClawX CI Workflow
+# Runs on pull requests (main/develop) 
+name: Check and Build
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Prefer HTTPS for public GitHub git dependencies
+        run: |
+          git config --global "url.https://github.com/.insteadOf" "git@github.com:"
+          git config --global --add "url.https://github.com/.insteadOf" "ssh://git@github.com/"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # The runtime compatibility test executes Electron to assert its embedded
+      # Node and SQLite versions, so this job cannot rely on the package alone.
+      # Use the same extraction path as Electron E2E because install.js can
+      # leave a partially extracted dist directory on GitHub-hosted runners.
+      - name: Install Electron binary for runtime compatibility test
+        shell: bash
+        env:
+          force_no_cache: 'true'
+        run: |
+          set -euo pipefail
+          unset ELECTRON_SKIP_BINARY_DOWNLOAD
+          ELECTRON_DIR="$(node -p "require('path').dirname(require.resolve('electron/package.json'))")"
+          echo "Electron package dir: $ELECTRON_DIR"
+          rm -rf "$ELECTRON_DIR/dist" "$ELECTRON_DIR/path.txt"
+          mkdir -p "$ELECTRON_DIR/dist"
+
+          ZIP="$(cd "$ELECTRON_DIR" && node -e "
+            const { downloadArtifact } = require('@electron/get');
+            const { version } = require('./package.json');
+            downloadArtifact({ version, artifactName: 'electron', force: true })
+              .then((z) => { process.stdout.write(z); process.exit(0); })
+              .catch((e) => { console.error(e); process.exit(1); });
+          ")"
+          ZIP_SIZE="$(stat -c%s "$ZIP")"
+          echo "Downloaded zip: $ZIP ($ZIP_SIZE bytes)"
+
+          unzip -oq "$ZIP" -d "$ELECTRON_DIR/dist"
+          echo "Extracted top-level entries: $(ls -1 "$ELECTRON_DIR/dist" | wc -l | tr -d ' ')"
+          if [ -f "$ELECTRON_DIR/dist/electron.d.ts" ]; then
+            mv "$ELECTRON_DIR/dist/electron.d.ts" "$ELECTRON_DIR/electron.d.ts"
+          fi
+          test -f "$ELECTRON_DIR/dist/electron"
+          chmod +x "$ELECTRON_DIR/dist/electron"
+          printf '%s' 'electron' > "$ELECTRON_DIR/path.txt"
+
+      - name: Generate extension bridge
+        run: pnpm run ext:bridge
+
+      - name: Run linter
+        run: pnpm run lint
+
+      - name: Run typecheck
+        run: pnpm run typecheck
+
+      - name: Run tests
+        run: pnpm run test
+
+      - name: Run harness checks
+        run: pnpm run harness:ci
+
+      - name: Upload harness artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-artifacts
+          path: artifacts/harness
+          if-no-files-found: warn
+          retention-days: 7
+
+  build:
+    runs-on: windows-latest
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Prefer HTTPS for public GitHub git dependencies
+        run: |
+          git config --global "url.https://github.com/.insteadOf" "git@github.com:"
+          git config --global --add "url.https://github.com/.insteadOf" "ssh://git@github.com/"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test Windows attachment open-with bridge
+        run: pnpm exec vitest run tests/unit/attachment-open-with.test.ts tests/unit/attachment-open-with-native.test.ts tests/unit/safe-fs.test.ts
+
+      - name: Generate extension bridge
+        run: pnpm run ext:bridge
+
+      - name: Build
+        run: pnpm run build:vite

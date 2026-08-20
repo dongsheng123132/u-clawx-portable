@@ -1,0 +1,120 @@
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { Chat } from '@/pages/Chat';
+
+vi.mock('react-i18next', () => ({
+  initReactI18next: { type: '3rdParty', init: vi.fn() },
+  useTranslation: () => ({
+    t: (_key: string, defaultValue?: string) => defaultValue ?? '',
+  }),
+}));
+
+vi.mock('@/stores/gateway', () => ({
+  useGatewayStore: (selector: (state: { status: { state: string; gatewayReady: boolean } }) => unknown) => selector({
+    status: { state: 'running', gatewayReady: true },
+  }),
+}));
+
+vi.mock('@/lib/host-api', () => ({
+  hostApi: {
+    files: {
+      resolveWorkspaceContext: vi.fn(async ({ workspaceRoot, executionCwd }) => ({ ok: true, workspaceRoot, executionCwd })),
+    },
+  },
+}));
+
+const chatState = {
+  sessions: [{ key: 'main:test' }],
+  currentSessionKey: 'main:test',
+  currentAgentId: 'main',
+  sessionLabels: {},
+  loadSessions: vi.fn().mockResolvedValue(undefined),
+  selectAcpSession: vi.fn(),
+  acknowledgeAcpSessionCreated: vi.fn(),
+};
+
+vi.mock('@/stores/chat', () => ({
+  useChatStore: (selector: (state: typeof chatState) => unknown) => selector(chatState),
+}));
+
+vi.mock('@/stores/agents', () => ({
+  useAgentsStore: (selector: (state: { agents: Array<{ id: string; name: string; workspace: string }>; fetchAgents: () => void }) => unknown) => selector({
+    agents: [{ id: 'main', name: 'main', workspace: '/workspace' }],
+    fetchAgents: vi.fn().mockResolvedValue(undefined),
+  }),
+}));
+
+vi.mock('@/stores/artifact-panel', () => ({
+  useArtifactPanel: (selector: (state: { open: boolean; widthPct: number; openChanges: () => void; openPreview: () => void; close: () => void }) => unknown) => selector({
+    open: true,
+    widthPct: 34,
+    openChanges: vi.fn(),
+    openPreview: vi.fn(),
+    close: vi.fn(),
+  }),
+}));
+
+vi.mock('@/components/file-preview/ArtifactPanel', () => ({
+  ArtifactPanel: () => <div data-testid="artifact-panel" />,
+}));
+
+vi.mock('@/components/file-preview/PanelResizeDivider', () => ({
+  PanelResizeDivider: () => <div data-testid="panel-resize-divider" />,
+}));
+
+vi.mock('@/hooks/use-stick-to-bottom-instant', () => ({
+  useStickToBottomInstant: () => ({
+    contentRef: { current: null },
+    scrollRef: { current: null },
+    scrollToBottom: vi.fn(),
+    isAtBottom: true,
+  }),
+}));
+
+vi.mock('@/hooks/use-min-loading', () => ({
+  useMinLoading: (value: boolean) => value,
+}));
+
+vi.mock('@/pages/Chat/ChatInput', () => ({
+  ChatInput: () => <div data-testid="chat-input" />,
+}));
+
+vi.mock('@/pages/Chat/ChatToolbar', () => ({
+  ChatToolbar: () => <div data-testid="chat-toolbar" />,
+}));
+
+describe('Chat artifact panel layout', () => {
+  it('keeps the chat toolbar background draggable while actions remain clickable', async () => {
+    window.electron.platform = 'darwin';
+
+    render(<Chat />);
+
+    const dragRegion = await screen.findByTestId('chat-toolbar-drag-region');
+    const actions = await screen.findByTestId('chat-toolbar-actions');
+
+    expect(dragRegion).toHaveClass('drag-region');
+    expect(actions).toHaveClass('no-drag');
+  });
+
+  it('stacks the chat page above the macOS main drag strip', async () => {
+    window.electron.platform = 'darwin';
+
+    render(<Chat />);
+
+    const chatPage = await screen.findByTestId('chat-page');
+    expect(chatPage).toHaveClass('z-20');
+  });
+
+  it('layers the right artifact panel above the macOS drag strip', async () => {
+    window.electron.platform = 'darwin';
+
+    render(<Chat />);
+
+    const panel = await screen.findByTestId('artifact-panel');
+    const aside = panel.closest('aside');
+
+    expect(aside).toHaveClass('relative');
+    expect(aside).toHaveClass('z-20');
+    expect(aside).toHaveClass('no-drag');
+  });
+});

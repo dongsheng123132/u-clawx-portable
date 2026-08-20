@@ -1,0 +1,26 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <filter id="shadow" x="78" y="89" width="868" height="868" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <feFlood flood-opacity="0" result="bg"/>
+    <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="a"/>
+    <feOffset dy="11"/>
+    <feGaussianBlur stdDeviation="11"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.28 0"/>
+    <feBlend mode="normal" in2="bg" result="s"/>
+    <feBlend mode="normal" in="SourceGraphic" in2="s" result="shape"/>
+  </filter>
+  <linearGradient id="bgGrad" x1="512" y1="100" x2="512" y2="924" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#ffffff"/>
+    <stop offset="1" stop-color="#fff5f5"/>
+  </linearGradient>
+</defs>
+
+<!-- Background -->
+<g filter="url(#shadow)">
+  <rect x="100" y="100" width="824" height="824" rx="184" fill="url(#bgGrad)"/>
+</g>
+
+<!-- 🦞 Lobster emoji rendered as text -->
+<text x="512" y="600" text-anchor="middle" dominant-baseline="central" font-size="520" font-family="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif">🦞</text>
+
+</svg>

@@ -1,0 +1,30 @@
+<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    U-Claw macOS status-bar template mark.
+
+    Purpose-drawn for 22px, deliberately NOT derived from icon-uclaw.png: the
+    master's carapace is a solid fill, and any auto-threshold of it collapses
+    into an unreadable blob at menu-bar size. Hence the hollow body — the
+    outline is what keeps the prawn readable when it is 22 pixels wide.
+
+    Template rules (macOS): pure #000000 on transparent, no gradients, no
+    colour. Everything else in this directory is generated from the master;
+    this file is hand-authored and is the tray icon's source of truth.
+  -->
+  <g stroke="#000000" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- carapace -->
+    <path d="M4.8 12.2 C6.4 8.6 10.2 6.9 13.6 7.6 C16.4 8.2 17.9 9.4 17.9 10.9 C17.9 12.6 15.4 13.7 12 13.9 C8.6 14.1 6.2 13.5 4.8 12.2 Z"/>
+    <!-- tail fan -->
+    <path d="M4.9 11.6 L2.1 9.8"/>
+    <path d="M4.6 12.6 L1.5 12.4"/>
+    <path d="M5.1 13.4 L2.4 15.0"/>
+    <!-- antennae -->
+    <path d="M17.9 10.2 C19.3 8.9 20.3 7.7 20.8 6.5"/>
+    <path d="M18.0 11.4 C19.5 11.1 20.6 10.7 21.1 10.2"/>
+    <!-- legs -->
+    <path d="M8.2 14.0 L7.4 16.5"/>
+    <path d="M10.8 14.1 L10.4 16.7"/>
+    <path d="M13.3 13.8 L13.2 16.4"/>
+  </g>
+  <circle cx="15.2" cy="9.9" r="0.8" fill="#000000"/>
+</svg>

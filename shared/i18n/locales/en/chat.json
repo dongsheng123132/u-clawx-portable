@@ -1,0 +1,275 @@
+{
+    "gatewayNotRunning": "Gateway Not Running",
+    "gatewayRequired": "The OpenClaw Gateway needs to be running to use chat. It will start automatically, or you can start it from Settings.",
+    "welcome": {
+        "title": "ClawX Chat",
+        "subtitle": "What can I do for you?",
+        "askQuestions": "Handle Tasks",
+        "askQuestionsDesc": "Work on task-oriented requests",
+        "creativeTasks": "Continuous Execution",
+        "creativeTasksDesc": "Keep running through multi-step work",
+        "brainstorming": "Multi-Agent Parallel"
+    },
+    "noLogs": "(No logs available yet)",
+    "scrollToLatest": "Back to bottom",
+    "toolbar": {
+        "refresh": "Refresh chat",
+        "currentAgent": "{{agent}}",
+        "workspace": "Workspace"
+    },
+    "generatedFiles": {
+        "openFolder": "Open folder"
+    },
+    "fileActivity": {
+        "created": "Created",
+        "modified": "Modified",
+        "deleted": "Deleted",
+        "fileButton": "{{action}} {{path}}",
+        "changeRecord": "View changes for {{path}}",
+        "fileUnavailable": "File unavailable",
+        "outsideWorkspace": "File is outside the workspace"
+    },
+    "fileCard": {
+        "openWith": "Open with",
+        "openWithFile": "Open {{name}} with",
+        "openInBuiltInBrowser": "Open in ClawX Preview",
+        "openInSystemBrowser": "Open in system browser",
+        "searchingApplications": "Searching for applications",
+        "showInFinder": "Show in Finder",
+        "showInExplorer": "Show in File Explorer",
+        "showInFileManager": "Show in file manager",
+        "openWithFailed": "Could not open file with the selected application",
+        "revealFailed": "Could not show file in its folder"
+    },
+    "runError": {
+        "title": "Model call failed"
+    },
+    "acp": {
+        "thought": "Thought",
+        "tool": "Tool",
+        "expandTool": "Expand tool result",
+        "collapseTool": "Collapse tool result",
+        "expandToolGroup": "Expand tool calls",
+        "collapseToolGroup": "Collapse tool calls",
+        "toolGroupSummary": "{{count}} tool calls",
+        "permission": "Permission",
+        "plan": "Plan",
+        "running": "Running",
+        "pending": "Pending",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Cancelled",
+        "loadFailed": "Failed to load session",
+        "promptFailed": "Failed to send prompt",
+        "unsupportedContent": "Unsupported content",
+        "dismiss": "Dismiss",
+        "image": "Image",
+        "copyImage": "Copy image",
+        "imageCopied": "Image copied",
+        "saveImage": "Save image as",
+        "imageSaved": "Image saved",
+        "copy": "Copy response",
+        "copied": "Copied",
+        "turnDuration": "Took {{duration}}",
+        "turnElapsed": "{{duration}} elapsed",
+        "attachment": {
+            "loading": "Loading attachment",
+            "unavailable": "Attachment unavailable",
+            "open": "Open {{name}}",
+            "preview": "Preview {{name}}",
+            "openFailed": "Could not open attachment"
+        }
+    },
+    "artifactPanel": {
+        "tabs": {
+            "changes": "Changes",
+            "preview": "Preview",
+            "browser": "Workspace"
+        },
+        "actions": {
+            "back": "Back to list"
+        },
+        "changes": {
+            "heading": "File changes ({{count}})",
+            "empty": "This session has no file changes yet.",
+            "selectFileHint": "Click a file card in the chat or “View changes” to open a diff.",
+            "changeRecord": "Change {{number}}",
+            "diffUnavailable": "Diff unavailable for this change."
+        },
+        "preview": {
+            "emptyTitle": "No file selected",
+            "emptyHint": "Click a file card in the chat first; the selected file will preview here.",
+            "fullscreenLabel": "Fullscreen file preview"
+        }
+    },
+    "filePreview": {
+        "tabs": {
+            "source": "Source",
+            "preview": "Preview"
+        },
+        "actions": {
+            "save": "Save",
+            "saving": "Saving...",
+            "revert": "Revert",
+            "openInFinder": "Reveal in file manager",
+            "openDirectly": "Open directly",
+            "close": "Close",
+            "enterFullscreen": "Enter fullscreen",
+            "exitFullscreen": "Exit fullscreen",
+            "openHtmlExternally": "Open HTML in system browser",
+            "retry": "Retry"
+        },
+        "toast": {
+            "saved": "Saved to disk",
+            "saveFailed": "Save failed: {{error}}"
+        },
+        "errors": {
+            "outsideSandbox": "Path outside sandbox — access denied",
+            "outsideSandboxTitle": "Could not read this file",
+            "outsideSandboxHint": "ClawX could not read this path. The file may have been moved or deleted, or the current account may not have permission. You can still reveal it in the file manager.",
+            "readOnlyRoot": "File lives in a read-only location (e.g. bundled skill) and cannot be modified",
+            "tooLarge": "File too large ({{size}}); preview disabled",
+            "binary": "Binary file — text preview unavailable",
+            "notFound": "File not found",
+            "loadFailed": "Load failed: {{error}}",
+            "noPreview": "No preview available for this file",
+            "unsupportedFormatTitle": "This file format is not supported for built-in preview",
+            "unsupportedFormatHint": "Built-in preview currently supports directly readable text/Markdown-style files only. Open the file in the file manager instead.",
+            "largeBinaryOpenTitle": "This file is too large for built-in preview",
+            "largeBinaryOpenHint": "This file is {{size}}. ClawX cannot preview it inline, but you can confirm and open it with the system default app.",
+            "openInFinderFailed": "Could not reveal file",
+            "openFailed": "Open failed: {{error}}",
+            "htmlLoadFailed": "Could not load HTML preview",
+            "openHtmlExternallyFailed": "Could not open HTML in system browser"
+        },
+        "html": {
+            "crashed": "HTML preview stopped"
+        },
+        "confirmOpen": {
+            "title": "Open file",
+            "message": "Open “{{fileName}}” with the system default app?",
+            "detail": "This file will be opened with the system default application.",
+            "size": "File size: {{size}}",
+            "cancel": "Cancel"
+        },
+        "pdf": {
+            "loadFailed": "Failed to load PDF: {{error}}",
+            "prev": "Previous page",
+            "next": "Next page",
+            "zoomIn": "Zoom in",
+            "zoomOut": "Zoom out",
+            "zoomReset": "Fit to width",
+            "pageInputAria": "Current page",
+            "singlePageHint": "Use the toolbar to switch between {{total}} pages"
+        },
+        "docx": {
+            "loadFailed": "Word document failed to load"
+        },
+        "pptx": {
+            "loadFailed": "Presentation failed to load",
+            "previous": "Previous slide",
+            "next": "Next slide",
+            "slidePosition": "{{current}} / {{total}}"
+        },
+        "sheet": {
+            "loadFailed": "Failed to load spreadsheet: {{error}}",
+            "empty": "This file has no displayable worksheets",
+            "emptySheet": "This worksheet is empty",
+            "unnamedSheet": "Sheet {{idx}}",
+            "rowRange": "Rows {{from}}-{{to}} / {{total}}",
+            "prevPage": "Previous rows",
+            "nextPage": "Next rows"
+        }
+    },
+    "workspace": {
+        "title": "Workspace",
+        "defaultLabel": "Default workspace",
+        "header": "Agent: {{agent}} · Directory: {{directory}}",
+        "freshBadge": "Updated this run",
+        "pickFile": "Select a file from the left to preview",
+        "empty": "Workspace is empty or inaccessible",
+        "truncated": "Directory truncated — only the first 5000 entries shown",
+        "unavailable": {
+            "title": "Workspace unavailable",
+            "description": "This folder may have been moved or deleted. Choose an existing folder to continue: {{path}}",
+            "boundDescription": "This chat's workspace may have been moved or deleted and can no longer be accessed: {{path}}",
+            "chooseAction": "Choose workspace"
+        },
+        "actions": {
+            "refresh": "Refresh",
+            "openRootInFinder": "Reveal workspace in file manager"
+        }
+    },
+    "imageGeneration": {
+        "generating": "Generating image, please wait…",
+        "previewUnavailable": "Image generation completed, but the preview could not be loaded.",
+        "generatedReady": "Generated image is ready.",
+        "generatedReadyWithMissing": "Generated image is ready. Some images could not be loaded."
+    },
+    "composer": {
+        "attachFiles": "Attach files",
+        "pickSkill": "Choose skill",
+        "skillButton": "Skills",
+        "skillPickerTitle": "Quick skill access for {{agent}}",
+        "skillSearchPlaceholder": "Search skills",
+        "skillLoading": "Loading skills...",
+        "skillEmpty": "No matching skills found",
+        "pickAgent": "Choose agent",
+        "pickModel": "Choose model",
+        "clearTarget": "Clear target agent",
+        "targetChip": "@{{agent}}",
+        "agentPickerTitle": "Route the next message to another agent",
+        "modelPickerTitle": "Switch model for this chat",
+        "modelSwitchFailed": "Failed to switch model: {{error}}",
+        "gatewayDisconnectedPlaceholder": "Gateway not connected...",
+        "send": "Send",
+        "stop": "Stop",
+        "thinking": "Thinking…",
+        "gatewayConnected": "connected",
+        "gatewayStarting": "starting",
+        "gatewayStatus": "gateway {{state}}",
+        "retryFailedAttachments": "Retry failed attachments",
+        "workspacePrefix": "{{workspace}}",
+        "workspacePickerTitle": "Select workspace folder",
+        "workspacePickerButton": "Use workspace",
+        "workspacePickerFailed": "Could not open workspace picker",
+        "defaultWorkspaceOption": "Default workspace",
+        "chooseOtherWorkspaceOption": "Choose another folder...",
+        "folderDropUnsupported": "Couldn't attach this folder. Drag it again, or paste the folder path into your message.",
+        "folderAttachment": "Folder",
+        "skillPreviewTooltip": "Preview SKILL.md",
+        "skillPreviewNotFound": "Could not find this skill. Open the skill picker to refresh the list."
+    },
+    "sessionList": {
+        "title": "Sessions",
+        "collapseAll": "Collapse all",
+        "expandAll": "Expand all",
+        "loadMore": "Load more",
+        "aiReplying": "AI is replying",
+        "unreadReply": "Unread reply",
+        "loadMoreForWorkspace": "Load {{count}} more sessions in {{workspace}}",
+        "workspaceToggle": "Toggle workspace {{workspace}}",
+        "renameWorkspace": "Rename workspace {{workspace}}",
+        "workspaceUnavailableBadge": "Unavailable",
+        "deleteWorkspace": "Delete unavailable workspace {{workspace}}",
+        "deleteWorkspaceTitle": "Delete unavailable workspace?",
+        "deleteWorkspaceConfirm": "Permanently delete “{{workspace}}” and all {{count}} sessions in it? This cannot be undone.",
+        "deleteWorkspaceConfirmAction": "Delete workspace and sessions",
+        "deleteWorkspacePartialFailure": "{{count}} sessions could not be deleted and remain in the workspace.",
+        "deleteWorkspaceCleanupFailed": "Sessions were deleted, but the saved workspace entry could not be cleaned up.",
+        "workspaceName": "Workspace name",
+        "saveWorkspaceRename": "Save workspace name",
+        "cancelWorkspaceRename": "Cancel workspace rename"
+    },
+    "historyBuckets": {
+        "today": "Today",
+        "withinWeek": "Last 7 days",
+        "withinMonth": "Last 30 days",
+        "older": "Older"
+    },
+    "questionDirectory": {
+        "title": "Question directory",
+        "fallback": "Question {{number}}",
+        "moreHint": "{{count}} more questions not shown"
+    }
+}

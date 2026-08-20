@@ -1,0 +1,58 @@
+<svg width="550" height="450" viewBox="0 0 550 450" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="clawGrad" x1="50" y1="50" x2="500" y2="400" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#FF7043"/>
+    <stop offset="0.45" stop-color="#E53935"/>
+    <stop offset="1" stop-color="#C62828"/>
+  </linearGradient>
+  <radialGradient id="bodyShine" cx="0.42" cy="0.32" r="0.55">
+    <stop stop-color="#FF8A65" stop-opacity="0.6"/>
+    <stop offset="1" stop-color="#E53935" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+
+<!-- Left arm -->
+<path d="M190 295 C150 245, 110 190, 100 145 C93 115, 100 95, 120 82 C128 78, 135 76, 142 78" fill="url(#clawGrad)"/>
+<!-- Left claw palm -->
+<ellipse cx="95" cy="80" rx="55" ry="48" fill="url(#clawGrad)" transform="rotate(-15 95 80)"/>
+<!-- Left top pincer -->
+<path d="M55 45 C38 22, 12 2, -2 -3 C-10 -5, -14 0, -8 8 C-2 20, 22 40, 50 55 Z" fill="url(#clawGrad)"/>
+<path d="M-2 -3 C-12 -8, -18 -5, -15 4 C-12 9, -5 13, -2 10 Z" fill="#C62828"/>
+<!-- Left bottom pincer -->
+<path d="M58 120 C32 127, 5 128, -10 120 C-20 113, -20 100, -10 92 C2 85, 28 88, 52 97 Z" fill="url(#clawGrad)"/>
+<path d="M-10 120 C-22 125, -28 120, -24 110 C-22 105, -14 101, -10 104 Z" fill="#C62828"/>
+
+<!-- Right arm -->
+<path d="M360 295 C400 245, 440 190, 450 145 C457 115, 450 95, 430 82 C422 78, 415 76, 408 78" fill="url(#clawGrad)"/>
+<!-- Right claw palm -->
+<ellipse cx="455" cy="80" rx="55" ry="48" fill="url(#clawGrad)" transform="rotate(15 455 80)"/>
+<!-- Right top pincer -->
+<path d="M495 45 C512 22, 538 2, 552 -3 C560 -5, 564 0, 558 8 C552 20, 528 40, 500 55 Z" fill="url(#clawGrad)"/>
+<path d="M552 -3 C562 -8, 568 -5, 565 4 C562 9, 555 13, 552 10 Z" fill="#C62828"/>
+<!-- Right bottom pincer -->
+<path d="M492 120 C518 127, 545 128, 560 120 C570 113, 570 100, 560 92 C548 85, 522 88, 498 97 Z" fill="url(#clawGrad)"/>
+<path d="M560 120 C572 125, 578 120, 574 110 C572 105, 564 101, 560 104 Z" fill="#C62828"/>
+
+<!-- Body -->
+<ellipse cx="275" cy="310" rx="110" ry="88" fill="url(#clawGrad)"/>
+<ellipse cx="265" cy="290" rx="62" ry="42" fill="url(#bodyShine)"/>
+
+<!-- Eyes -->
+<path d="M248 270 C243 253, 236 240, 232 228" stroke="url(#clawGrad)" stroke-width="9" stroke-linecap="round" fill="none"/>
+<path d="M302 270 C307 253, 314 240, 318 228" stroke="url(#clawGrad)" stroke-width="9" stroke-linecap="round" fill="none"/>
+<circle cx="230" cy="224" r="13" fill="#222"/>
+<circle cx="320" cy="224" r="13" fill="#222"/>
+<circle cx="226" cy="219" r="5" fill="#fff" opacity="0.85"/>
+<circle cx="316" cy="219" r="5" fill="#fff" opacity="0.85"/>
+
+<!-- Legs -->
+<g stroke="url(#clawGrad)" stroke-width="6" stroke-linecap="round" fill="none">
+  <path d="M215 380 C203 405, 185 420, 168 428"/>
+  <path d="M240 390 C232 415, 215 435, 200 442"/>
+  <path d="M310 390 C318 415, 335 435, 350 442"/>
+  <path d="M335 380 C347 405, 365 420, 382 428"/>
+</g>
+
+<!-- Mouth -->
+<path d="M258 315 Q275 324, 292 315" stroke="#BF360C" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+</svg>

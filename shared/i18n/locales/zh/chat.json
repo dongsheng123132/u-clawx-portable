@@ -1,0 +1,275 @@
+{
+    "gatewayNotRunning": "网关未运行",
+    "gatewayRequired": "OpenClaw 网关需要运行才能使用聊天。它将自动启动，或者您可以从设置中启动。",
+    "welcome": {
+        "title": "ClawX 聊天",
+        "subtitle": "我能为你做些什么？",
+        "askQuestions": "处理任务",
+        "askQuestionsDesc": "处理面向任务的请求",
+        "creativeTasks": "持续执行",
+        "creativeTasksDesc": "持续推进多步骤工作",
+        "brainstorming": "多智能体并行"
+    },
+    "noLogs": "（暂无日志）",
+    "scrollToLatest": "回到底部",
+    "toolbar": {
+        "refresh": "刷新聊天",
+        "currentAgent": "{{agent}}",
+        "workspace": "工作空间"
+    },
+    "generatedFiles": {
+        "openFolder": "打开文件夹"
+    },
+    "fileActivity": {
+        "created": "已创建",
+        "modified": "已修改",
+        "deleted": "已删除",
+        "fileButton": "{{action}} {{path}}",
+        "changeRecord": "查看 {{path}} 的变更",
+        "fileUnavailable": "文件不可用",
+        "outsideWorkspace": "文件位于工作空间之外"
+    },
+    "fileCard": {
+        "openWith": "打开方式",
+        "openWithFile": "选择打开 {{name}} 的应用",
+        "openInBuiltInBrowser": "在 ClawX 预览中打开",
+        "openInSystemBrowser": "在系统浏览器中打开",
+        "searchingApplications": "正在查找应用",
+        "showInFinder": "在访达中显示",
+        "showInExplorer": "在文件资源管理器中显示",
+        "showInFileManager": "在文件管理器中显示",
+        "openWithFailed": "无法使用所选应用打开文件",
+        "revealFailed": "无法在文件夹中显示文件"
+    },
+    "runError": {
+        "title": "模型调用失败"
+    },
+    "acp": {
+        "thought": "思考",
+        "tool": "工具",
+        "expandTool": "展开工具结果",
+        "collapseTool": "折叠工具结果",
+        "expandToolGroup": "展开工具调用",
+        "collapseToolGroup": "折叠工具调用",
+        "toolGroupSummary": "{{count}} 个工具调用",
+        "permission": "权限",
+        "plan": "计划",
+        "running": "进行中",
+        "pending": "待处理",
+        "completed": "已完成",
+        "failed": "失败",
+        "cancelled": "已取消",
+        "loadFailed": "会话加载失败",
+        "promptFailed": "发送提示失败",
+        "unsupportedContent": "不支持的内容",
+        "dismiss": "关闭",
+        "image": "图片",
+        "copyImage": "复制图片",
+        "imageCopied": "图片已复制",
+        "saveImage": "另存为图片",
+        "imageSaved": "图片已保存",
+        "copy": "复制回复",
+        "copied": "已复制",
+        "turnDuration": "用时 {{duration}}",
+        "turnElapsed": "已处理 {{duration}}",
+        "attachment": {
+            "loading": "正在加载附件",
+            "unavailable": "附件不可用",
+            "open": "打开 {{name}}",
+            "preview": "预览 {{name}}",
+            "openFailed": "无法打开附件"
+        }
+    },
+    "artifactPanel": {
+        "tabs": {
+            "changes": "变更",
+            "preview": "预览",
+            "browser": "工作空间"
+        },
+        "actions": {
+            "back": "返回列表"
+        },
+        "changes": {
+            "heading": "文件变更（{{count}} 个）",
+            "empty": "此会话尚无文件变更。",
+            "selectFileHint": "请点击对话中的文件卡片，或「查看文件变更」打开 diff。",
+            "changeRecord": "变更 {{number}}",
+            "diffUnavailable": "此变更无法显示差异。"
+        },
+        "preview": {
+            "emptyTitle": "尚未选择文件",
+            "emptyHint": "请先点击对话里的文件卡片，侧栏会选中该文件后在此预览。",
+            "fullscreenLabel": "全屏文件预览"
+        }
+    },
+    "filePreview": {
+        "tabs": {
+            "source": "源码",
+            "preview": "预览"
+        },
+        "actions": {
+            "save": "保存",
+            "saving": "保存中...",
+            "revert": "撤销",
+            "openInFinder": "在文件管理器中显示",
+            "openDirectly": "直接打开",
+            "close": "关闭",
+            "enterFullscreen": "全屏预览",
+            "exitFullscreen": "退出全屏",
+            "openHtmlExternally": "在系统浏览器中打开 HTML",
+            "retry": "重试"
+        },
+        "toast": {
+            "saved": "已保存到磁盘",
+            "saveFailed": "保存失败：{{error}}"
+        },
+        "errors": {
+            "outsideSandbox": "路径越界，已拒绝访问",
+            "outsideSandboxTitle": "无法读取此文件",
+            "outsideSandboxHint": "ClawX 无法读取这个路径。文件可能已被移动、删除，或当前账户没有访问权限。可在文件管理器中查看。",
+            "readOnlyRoot": "该文件位于只读位置（如内置技能），无法修改",
+            "tooLarge": "文件过大（{{size}}），已禁用预览",
+            "binary": "二进制文件不支持文本预览",
+            "notFound": "文件不存在",
+            "loadFailed": "加载失败：{{error}}",
+            "noPreview": "该文件没有预览",
+            "unsupportedFormatTitle": "此文件格式暂不支持内置预览",
+            "unsupportedFormatHint": "当前仅支持文本/Markdown 等可直接读取的文件进行内置预览。请在文件管理器中打开该文件。",
+            "largeBinaryOpenTitle": "该文件较大，暂不支持内置预览",
+            "largeBinaryOpenHint": "当前文件为 {{size}}，ClawX 不提供内置预览。你可以确认后直接使用系统默认应用打开。",
+            "openInFinderFailed": "无法在文件管理器中显示",
+            "openFailed": "打开失败：{{error}}",
+            "htmlLoadFailed": "无法加载 HTML 预览",
+            "openHtmlExternallyFailed": "无法在系统浏览器中打开 HTML"
+        },
+        "html": {
+            "crashed": "HTML 预览已停止运行"
+        },
+        "confirmOpen": {
+            "title": "打开文件",
+            "message": "确认直接打开「{{fileName}}」？",
+            "detail": "该文件将使用系统默认应用打开。",
+            "size": "文件大小：{{size}}",
+            "cancel": "取消"
+        },
+        "pdf": {
+            "loadFailed": "PDF 加载失败：{{error}}",
+            "prev": "上一页",
+            "next": "下一页",
+            "zoomIn": "放大",
+            "zoomOut": "缩小",
+            "zoomReset": "适配宽度",
+            "pageInputAria": "当前页",
+            "singlePageHint": "使用工具栏在 {{total}} 页之间切换"
+        },
+        "docx": {
+            "loadFailed": "Word 文档加载失败"
+        },
+        "pptx": {
+            "loadFailed": "演示文稿加载失败",
+            "previous": "上一张幻灯片",
+            "next": "下一张幻灯片",
+            "slidePosition": "{{current}} / {{total}}"
+        },
+        "sheet": {
+            "loadFailed": "表格加载失败：{{error}}",
+            "empty": "该文件没有可展示的工作表",
+            "emptySheet": "当前工作表为空",
+            "unnamedSheet": "工作表 {{idx}}",
+            "rowRange": "行 {{from}}-{{to}} / {{total}}",
+            "prevPage": "上一页",
+            "nextPage": "下一页"
+        }
+    },
+    "workspace": {
+        "title": "工作空间",
+        "defaultLabel": "默认工作空间",
+        "header": "Agent：{{agent}} · 目录：{{directory}}",
+        "freshBadge": "本轮新增",
+        "pickFile": "从左侧选择一个文件预览",
+        "empty": "工作空间为空或无法访问",
+        "truncated": "目录过大，已截断显示前 5000 个节点",
+        "unavailable": {
+            "title": "工作空间不可用",
+            "description": "此文件夹可能已被移动或删除。请选择一个现有文件夹以继续：{{path}}",
+            "boundDescription": "此对话的工作空间可能已被移动或删除，当前无法访问：{{path}}",
+            "chooseAction": "选择工作空间"
+        },
+        "actions": {
+            "refresh": "刷新",
+            "openRootInFinder": "在文件管理器中显示根目录"
+        }
+    },
+    "imageGeneration": {
+        "generating": "图片生成中，请稍候…",
+        "previewUnavailable": "图片生成已完成，但无法加载预览。",
+        "generatedReady": "生成的图片已准备好。",
+        "generatedReadyWithMissing": "生成的图片已准备好，但有部分图片无法加载。"
+    },
+    "composer": {
+        "attachFiles": "添加文件",
+        "pickSkill": "选择技能",
+        "skillButton": "技能",
+        "skillPickerTitle": "{{agent}} 的快捷技能",
+        "skillSearchPlaceholder": "搜索技能",
+        "skillLoading": "正在加载技能...",
+        "skillEmpty": "未找到匹配的技能",
+        "pickAgent": "选择 Agent",
+        "pickModel": "选择模型",
+        "modelPickerTitle": "切换当前 Agent 模型",
+        "modelSwitchFailed": "模型切换失败：{{error}}",
+        "clearTarget": "清除目标 Agent",
+        "targetChip": "@{{agent}}",
+        "agentPickerTitle": "将下一条消息直接发送给其他 Agent",
+        "gatewayDisconnectedPlaceholder": "网关未连接...",
+        "send": "发送",
+        "stop": "停止",
+        "thinking": "思考中…",
+        "gatewayConnected": "已连接",
+        "gatewayStarting": "启动中",
+        "gatewayStatus": "网关{{state}}",
+        "retryFailedAttachments": "重试失败的附件",
+        "workspacePrefix": "{{workspace}}",
+        "workspacePickerTitle": "选择工作空间文件夹",
+        "workspacePickerButton": "使用此工作空间",
+        "workspacePickerFailed": "无法打开工作空间选择器",
+        "defaultWorkspaceOption": "默认工作空间",
+        "chooseOtherWorkspaceOption": "选择其他目录…",
+        "folderDropUnsupported": "无法添加此文件夹。请重新拖入，或在消息中粘贴文件夹路径。",
+        "folderAttachment": "文件夹",
+        "skillPreviewTooltip": "预览 SKILL.md",
+        "skillPreviewNotFound": "找不到该技能。请打开技能列表以刷新。"
+    },
+    "sessionList": {
+        "title": "会话列表",
+        "collapseAll": "一键折叠",
+        "expandAll": "一键展开",
+        "loadMore": "加载更多",
+        "aiReplying": "AI 正在回复",
+        "unreadReply": "未读回复",
+        "loadMoreForWorkspace": "在 {{workspace}} 中再加载 {{count}} 个会话",
+        "workspaceToggle": "展开或折叠工作空间 {{workspace}}",
+        "renameWorkspace": "重命名工作空间 {{workspace}}",
+        "workspaceUnavailableBadge": "不可用",
+        "deleteWorkspace": "删除不可用的工作空间 {{workspace}}",
+        "deleteWorkspaceTitle": "删除不可用的工作空间？",
+        "deleteWorkspaceConfirm": "永久删除“{{workspace}}”及其中的全部 {{count}} 个会话？此操作无法撤销。",
+        "deleteWorkspaceConfirmAction": "删除工作空间和会话",
+        "deleteWorkspacePartialFailure": "有 {{count}} 个会话无法删除，已保留在该工作空间中。",
+        "deleteWorkspaceCleanupFailed": "会话已删除，但无法清理保存的工作空间记录。",
+        "workspaceName": "工作空间名称",
+        "saveWorkspaceRename": "保存工作空间名称",
+        "cancelWorkspaceRename": "取消重命名工作空间"
+    },
+    "historyBuckets": {
+        "today": "今天",
+        "withinWeek": "一周内",
+        "withinMonth": "一月内",
+        "older": "更早"
+    },
+    "questionDirectory": {
+        "title": "问题目录",
+        "fallback": "问题 {{number}}",
+        "moreHint": "还有 {{count}} 个问题未显示"
+    }
+}

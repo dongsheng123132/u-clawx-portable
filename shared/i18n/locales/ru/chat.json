@@ -1,0 +1,275 @@
+{
+    "gatewayNotRunning": "Шлюз не запущен",
+    "gatewayRequired": "Для использования чата требуется запущенный шлюз OpenClaw. Он запустится автоматически, или вы можете запустить его в Настройках.",
+    "welcome": {
+        "title": "Чат ClawX",
+        "subtitle": "Чем могу помочь?",
+        "askQuestions": "Задачи",
+        "askQuestionsDesc": "Работа над задачами",
+        "creativeTasks": "Непрерывное выполнение",
+        "creativeTasksDesc": "Выполнение многошаговых задач",
+        "brainstorming": "Параллельные агенты"
+    },
+    "noLogs": "(Журналы ещё недоступны)",
+    "scrollToLatest": "Вернуться вниз",
+    "toolbar": {
+        "refresh": "Обновить чат",
+        "currentAgent": "{{agent}}",
+        "workspace": "Рабочая область"
+    },
+    "generatedFiles": {
+        "openFolder": "Открыть папку"
+    },
+    "fileActivity": {
+        "created": "Создан",
+        "modified": "Изменён",
+        "deleted": "Удалён",
+        "fileButton": "{{action}}: {{path}}",
+        "changeRecord": "Показать изменения {{path}}",
+        "fileUnavailable": "Файл недоступен",
+        "outsideWorkspace": "Файл находится вне рабочей области"
+    },
+    "fileCard": {
+        "openWith": "Открыть с помощью",
+        "openWithFile": "Открыть {{name}} с помощью",
+        "openInBuiltInBrowser": "Открыть в просмотре ClawX",
+        "openInSystemBrowser": "Открыть в системном браузере",
+        "searchingApplications": "Поиск приложений",
+        "showInFinder": "Показать в Finder",
+        "showInExplorer": "Показать в Проводнике",
+        "showInFileManager": "Показать в файловом менеджере",
+        "openWithFailed": "Не удалось открыть файл в выбранном приложении",
+        "revealFailed": "Не удалось показать файл в папке"
+    },
+    "runError": {
+        "title": "Ошибка вызова модели"
+    },
+    "acp": {
+        "thought": "Размышление",
+        "tool": "Инструмент",
+        "expandTool": "Развернуть результат инструмента",
+        "collapseTool": "Свернуть результат инструмента",
+        "expandToolGroup": "Развернуть вызовы инструментов",
+        "collapseToolGroup": "Свернуть вызовы инструментов",
+        "toolGroupSummary": "Вызовов инструментов: {{count}}",
+        "permission": "Разрешение",
+        "plan": "План",
+        "running": "Выполняется",
+        "pending": "Ожидает",
+        "completed": "Завершено",
+        "failed": "Ошибка",
+        "cancelled": "Отменено",
+        "loadFailed": "Не удалось загрузить сеанс",
+        "promptFailed": "Не удалось отправить запрос",
+        "unsupportedContent": "Неподдерживаемое содержимое",
+        "dismiss": "Закрыть",
+        "image": "Изображение",
+        "copyImage": "Копировать изображение",
+        "imageCopied": "Изображение скопировано",
+        "saveImage": "Сохранить изображение как",
+        "imageSaved": "Изображение сохранено",
+        "copy": "Копировать ответ",
+        "copied": "Скопировано",
+        "turnDuration": "Заняло {{duration}}",
+        "turnElapsed": "Прошло {{duration}}",
+        "attachment": {
+            "loading": "Загрузка вложения",
+            "unavailable": "Вложение недоступно",
+            "open": "Открыть {{name}}",
+            "preview": "Просмотреть {{name}}",
+            "openFailed": "Не удалось открыть вложение"
+        }
+    },
+    "artifactPanel": {
+        "tabs": {
+            "changes": "Изменения",
+            "preview": "Просмотр",
+            "browser": "Рабочая область"
+        },
+        "actions": {
+            "back": "Назад к списку"
+        },
+        "changes": {
+            "heading": "Изменения файлов ({{count}})",
+            "empty": "В этом сеансе пока нет изменений файлов.",
+            "selectFileHint": "Нажмите на карточку файла в чате или «Просмотр изменений», чтобы открыть diff.",
+            "changeRecord": "Изменение {{number}}",
+            "diffUnavailable": "Diff для этого изменения недоступен."
+        },
+        "preview": {
+            "emptyTitle": "Файл не выбран",
+            "emptyHint": "Сначала откройте файл через карточку в чате — выбранный файл появится в этом предпросмотре.",
+            "fullscreenLabel": "Полноэкранный предпросмотр файла"
+        }
+    },
+    "filePreview": {
+        "tabs": {
+            "source": "Исходник",
+            "preview": "Предпросмотр"
+        },
+        "actions": {
+            "save": "Сохранить",
+            "saving": "Сохранение...",
+            "revert": "Откатить",
+            "openInFinder": "Показать в файловом менеджере",
+            "openDirectly": "Открыть напрямую",
+            "close": "Закрыть",
+            "enterFullscreen": "Полноэкранный просмотр",
+            "exitFullscreen": "Выйти из полноэкранного режима",
+            "openHtmlExternally": "Открыть HTML в системном браузере",
+            "retry": "Повторить"
+        },
+        "toast": {
+            "saved": "Сохранено на диск",
+            "saveFailed": "Ошибка сохранения: {{error}}"
+        },
+        "errors": {
+            "outsideSandbox": "Путь вне песочницы — доступ запрещён",
+            "outsideSandboxTitle": "Не удалось прочитать файл",
+            "outsideSandboxHint": "ClawX не удалось прочитать этот путь. Файл мог быть перемещён или удалён, либо у текущей учётной записи нет прав доступа. Его можно показать в файловом менеджере.",
+            "readOnlyRoot": "Файл находится в режиме только для чтения (например, встроенный навык) и не может быть изменён",
+            "tooLarge": "Файл слишком большой ({{size}}); предпросмотр отключён",
+            "binary": "Бинарный файл — текстовый предпросмотр недоступен",
+            "notFound": "Файл не найден",
+            "loadFailed": "Ошибка загрузки: {{error}}",
+            "noPreview": "Для этого файла предпросмотр недоступен",
+            "unsupportedFormatTitle": "Этот формат файла не поддерживает встроенный предпросмотр",
+            "unsupportedFormatHint": "Встроенный предпросмотр сейчас поддерживает только напрямую читаемые текстовые/Markdown-файлы. Откройте файл через файловый менеджер.",
+            "largeBinaryOpenTitle": "Этот файл слишком большой для встроенного предпросмотра",
+            "largeBinaryOpenHint": "Размер файла — {{size}}. ClawX не может показать его встроенно, но вы можете подтвердить открытие в системном приложении по умолчанию.",
+            "openInFinderFailed": "Не удалось показать файл",
+            "openFailed": "Не удалось открыть: {{error}}",
+            "htmlLoadFailed": "Не удалось загрузить предпросмотр HTML",
+            "openHtmlExternallyFailed": "Не удалось открыть HTML в системном браузере"
+        },
+        "html": {
+            "crashed": "Предпросмотр HTML остановлен"
+        },
+        "confirmOpen": {
+            "title": "Открыть файл",
+            "message": "Открыть «{{fileName}}» в системном приложении по умолчанию?",
+            "detail": "Файл будет открыт системным приложением по умолчанию.",
+            "size": "Размер файла: {{size}}",
+            "cancel": "Отмена"
+        },
+        "pdf": {
+            "loadFailed": "Не удалось загрузить PDF: {{error}}",
+            "prev": "Предыдущая страница",
+            "next": "Следующая страница",
+            "zoomIn": "Увеличить",
+            "zoomOut": "Уменьшить",
+            "zoomReset": "По ширине",
+            "pageInputAria": "Текущая страница",
+            "singlePageHint": "Используйте панель инструментов для переключения между {{total}} страницами"
+        },
+        "docx": {
+            "loadFailed": "Не удалось загрузить документ Word"
+        },
+        "pptx": {
+            "loadFailed": "Не удалось загрузить презентацию",
+            "previous": "Предыдущий слайд",
+            "next": "Следующий слайд",
+            "slidePosition": "{{current}} / {{total}}"
+        },
+        "sheet": {
+            "loadFailed": "Не удалось загрузить таблицу: {{error}}",
+            "empty": "В файле нет отображаемых листов",
+            "emptySheet": "Текущий лист пуст",
+            "unnamedSheet": "Лист {{idx}}",
+            "rowRange": "Строки {{from}}-{{to}} / {{total}}",
+            "prevPage": "Предыдущие строки",
+            "nextPage": "Следующие строки"
+        }
+    },
+    "workspace": {
+        "title": "Рабочая область",
+        "defaultLabel": "Рабочая область по умолчанию",
+        "header": "Agent: {{agent}} · Каталог: {{directory}}",
+        "freshBadge": "Обновлено в этот раз",
+        "pickFile": "Выберите файл слева для предпросмотра",
+        "empty": "Рабочая область пуста или недоступна",
+        "truncated": "Каталог обрезан — показаны первые 5000 узлов",
+        "unavailable": {
+            "title": "Рабочая область недоступна",
+            "description": "Папка могла быть перемещена или удалена. Выберите существующую папку, чтобы продолжить: {{path}}",
+            "boundDescription": "Рабочая область этого чата могла быть перемещена или удалена и сейчас недоступна: {{path}}",
+            "chooseAction": "Выбрать рабочую область"
+        },
+        "actions": {
+            "refresh": "Обновить",
+            "openRootInFinder": "Показать корень в файловом менеджере"
+        }
+    },
+    "imageGeneration": {
+        "generating": "Изображение генерируется, подождите…",
+        "previewUnavailable": "Создание изображения завершено, но предпросмотр загрузить не удалось.",
+        "generatedReady": "Сгенерированное изображение готово.",
+        "generatedReadyWithMissing": "Сгенерированное изображение готово, но некоторые изображения не удалось загрузить."
+    },
+    "composer": {
+        "attachFiles": "Прикрепить файлы",
+        "pickSkill": "Выбрать Skill",
+        "skillButton": "Skills",
+        "skillPickerTitle": "Быстрый доступ к Skill для {{agent}}",
+        "skillSearchPlaceholder": "Поиск Skill",
+        "skillLoading": "Загрузка Skill...",
+        "skillEmpty": "Подходящие Skill не найдены",
+        "pickAgent": "Выбрать агента",
+        "pickModel": "Выбрать модель",
+        "modelPickerTitle": "Переключить модель",
+        "modelSwitchFailed": "Не удалось переключить модель: {{error}}",
+        "clearTarget": "Очистить целевого агента",
+        "targetChip": "@{{agent}}",
+        "agentPickerTitle": "Направить следующее сообщение другому агенту",
+        "gatewayDisconnectedPlaceholder": "Шлюз не подключён...",
+        "send": "Отправить",
+        "stop": "Остановить",
+        "thinking": "Думаю…",
+        "gatewayConnected": "подключён",
+        "gatewayStarting": "запуск",
+        "gatewayStatus": "шлюз {{state}}",
+        "retryFailedAttachments": "Повторить неудавшиеся вложения",
+        "workspacePrefix": "{{workspace}}",
+        "workspacePickerTitle": "Выберите папку рабочей области",
+        "workspacePickerButton": "Использовать рабочую область",
+        "workspacePickerFailed": "Не удалось открыть выбор рабочей области",
+        "defaultWorkspaceOption": "Рабочая область по умолчанию",
+        "chooseOtherWorkspaceOption": "Выбрать другой каталог…",
+        "folderDropUnsupported": "Не удалось прикрепить эту папку. Перетащите её снова или вставьте путь к папке в сообщение.",
+        "folderAttachment": "Папка",
+        "skillPreviewTooltip": "Предпросмотр SKILL.md",
+        "skillPreviewNotFound": "Skill не найден. Откройте список Skill, чтобы обновить его."
+    },
+    "sessionList": {
+        "title": "Список сессий",
+        "collapseAll": "Свернуть все",
+        "expandAll": "Развернуть все",
+        "loadMore": "Загрузить еще",
+        "aiReplying": "ИИ отвечает",
+        "unreadReply": "Непрочитанный ответ",
+        "loadMoreForWorkspace": "Загрузить еще {{count}} сессий в {{workspace}}",
+        "workspaceToggle": "Переключить рабочую область {{workspace}}",
+        "renameWorkspace": "Переименовать рабочую область {{workspace}}",
+        "workspaceUnavailableBadge": "Недоступна",
+        "deleteWorkspace": "Удалить недоступную рабочую область {{workspace}}",
+        "deleteWorkspaceTitle": "Удалить недоступную рабочую область?",
+        "deleteWorkspaceConfirm": "Навсегда удалить «{{workspace}}» и все сессии ({{count}}) в ней? Это действие нельзя отменить.",
+        "deleteWorkspaceConfirmAction": "Удалить область и сессии",
+        "deleteWorkspacePartialFailure": "Не удалось удалить сессии: {{count}}. Они остались в рабочей области.",
+        "deleteWorkspaceCleanupFailed": "Сессии удалены, но не удалось очистить сохранённую запись рабочей области.",
+        "workspaceName": "Название рабочей области",
+        "saveWorkspaceRename": "Сохранить название рабочей области",
+        "cancelWorkspaceRename": "Отменить переименование рабочей области"
+    },
+    "historyBuckets": {
+        "today": "Сегодня",
+        "withinWeek": "За последние 7 дней",
+        "withinMonth": "За последние 30 дней",
+        "older": "Ранее"
+    },
+    "questionDirectory": {
+        "title": "Список вопросов",
+        "fallback": "Вопрос {{number}}",
+        "moreHint": "Ещё {{count}} вопросов не показано"
+    }
+}
