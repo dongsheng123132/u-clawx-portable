@@ -28,6 +28,7 @@ import {
   ChevronsDownUp,
   LoaderCircle,
   Loader2,
+  LifeBuoy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isGatewayRestarting } from '@/lib/gateway-status';
@@ -891,6 +892,26 @@ export function Sidebar() {
             )}
           </div>
         </div>
+
+        <NavLink
+          to="/support"
+          data-testid="sidebar-nav-support"
+          className={({ isActive }) =>
+            cn(
+              'sidebar-nav-text flex items-center gap-2 rounded-lg px-2.5 py-1.5 transition-colors',
+              'hover:bg-black/5 dark:hover:bg-white/5 text-foreground/80',
+              isActive && 'bg-black/5 dark:bg-white/10 text-foreground',
+              sidebarCollapsed ? 'justify-center px-0' : '',
+            )
+          }
+        >
+          <div className="flex shrink-0 items-center justify-center text-current [&_svg]:size-4">
+            <LifeBuoy className="h-4 w-4" strokeWidth={2} />
+          </div>
+          {!sidebarCollapsed && (
+            <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{t('sidebar.support')}</span>
+          )}
+        </NavLink>
 
         <NavLink
           to="/settings"

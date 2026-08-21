@@ -15,6 +15,8 @@ Use the semantic tokens and substitutions documented in `src/styles/globals.css`
 
 Interactive rows use semantic controls, keyboard activation, accessible names, visible focus styling, and disabled semantics where applicable. Attachment cards may show the decoded local path or normalized remote URL represented by explicit ACP resource or approved `MEDIA:` evidence; paths truncate visually and remain available in the title. Unavailable attachments remain basename-only, and unrelated UI or diagnostics must not expose sensitive absolute host paths.
 
+The manual Support surface keeps all contact and privacy copy in the four locale files, displays the WeChat QR code at a reliably scannable size, and requires user-entered feedback before opening a mail draft. It must state and preserve the boundary that no chat history, credentials, wallet data, file paths, logs, or device identifiers are attached automatically.
+
 ACP whole-turn timing uses localized unit formatting and localized running/completed labels in all four locales. It renders as persistent muted metadata in the assistant-turn footer; copy remains the hover-only action.
 
 Multi-view file previews keep their localized segmented view switcher in the trailing side of the file name/path header instead of allocating a separate content row. The Chat Preview surface exposes a localized, icon-only fullscreen toggle in that header; fullscreen uses the whole Renderer viewport, preserves the selected target and viewer position, exits through the same control or Escape, and closes when Preview becomes inactive. HTML preview retains the `Preview` then `Source` order and defaults to the rendered preview.

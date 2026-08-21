@@ -33,6 +33,13 @@ ownedPaths:
   - tests/unit/web-browser-policy.test.ts
   - tests/unit/web-browser-session.test.ts
   - tests/unit/web-browser-api.test.ts
+  - src/pages/Support/index.tsx
+  - src/components/layout/Sidebar.tsx
+  - src/App.tsx
+  - electron/main/menu.ts
+  - shared/i18n/locales/*/support.json
+  - shared/i18n/locales/*/menu.json
+  - tests/e2e/support.spec.ts
 requiredProfiles:
   - fast
   - comms
@@ -47,6 +54,7 @@ requiredRules:
   - device-wallet-lifecycle
   - openclaw-config-delivery
   - renderer-main-boundary
+  - ui-i18n-design-tokens
   - backend-communication-boundary
   - api-client-transport-policy
   - host-api-fallback-policy
@@ -87,6 +95,8 @@ Renderer page/component -> `src/lib/host-api.ts` or `src/lib/api-client.ts` -> E
 Renderer code must not own transport selection, direct IPC channels, direct Gateway HTTP calls, retry policy, or protocol fallback.
 
 Renderer code must not create direct Gateway WebSocket connections. Gateway frame diagnostics must be emitted by Main-process Gateway logging.
+
+The manual Support page uses the typed Host shell API only to open a user-reviewed `mailto:` draft. It may add the application version and operating-system type, but must not automatically attach or transmit chat history, API keys, wallet secrets, file paths, logs, device identifiers, or other diagnostics. WeChat and email contact values remain visible and copyable so support does not depend on an upload service. The native Help menu opens this local page instead of sending users to a public issue tracker.
 
 Typed generic Gateway RPC requests are validated by `electron/services/gateway-api.ts` and delegated directly to `GatewayManager.rpc`, including an optional positive finite timeout. This path has no Renderer Chat history/send specialization, polling queue, coalescing, or backpressure layer. ACP `session/load`, `session/prompt`, and `session/cancel` own ordinary Chat history and composer behavior independently.
 

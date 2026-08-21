@@ -34,7 +34,7 @@
 
 ---
 
-> **U-Claw 便携薄壳**：本仓库从上游最新稳定版 **ClawX v0.5.4** 干净构建，只增加 Windows 便携模式、虾盘云设备钱包、一键充值和默认作图接入。旧的硬件指纹/授权系统没有保留。设备钱包的 Key 共享与轮换规则见 [docs/device-wallet.md](docs/device-wallet.md)。
+> **U-Claw 便携薄壳**：本仓库从上游最新稳定版 **ClawX v0.5.4** 干净构建，增加 Windows 便携模式、虾盘云设备钱包、一键充值、默认作图接入和手工技术支持页面。旧的硬件指纹/授权系统没有保留。设备钱包的 Key 共享与轮换规则见 [docs/device-wallet.md](docs/device-wallet.md)。
 
 Windows 便携构建：`pnpm run init` 后运行 `pnpm package:win:portable`，产物位于 `release/win-unpacked`。首次测试请在干净电脑或真实 U 盘上进行，确认钱包文件只出现在产物自己的 `data/clawx-state` 中。为避免 U 盘大量随机写，默认仅把可丢弃的 Chromium 会话缓存放到宿主机系统缓存。
 
@@ -88,6 +88,7 @@ ClawX 预置了最佳实践的模型供应商配置，原生支持 Windows 平�
 - **🌙 自适应主题**：支持浅色、深色与跟随系统主题。
 - **🚀 开机启动控制**：在 设置 → 通用 中开启开机自动启动。
 - **🔔 更新提示**：启动时自动检查新版本，由你决定是否下载或安装更新。
+- **🛟 隐私优先的技术支持**：可在“技术支持”页面扫码联系微信，或手工填写并通过邮件发送反馈；不会自动附带聊天记录、Key、钱包密钥、文件路径或日志。
 
 > 对于功能细节的完整说明，请参阅 [docs/zh-CN/features.md](docs/zh-CN/features.md)。
 

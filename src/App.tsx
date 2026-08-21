@@ -17,6 +17,7 @@ import { Skills } from './pages/Skills';
 import { Cron } from './pages/Cron';
 import { ImageGenerationPage } from './pages/ImageGeneration';
 import { Settings } from './pages/Settings';
+import { Support } from './pages/Support';
 import { Setup } from './pages/Setup';
 import { useSettingsStore } from './stores/settings';
 import { useUpdateStore } from './stores/update';
@@ -210,6 +211,7 @@ function App() {
             <Route path="/skills" element={<Skills />} />
             <Route path="/cron" element={<Cron />} />
             <Route path="/image-generation" element={devModeUnlocked ? <ImageGenerationPage /> : <Navigate to="/" replace />} />
+            <Route path="/support" element={<Support />} />
             <Route path="/settings/*" element={<Settings />} />
             {extraRoutes.map((r) => (
               <Route key={r.path} path={r.path} element={<r.component />} />

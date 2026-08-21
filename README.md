@@ -34,7 +34,7 @@
 
 ---
 
-> **U-Claw portable thin shell:** this repository is rebuilt from the latest stable upstream **ClawX v0.5.4** and adds only Windows portable mode, the Xiapan Cloud device wallet, one-click recharge, and default image-generation wiring. The former hardware-fingerprint/license system is not included. See [docs/device-wallet.md](docs/device-wallet.md) for key sharing and rotation semantics.
+> **U-Claw portable thin shell:** this repository is rebuilt from the latest stable upstream **ClawX v0.5.4** and adds Windows portable mode, the Xiapan Cloud device wallet, one-click recharge, default image-generation wiring, and a manual technical-support page. The former hardware-fingerprint/license system is not included. See [docs/device-wallet.md](docs/device-wallet.md) for key sharing and rotation semantics.
 
 To build the Windows portable tree, run `pnpm run init` and then `pnpm package:win:portable`. The output is `release/win-unpacked`. Perform the first-run test on a clean computer or real USB drive and verify that wallet state exists only under the package's own `data/clawx-state` directory. Disposable Chromium session caches use the host system cache by default to avoid slow USB random writes.
 
@@ -89,6 +89,7 @@ Building AI agents shouldn't require mastering the command line. ClawX was desig
 - **🌙 Adaptive Theming**: Choose light mode, dark mode, or system-synchronized themes.
 - **🚀 Startup Launch Control**: Enable **Launch at system startup** in **Settings -> General**.
 - **🔔 Update Prompts**: Check for new versions at startup and choose whether to download or install them.
+- **🛟 Privacy-first Support**: Contact support by WeChat or manually compose an email from the Support page. Chat history, keys, wallet secrets, file paths, and logs are never attached automatically.
 
 > For full feature details, see [docs/en-US/features.md](docs/en-US/features.md).
 

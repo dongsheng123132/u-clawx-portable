@@ -205,9 +205,11 @@ export async function createMenu(language?: string): Promise<void> {
           },
         },
         {
+          id: 'technical-support',
           label: labels.help.reportIssue,
-          click: async () => {
-            await shell.openExternal('https://github.com/ValueCell-ai/ClawX/issues');
+          click: () => {
+            const win = getMenuTargetWindow();
+            win?.webContents.send('navigate', '/support');
           },
         },
         { type: 'separator' },

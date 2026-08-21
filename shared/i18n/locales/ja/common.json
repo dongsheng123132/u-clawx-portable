@@ -8,6 +8,7 @@
         "channels": "チャンネル",
         "dashboard": "ダッシュボード",
         "settings": "設定",
+        "support": "テクニカルサポート",
         "devConsole": "開発者コンソール",
         "models": "モデル",
         "deleteSessionConfirm": "「{{label}}」を削除しますか？",

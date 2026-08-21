@@ -8,6 +8,7 @@
         "channels": "Каналы",
         "dashboard": "Панель",
         "settings": "Настройки",
+        "support": "Поддержка",
         "devConsole": "Консоль разработчика",
         "models": "Модели",
         "deleteSessionConfirm": "Удалить \"{{label}}\"?",
