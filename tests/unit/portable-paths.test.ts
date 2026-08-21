@@ -9,6 +9,7 @@ const originalCwd = process.cwd();
 const originalUserDataDir = process.env.CLAWX_USER_DATA_DIR;
 const originalOpenClawStateDir = process.env.OPENCLAW_STATE_DIR;
 const originalOpenClawConfigPath = process.env.OPENCLAW_CONFIG_PATH;
+const originalLocalAppData = process.env.LOCALAPPDATA;
 
 async function createTempDir(prefix: string): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), prefix));
@@ -44,6 +45,11 @@ afterEach(async () => {
   } else {
     process.env.OPENCLAW_CONFIG_PATH = originalOpenClawConfigPath;
   }
+  if (originalLocalAppData === undefined) {
+    delete process.env.LOCALAPPDATA;
+  } else {
+    process.env.LOCALAPPDATA = originalLocalAppData;
+  }
   vi.resetModules();
   await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
 });
@@ -75,6 +81,11 @@ describe('portable path resolution', () => {
     expect(paths.getOpenClawConfigDir()).toBe(join(appRoot, 'data', '.openclaw'));
     expect(paths.getClawXConfigDir()).toBe(join(appRoot, 'data', '.clawx'));
     expect(paths.getDataDir()).toBe(join(appRoot, 'data', 'clawx-state'));
+    process.env.LOCALAPPDATA = 'C:\\Users\\alice\\AppData\\Local';
+    expect(paths.getPortableHostCacheDir()).toBe(join('C:\\Users\\alice\\AppData\\Local', 'U-Claw'));
+    expect(paths.getPortableHostLogsDir()).toBe(join('C:\\Users\\alice\\AppData\\Local', 'U-Claw', 'logs'));
+    expect(paths.getPortableHostRuntimeDir()).toBe(join('C:\\Users\\alice\\AppData\\Local', 'U-Claw', 'runtime'));
+    expect(paths.getLogsDir()).toBe(join('C:\\Users\\alice\\AppData\\Local', 'U-Claw', 'logs'));
     expect(paths.expandPath('~/.openclaw/workspace')).toBe(join(appRoot, 'data', '.openclaw', 'workspace'));
     expect(paths.getOpenClawPortableEnv()).toEqual({
       OPENCLAW_HOME: join(appRoot, 'data'),
