@@ -31,6 +31,7 @@ jobs:
   release:
     needs: validate-release
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-latest
@@ -108,17 +109,37 @@ jobs:
           echo "=== Disk usage after cleanup ==="
           df -h /
 
+      # An open-source fork normally has no Apple signing secrets. Do not pass
+      # empty CSC_LINK/Apple values to electron-builder: an empty CSC_LINK is
+      # resolved as the checkout directory and fails with "not a file".
+      - name: Configure macOS signing when credentials are available
+        if: matrix.platform == 'mac'
+        shell: bash
+        env:
+          MAC_CERTS: ${{ secrets.MAC_CERTS }}
+          MAC_CERTS_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }}
+          MAC_APPLE_ID: ${{ secrets.APPLE_ID }}
+          MAC_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          MAC_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [[ -n "$MAC_CERTS" ]]; then
+            echo "CSC_LINK=$MAC_CERTS" >> "$GITHUB_ENV"
+            echo "CSC_KEY_PASSWORD=$MAC_CERTS_PASSWORD" >> "$GITHUB_ENV"
+            echo "APPLE_ID=$MAC_APPLE_ID" >> "$GITHUB_ENV"
+            echo "APPLE_APP_SPECIFIC_PASSWORD=$MAC_APP_SPECIFIC_PASSWORD" >> "$GITHUB_ENV"
+            echo "APPLE_TEAM_ID=$MAC_TEAM_ID" >> "$GITHUB_ENV"
+            echo "macOS signing enabled."
+          else
+            echo "CSC_IDENTITY_AUTO_DISCOVERY=false" >> "$GITHUB_ENV"
+            echo "No macOS certificate configured; producing unsigned artifacts."
+          fi
+
       # --publish never: prevent electron-builder from auto-publishing to GitHub.
       # All artifacts are collected and published atomically in the publish job.
       - name: Build macOS
         if: matrix.platform == 'mac'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ secrets.MAC_CERTS }}
-          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           ulimit -n 65536
           echo "File descriptor limit: $(ulimit -n)"
@@ -391,6 +412,7 @@ jobs:
   upload-oss:
     needs: release
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
 
     steps:
       - name: Download release artifacts only
