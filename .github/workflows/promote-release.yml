@@ -1,0 +1,125 @@
+name: Promote Build Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Successful Release workflow run ID'
+        required: true
+      tag:
+        description: 'GitHub Release tag (for example, v0.5.4)'
+        required: true
+      target_sha:
+        description: 'Expected source commit SHA'
+        required: true
+      prerelease:
+        description: 'Keep the GitHub Release marked as a pre-release'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify source workflow run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ inputs.run_id }}
+          TARGET_SHA: ${{ inputs.target_sha }}
+        run: |
+          set -euo pipefail
+          RUN_JSON="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}")"
+          RUN_SHA="$(jq -r '.head_sha' <<<"$RUN_JSON")"
+          RUN_STATUS="$(jq -r '.status' <<<"$RUN_JSON")"
+          RUN_CONCLUSION="$(jq -r '.conclusion' <<<"$RUN_JSON")"
+
+          if [[ "$RUN_STATUS" != "completed" || "$RUN_CONCLUSION" != "success" ]]; then
+            echo "Run ${RUN_ID} is not a completed successful run." >&2
+            exit 1
+          fi
+
+          if [[ "$RUN_SHA" != "$TARGET_SHA" ]]; then
+            echo "Run SHA ${RUN_SHA} does not match expected SHA ${TARGET_SHA}." >&2
+            exit 1
+          fi
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-win
+          path: release-artifacts/release-win
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.run_id }}
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-mac
+          path: release-artifacts/release-mac
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.run_id }}
+
+      - name: Verify downloaded files
+        run: |
+          set -euo pipefail
+          find release-artifacts -type f -print
+          test -n "$(find release-artifacts/release-win -type f -name '*.exe' -print -quit)"
+          test -n "$(find release-artifacts/release-mac -type f -name '*.dmg' -print -quit)"
+
+      - name: Create release when missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+          TARGET_SHA: ${{ inputs.target_sha }}
+          PRERELEASE: ${{ inputs.prerelease }}
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release ${TAG} already exists."
+            exit 0
+          fi
+
+          FLAGS=()
+          if [[ "$PRERELEASE" == "true" ]]; then
+            FLAGS+=(--prerelease)
+          fi
+
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_SHA" \
+            --title "U-Claw Portable ${TAG}" \
+            --notes "Promoted from successful GitHub Actions run ${RUN_ID}." \
+            "${FLAGS[@]}"
+
+      - name: Upload Windows and macOS assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          mapfile -d '' FILES < <(find release-artifacts -type f -print0)
+          gh release upload "$TAG" "${FILES[@]}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+      - name: Verify published assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          EXPECTED="$(find release-artifacts -type f | wc -l)"
+          PUBLISHED="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets | length')"
+          if (( PUBLISHED < EXPECTED )); then
+            echo "Release has ${PUBLISHED} assets; expected at least ${EXPECTED}." >&2
+            exit 1
+          fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url,assets
