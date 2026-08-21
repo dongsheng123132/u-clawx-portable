@@ -4,7 +4,11 @@ import { getProviderDefinition } from '../shared/providers/registry';
 import type { ProviderAccount } from '../shared/providers/types';
 import { getProviderService } from './providers/provider-service';
 import { syncDefaultProviderToRuntime } from './providers/provider-runtime-sync';
-import { UCLAW_CLOUD_DEFAULT_API_BASE } from './providers/uclaw-cloud-endpoint';
+import {
+  detectBestEndpoint,
+  UCLAW_CLOUD_PRIMARY_API_BASE,
+  UCLAW_CLOUD_PRIMARY_PAY_BASE,
+} from './providers/uclaw-cloud-endpoint';
 import { fetchAvailableModelIds } from './providers/uclaw-cloud-catalog';
 import { ensureUclawCloudImageDefaults } from './providers/uclaw-cloud-image-defaults';
 import { applyOpenAiImageRelaySettings } from '../utils/openclaw-image-generation';
@@ -84,9 +88,8 @@ function timeoutSignal(): AbortSignal | undefined {
   return typeof AbortSignal?.timeout === 'function' ? AbortSignal.timeout(NETWORK_TIMEOUT_MS) : undefined;
 }
 
-function resolveApiOrigin(): string {
-  const base = process.env.UCLAW_API_BASE_URL?.trim() || UCLAW_CLOUD_DEFAULT_API_BASE;
-  return base.replace(/\/+$/, '').replace(/\/v1$/i, '');
+function apiOrigin(apiBase: string): string {
+  return apiBase.replace(/\/+$/, '').replace(/\/v1$/i, '');
 }
 
 function tokenCount(value: unknown): number | undefined {
@@ -95,7 +98,7 @@ function tokenCount(value: unknown): number | undefined {
   return Math.max(0, Math.round(numeric));
 }
 
-function buildUclawCloudAccount(offered: string[]): ProviderAccount {
+function buildUclawCloudAccount(offered: string[], baseUrl: string): ProviderAccount {
   const definition = getProviderDefinition(UCLAW_CLOUD_PROVIDER_ID);
   const now = new Date().toISOString();
   return {
@@ -103,7 +106,7 @@ function buildUclawCloudAccount(offered: string[]): ProviderAccount {
     vendorId: UCLAW_CLOUD_PROVIDER_ID,
     label: definition?.name ?? '虾盘云',
     authMode: definition?.defaultAuthMode ?? 'api_key',
-    baseUrl: process.env.UCLAW_API_BASE_URL?.trim() || UCLAW_CLOUD_DEFAULT_API_BASE,
+    baseUrl,
     model: UCLAW_CLOUD_DEFAULT_MODEL,
     fallbackModels: [...UCLAW_CLOUD_DEFAULT_FALLBACKS],
     metadata: { customModels: offered },
@@ -131,8 +134,13 @@ async function applyKeyToProvider(apiKey: string | null, gatewayManager?: Gatewa
     await applyOpenAiImageRelaySettings({ enabled: false });
     return;
   }
-  const curated = (await fetchCuratedModels(resolveApiOrigin())) ?? fallbackCuratedModels();
-  const account = buildUclawCloudAccount(await offeredModelIds(apiKey, curated.chat));
+  const endpoint = await detectBestEndpoint().catch(() => ({
+    apiBase: UCLAW_CLOUD_PRIMARY_API_BASE,
+    payBase: UCLAW_CLOUD_PRIMARY_PAY_BASE,
+    origin: 'primary-unverified' as const,
+  }));
+  const curated = (await fetchCuratedModels(apiOrigin(endpoint.apiBase))) ?? fallbackCuratedModels();
+  const account = buildUclawCloudAccount(await offeredModelIds(apiKey, curated.chat), endpoint.apiBase);
 
   if (existing) {
     // 用户在虾粮中心里换过模型的话要保住，不能每次启动给他改回默认。
@@ -210,7 +218,8 @@ export async function getBalance(): Promise<UclawBalance> {
   }
   const masked = maskApiKey(wallet.apiKey);
   try {
-    const res = await fetch(joinUrl(resolveApiOrigin(), '/api/usage/token/'), {
+    const endpoint = await detectBestEndpoint();
+    const res = await fetch(joinUrl(apiOrigin(endpoint.apiBase), '/api/usage/token/'), {
       method: 'GET',
       headers: { Authorization: `Bearer ${wallet.apiKey}` },
       signal: timeoutSignal(),
@@ -242,8 +251,10 @@ export async function getBalance(): Promise<UclawBalance> {
 export async function getRechargeUrl(): Promise<{ url: string }> {
   const wallet = await ensureDeviceKey();
   if (!wallet.apiKey) throw new Error('这台机器还没有钱包，先联网启动一次');
-  const payBaseUrl = process.env.UCLAW_PAY_BASE_URL?.trim() || 'https://api.u-claw.org';
-  const url = new URL('/recharge', payBaseUrl);
+  const endpoint = await detectBestEndpoint().catch(() => ({
+    payBase: UCLAW_CLOUD_PRIMARY_PAY_BASE,
+  }));
+  const url = new URL('/recharge', endpoint.payBase);
   url.searchParams.set('key', wallet.apiKey);
   return { url: url.toString() };
 }

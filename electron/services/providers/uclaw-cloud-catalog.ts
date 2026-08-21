@@ -1,5 +1,8 @@
 import { logger } from '../../utils/logger';
-import { UCLAW_CLOUD_DEFAULT_API_BASE } from './uclaw-cloud-endpoint';
+import {
+  detectBestEndpoint,
+  UCLAW_CLOUD_PRIMARY_API_BASE,
+} from './uclaw-cloud-endpoint';
 
 /**
  * 虾盘云模型目录与价格 —— 唯一真相源在服务端，客户端不攒清单。
@@ -25,9 +28,11 @@ export type ModelPricing = {
   cacheRatio?: number;
 };
 
-function apiOrigin(): string {
-  const base = process.env.UCLAW_API_BASE_URL?.trim() || UCLAW_CLOUD_DEFAULT_API_BASE;
-  return base.replace(/\/+$/, '').replace(/\/v1$/i, '');
+async function apiOrigin(): Promise<string> {
+  const endpoint = await detectBestEndpoint().catch(() => ({
+    apiBase: UCLAW_CLOUD_PRIMARY_API_BASE,
+  }));
+  return endpoint.apiBase.replace(/\/+$/, '').replace(/\/v1$/i, '');
 }
 
 function timeoutSignal(): AbortSignal | undefined {
@@ -55,7 +60,7 @@ export async function fetchAvailableModelIds(apiKey: string): Promise<string[] |
   if (!apiKey) return null;
 
   try {
-    const res = await fetch(`${apiOrigin()}/v1/models`, {
+    const res = await fetch(`${await apiOrigin()}/v1/models`, {
       headers: { Authorization: `Bearer ${apiKey}` },
       signal: timeoutSignal(),
     });
@@ -84,7 +89,7 @@ export async function fetchPricing(): Promise<Map<string, ModelPricing> | null> 
   if (cached) return cached;
 
   try {
-    const res = await fetch(`${apiOrigin()}/api/pricing`, { signal: timeoutSignal() });
+    const res = await fetch(`${await apiOrigin()}/api/pricing`, { signal: timeoutSignal() });
     if (!res.ok) return null;
     const payload = (await res.json()) as {
       data?: Array<{

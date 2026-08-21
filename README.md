@@ -36,7 +36,7 @@
 
 > **U-Claw portable thin shell:** this repository is rebuilt from the latest stable upstream **ClawX v0.5.4** and adds only Windows portable mode, the Xiapan Cloud device wallet, one-click recharge, and default image-generation wiring. The former hardware-fingerprint/license system is not included. See [docs/device-wallet.md](docs/device-wallet.md) for key sharing and rotation semantics.
 
-To build the Windows portable tree, run `pnpm run init` and then `pnpm package:win:portable`. The output is `release/win-unpacked`. Perform the first-run test on a clean computer or real USB drive and verify that wallet state exists only under the package's own `data/clawx-state` directory.
+To build the Windows portable tree, run `pnpm run init` and then `pnpm package:win:portable`. The output is `release/win-unpacked`. Perform the first-run test on a clean computer or real USB drive and verify that wallet state exists only under the package's own `data/clawx-state` directory. Disposable Chromium session caches use the host system cache by default to avoid slow USB random writes.
 
 ## Overview
 

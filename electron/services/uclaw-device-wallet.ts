@@ -1,8 +1,7 @@
 import { logger } from '../utils/logger';
 import {
   detectBestEndpoint,
-  UCLAW_CLOUD_DEFAULT_PAY_BASE,
-  UCLAW_CLOUD_FALLBACK_PAY_BASE,
+  loadUclawCloudEndpointCandidates,
 } from './providers/uclaw-cloud-endpoint';
 
 /**
@@ -115,12 +114,11 @@ type DeviceResponse = {
 };
 
 async function payBases(): Promise<string[]> {
-  const envPay = process.env.UCLAW_PAY_BASE_URL?.trim();
-  if (envPay) return [envPay];
   const detected = await detectBestEndpoint().catch(() => null);
-  const all = [detected?.payBase, UCLAW_CLOUD_DEFAULT_PAY_BASE, UCLAW_CLOUD_FALLBACK_PAY_BASE]
-    .filter((x): x is string => !!x);
-  return Array.from(new Set(all));
+  return Array.from(new Set([
+    detected?.payBase,
+    ...loadUclawCloudEndpointCandidates().map((endpoint) => endpoint.payBase),
+  ].filter((base): base is string => !!base)));
 }
 
 function joinUrl(baseUrl: string, path: string): string {
@@ -306,8 +304,8 @@ async function bindFresh(store: DeviceWalletStore, fetchImpl: typeof fetch): Pro
  * 用真实模型调用来验的话，一把 0 余额的新 key 永远验不过。
  */
 async function defaultVerifyKey(apiKey: string): Promise<boolean> {
-  const endpoint = await detectBestEndpoint().catch(() => null);
-  const apiBase = endpoint?.apiBase ?? 'https://api.u-claw.org.cn/v1';
+  const endpoint = await detectBestEndpoint();
+  const apiBase = endpoint.apiBase;
   try {
     const res = await fetch(joinUrl(apiBase, '/dashboard/billing/subscription'), {
       headers: { Authorization: `Bearer ${apiKey}` },
@@ -456,7 +454,6 @@ async function doResetLocalDeviceWallet(
     if (settled.pendingKey) {
       throw new Error('DEVICE_WALLET_PENDING_NOT_SETTLED');
     }
-    state = settled;
     // 当前 key 已经从用户首次确认时看到的那把变了，必须重新展示并确认。
     throw new Error('DEVICE_WALLET_PENDING_SETTLED');
   }

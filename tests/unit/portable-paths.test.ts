@@ -146,6 +146,21 @@ describe('便携层的调用点（源码级）', () => {
     expect(redirectAt).toBeLessThan(readyAt);
   });
 
+  it("主进程在 whenReady 之前把可丢弃的 Chromium sessionData 放到本机缓存", () => {
+    const source = read('electron', 'main', 'index.ts')
+      .split('\n')
+      .filter((line) => !line.trim().startsWith('//'))
+      .join('\n');
+
+    expect(source).toContain('resolvePortableSessionDataDecision({');
+    expect(source).toContain("app.setPath('sessionData', sessionData.path)");
+
+    const redirectAt = source.indexOf("app.setPath('sessionData', sessionData.path)");
+    const readyAt = source.indexOf('app.whenReady()');
+    expect(redirectAt).toBeGreaterThan(-1);
+    expect(redirectAt).toBeLessThan(readyAt);
+  });
+
   it('每个拉起 OpenClaw 子进程的地方都注入便携 env', () => {
     for (const file of [
       ['electron', 'gateway', 'process-launcher.ts'],

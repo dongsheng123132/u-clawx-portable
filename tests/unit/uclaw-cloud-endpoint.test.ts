@@ -1,11 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   detectBestEndpoint,
+  loadUclawCloudEndpointCandidates,
   resetEndpointCache,
-  UCLAW_CLOUD_DEFAULT_API_BASE,
-  UCLAW_CLOUD_DEFAULT_PAY_BASE,
   UCLAW_CLOUD_FALLBACK_API_BASE,
   UCLAW_CLOUD_FALLBACK_PAY_BASE,
+  UCLAW_CLOUD_PRIMARY_API_BASE,
+  UCLAW_CLOUD_PRIMARY_PAY_BASE,
 } from '@electron/services/providers/uclaw-cloud-endpoint';
 
 vi.mock('@electron/utils/logger', () => ({
@@ -14,96 +18,77 @@ vi.mock('@electron/utils/logger', () => ({
 
 const ORIGINAL_FETCH = globalThis.fetch;
 
-describe('detectBestEndpoint', () => {
-  beforeEach(() => {
-    resetEndpointCache();
-    delete process.env.UCLAW_API_BASE_URL;
-    delete process.env.UCLAW_PAY_BASE_URL;
-  });
-
+describe('U-Claw cloud endpoint failover', () => {
+  beforeEach(() => resetEndpointCache());
   afterEach(() => {
     globalThis.fetch = ORIGINAL_FETCH;
   });
 
-  it('returns the main endpoint when the primary HEAD probe succeeds', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ status: 200 } as Response);
+  it('uses api.u-claw.org.cn when the primary path answers', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ status: 401 } as Response);
     globalThis.fetch = fetchMock;
 
-    const endpoint = await detectBestEndpoint();
-
-    expect(endpoint).toEqual({
-      apiBase: UCLAW_CLOUD_DEFAULT_API_BASE,
-      payBase: UCLAW_CLOUD_DEFAULT_PAY_BASE,
-      origin: 'oversea',
+    expect(await detectBestEndpoint()).toEqual({
+      apiBase: UCLAW_CLOUD_PRIMARY_API_BASE,
+      payBase: UCLAW_CLOUD_PRIMARY_PAY_BASE,
+      origin: 'primary',
     });
-    expect(fetchMock).toHaveBeenCalledWith(
-      `${UCLAW_CLOUD_DEFAULT_API_BASE}/models`,
-      expect.objectContaining({ method: 'HEAD' }),
-    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('treats 4xx as reachable because the network path answered', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({ status: 401 } as Response);
+  it('switches to api.u-claw.org only after a primary network/5xx failure', async () => {
+    globalThis.fetch = vi.fn()
+      .mockResolvedValueOnce({ status: 503 } as Response)
+      .mockResolvedValueOnce({ status: 200 } as Response);
 
-    const endpoint = await detectBestEndpoint();
-
-    expect(endpoint.origin).toBe('oversea');
-  });
-
-  it('falls back to CN when the primary probe rejects', async () => {
-    let callCount = 0;
-    globalThis.fetch = vi.fn().mockImplementation(async () => {
-      callCount += 1;
-      if (callCount === 1) {
-        throw new TypeError('fetch failed: ECONNRESET');
-      }
-      return { status: 200 } as Response;
-    });
-
-    const endpoint = await detectBestEndpoint();
-
-    expect(endpoint).toEqual({
+    expect(await detectBestEndpoint()).toEqual({
       apiBase: UCLAW_CLOUD_FALLBACK_API_BASE,
       payBase: UCLAW_CLOUD_FALLBACK_PAY_BASE,
-      origin: 'cn',
+      origin: 'fallback',
     });
   });
 
-  it('falls back to defaults when both endpoints are unreachable', async () => {
-    globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('fetch failed'));
-
-    const endpoint = await detectBestEndpoint();
-
-    expect(endpoint).toEqual({
-      apiBase: UCLAW_CLOUD_DEFAULT_API_BASE,
-      payBase: UCLAW_CLOUD_DEFAULT_PAY_BASE,
-      origin: 'default-fallback',
-    });
-  });
-
-  it('honors env overrides and skips the network probe entirely', async () => {
-    process.env.UCLAW_API_BASE_URL = 'https://mirror.example.com/v1';
-    process.env.UCLAW_PAY_BASE_URL = 'https://pay.example.com';
-    const fetchMock = vi.fn();
+  it('keeps the primary unverified and retries later when both paths fail', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError('offline'));
     globalThis.fetch = fetchMock;
 
-    const endpoint = await detectBestEndpoint();
-
-    expect(endpoint).toEqual({
-      apiBase: 'https://mirror.example.com/v1',
-      payBase: 'https://pay.example.com',
-      origin: 'env',
-    });
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect((await detectBestEndpoint()).origin).toBe('primary-unverified');
+    expect((await detectBestEndpoint()).origin).toBe('primary-unverified');
+    expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
-  it('caches the resolved endpoint across calls', async () => {
+  it('caches a verified choice for the rest of the process', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ status: 200 } as Response);
     globalThis.fetch = fetchMock;
 
     await detectBestEndpoint();
     await detectBestEndpoint();
-
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('loads an operator-editable HTTPS A/B list and rejects an invalid file', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'uclaw-endpoints-'));
+    const configPath = join(dir, 'uclaw-cloud-endpoints.json');
+    try {
+      writeFileSync(configPath, JSON.stringify({
+        version: 1,
+        endpoints: [
+          { id: 'a', apiBase: 'https://a.example.com/v1/', payBase: 'https://a.example.com/' },
+          { id: 'b', apiBase: 'https://b.example.com/v1', payBase: 'https://b.example.com' },
+        ],
+      }));
+      expect(loadUclawCloudEndpointCandidates(configPath)).toEqual([
+        { id: 'a', apiBase: 'https://a.example.com/v1', payBase: 'https://a.example.com' },
+        { id: 'b', apiBase: 'https://b.example.com/v1', payBase: 'https://b.example.com' },
+      ]);
+
+      writeFileSync(configPath, JSON.stringify({
+        version: 1,
+        endpoints: [{ apiBase: 'http://unsafe.example.com/v1', payBase: 'https://safe.example.com' }],
+      }));
+      expect(loadUclawCloudEndpointCandidates(configPath)[0].apiBase).toBe(UCLAW_CLOUD_PRIMARY_API_BASE);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

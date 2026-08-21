@@ -9,11 +9,13 @@ import {
   rotateDeviceKey,
 } from '../../electron/services/uclaw-device-wallet';
 
-// 端点探测会打真网。钉死成固定 base，测试才是确定性的。
+// 产品端点固定；测试换成假 base，避免打真网。
 vi.mock('../../electron/services/providers/uclaw-cloud-endpoint', () => ({
-  detectBestEndpoint: async () => ({ apiBase: 'https://pay.test/v1', payBase: 'https://pay.test', origin: 'cn' }),
-  UCLAW_CLOUD_DEFAULT_PAY_BASE: 'https://pay.test',
-  UCLAW_CLOUD_FALLBACK_PAY_BASE: 'https://pay.test',
+  detectBestEndpoint: async () => ({ apiBase: 'https://pay.test/v1', payBase: 'https://pay.test', origin: 'primary' }),
+  loadUclawCloudEndpointCandidates: () => [
+    { id: 'primary', apiBase: 'https://pay.test/v1', payBase: 'https://pay.test' },
+    { id: 'fallback', apiBase: 'https://pay-fallback.test/v1', payBase: 'https://pay-fallback.test' },
+  ],
 }));
 
 vi.mock('../../electron/utils/logger', () => ({

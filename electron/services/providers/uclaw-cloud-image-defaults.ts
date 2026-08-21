@@ -10,7 +10,7 @@ import {
   CLAWX_OPENAI_IMAGE_DEFAULT_MODEL,
   CLAWX_OPENAI_IMAGE_PROVIDER_KEY,
 } from '../../utils/openclaw-image-relay-constants';
-import { detectBestEndpoint, UCLAW_CLOUD_DEFAULT_API_BASE } from './uclaw-cloud-endpoint';
+import { detectBestEndpoint, UCLAW_CLOUD_PRIMARY_API_BASE } from './uclaw-cloud-endpoint';
 
 /**
  * 给 image_generate 工具配一个 OpenAI Images 兼容端点，指向虾盘云。
@@ -51,7 +51,7 @@ export async function ensureUclawCloudImageDefaults(
 
     if (!relay.enabled) {
       const baseUrl = apiBaseUrl?.trim() || (await detectBestEndpoint().catch(() => ({
-        apiBase: UCLAW_CLOUD_DEFAULT_API_BASE,
+        apiBase: UCLAW_CLOUD_PRIMARY_API_BASE,
       }))).apiBase;
       await applyOpenAiImageRelaySettings({
         enabled: true,

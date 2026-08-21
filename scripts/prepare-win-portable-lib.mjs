@@ -16,6 +16,7 @@ export const portableLicenseFileNames = [
   'LICENSES.chromium.html',
 ];
 export const portableLicenseDirName = 'third-party-licenses';
+export const portableCloudEndpointConfigFileName = 'uclaw-cloud-endpoints.json';
 
 const resetScriptFileName = '一键重置.bat';
 const presetAgentModuleCache = new Map();
@@ -174,6 +175,23 @@ export async function writePortableResetScript(targetDir) {
   return resetScriptPath;
 }
 
+export async function copyPortableCloudEndpointConfig(targetDir, options = {}) {
+  const { projectRootDir = projectRoot } = options;
+  const sourcePath = path.join(
+    projectRootDir,
+    'electron',
+    'shared',
+    'providers',
+    'uclaw-cloud-endpoints.json',
+  );
+  if (!existsSync(sourcePath)) {
+    throw new Error(`Required cloud endpoint config not found: ${sourcePath}`);
+  }
+  const destinationPath = path.join(targetDir, portableCloudEndpointConfigFileName);
+  await copyFile(sourcePath, destinationPath);
+  return destinationPath;
+}
+
 async function loadPresetAgentModule(projectRootDir) {
   const cacheKey = path.resolve(projectRootDir);
   const cached = presetAgentModuleCache.get(cacheKey);
@@ -327,12 +345,14 @@ export async function preparePortableOutput(options = {}) {
     'utf8',
   );
   const copiedRootFiles = await copyPortableRootFiles(targetDir, { projectRootDir });
+  const cloudEndpointConfigPath = await copyPortableCloudEndpointConfig(targetDir, { projectRootDir });
   await seedPortablePresetAgents(targetDir);
   const { organizedFiles, thirdPartyLicensesDir } = await organizePortableLicenseFiles(targetDir);
   const resetScriptPath = await writePortableResetScript(targetDir);
 
   return {
     copiedRootFiles,
+    cloudEndpointConfigPath,
     dataDir,
     organizedLicenseFiles: organizedFiles,
     portableFlagPath,

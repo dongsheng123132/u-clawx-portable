@@ -1,8 +1,8 @@
 # Device wallet / 设备钱包
 
-U-Claw does not use a hardware fingerprint, license gate, registration, or login. On first online start, the server issues a random API key for a zero-balance wallet. The portable build stores that wallet under its own `data/clawx-state` directory.
+U-Claw does not use a hardware fingerprint, license gate, registration, or login. On first online start, the device-wallet service issues a random API key for a zero-balance wallet. Cloud calls prefer `https://api.u-claw.org.cn` and fall back to `https://api.u-claw.org` on network or server failure. Operators can change this order in `uclaw-cloud-endpoints.json` next to `U-Claw.exe`; invalid or missing files fall back to the bundled list. The portable build stores its wallet under `data/clawx-state`; only disposable Chromium session caches use the host system cache.
 
-U-Claw 不使用硬件指纹、授权门禁、注册或登录。首次联网启动时，服务端为一个零余额钱包随机签发 API Key；便携版把钱包保存在自身的 `data/clawx-state` 目录。
+U-Claw 不使用硬件指纹、授权门禁、注册或登录。首次联网启动时，设备钱包服务为一个零余额钱包随机签发 API Key；云端请求优先使用 `https://api.u-claw.org.cn`，网络或服务端失败时自动切到 `https://api.u-claw.org`。运营方以后可以直接修改 `U-Claw.exe` 旁的 `uclaw-cloud-endpoints.json` 调整顺序；文件缺失或无效时自动退回内置清单。便携版把钱包保存在自身的 `data/clawx-state` 目录，仅把可丢弃的 Chromium 会话缓存放到宿主机系统缓存。
 
 ## Security model / 安全模型
 

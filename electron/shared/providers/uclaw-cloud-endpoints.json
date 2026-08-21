@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "endpoints": [
+    {
+      "id": "primary",
+      "apiBase": "https://api.u-claw.org.cn/v1",
+      "payBase": "https://api.u-claw.org.cn"
+    },
+    {
+      "id": "fallback",
+      "apiBase": "https://api.u-claw.org/v1",
+      "payBase": "https://api.u-claw.org"
+    }
+  ]
+}

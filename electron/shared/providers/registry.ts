@@ -4,6 +4,7 @@ import type {
   ProviderType,
   ProviderTypeInfo,
 } from './types';
+import { UCLAW_CLOUD_PRIMARY_ENDPOINT } from './uclaw-cloud-config';
 
 export const PROVIDER_DEFINITIONS: ProviderDefinition[] = [
   {
@@ -217,7 +218,7 @@ export const PROVIDER_DEFINITIONS: ProviderDefinition[] = [
     placeholder: 'sk-...',
     model: '虾盘云',
     requiresApiKey: true,
-    defaultBaseUrl: 'https://api.u-claw.org/v1',
+    defaultBaseUrl: UCLAW_CLOUD_PRIMARY_ENDPOINT.apiBase,
     showModelId: true,
     modelIdPlaceholder: 'deepseek-v4-flash',
     defaultModelId: 'deepseek-v4-flash',
@@ -227,7 +228,7 @@ export const PROVIDER_DEFINITIONS: ProviderDefinition[] = [
     defaultAuthMode: 'api_key',
     supportsMultipleAccounts: false,
     providerConfig: {
-      baseUrl: 'https://api.u-claw.org/v1',
+      baseUrl: UCLAW_CLOUD_PRIMARY_ENDPOINT.apiBase,
       api: 'openai-completions',
       apiKeyEnv: 'UCLAW_CLOUD_API_KEY',
     },

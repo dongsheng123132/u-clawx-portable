@@ -12,7 +12,11 @@ import { HostApiRegistry } from './ipc/host-invoke';
 import { createTray } from './tray';
 import { createMenu } from './menu';
 import { installEditContextMenu } from './edit-context-menu';
-import { getDataDir, isPortableMode } from '../utils/paths';
+import { getAppRoot, getDataDir, isPortableMode } from '../utils/paths';
+import {
+  ensurePortableSessionDataDir,
+  resolvePortableSessionDataDecision,
+} from '../utils/portable-session-data';
 import { registerZoomShortcuts } from './zoom-shortcuts';
 
 import { appUpdater, registerUpdateHandlers } from './updater';
@@ -85,6 +89,18 @@ if (isE2EMode && requestedUserDataDir) {
 // 同类漏法这是第二次（第一次是 Gateway 子进程没拿到 OPENCLAW_* env）。
 if (!isE2EMode && isPortableMode()) {
   app.setPath('userData', getDataDir());
+
+  // Credentials/config/history stay portable. Only disposable Chromium cache
+  // moves to the host's fast local cache to avoid USB random-write latency.
+  const portableStateDir = getDataDir();
+  const sessionData = resolvePortableSessionDataDecision({
+    appRoot: getAppRoot(),
+    portableStateDir,
+  });
+  if (sessionData.path) {
+    ensurePortableSessionDataDir(sessionData.path);
+    app.setPath('sessionData', sessionData.path);
+  }
 }
 
 // On Linux, set CHROME_DESKTOP so Chromium can find the correct .desktop file.

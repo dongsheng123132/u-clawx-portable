@@ -22,6 +22,7 @@ async function main() {
   console.log(`[portable] ensured ${result.dataDir}`);
   console.log(`[portable] wrote ${result.portableFlagPath}`);
   console.log(`[portable] wrote ${result.resetScriptPath}`);
+  console.log(`[portable] wrote ${result.cloudEndpointConfigPath}`);
   for (const copiedFile of result.copiedRootFiles) {
     console.log(`[portable] copied ${copiedFile}`);
   }

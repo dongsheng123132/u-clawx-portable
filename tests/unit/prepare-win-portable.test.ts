@@ -34,8 +34,14 @@ describe('prepare-win-portable script', () => {
     const chromiumLicenseContent = '<html>Chromium licenses</html>\n';
 
     await mkdir(join(sourceDir, 'resources'), { recursive: true });
+    await mkdir(join(projectRootDir, 'electron', 'shared', 'providers'), { recursive: true });
     await writeFile(join(sourceDir, 'U-Claw.exe'), '');
     await writeFile(join(projectRootDir, 'license.clawx.txt'), licenseContent, 'utf8');
+    await writeFile(
+      join(projectRootDir, 'electron', 'shared', 'providers', 'uclaw-cloud-endpoints.json'),
+      '{"version":1,"endpoints":[]}',
+      'utf8',
+    );
     await writeFile(join(sourceDir, 'LICENSE.electron.txt'), electronLicenseContent, 'utf8');
     await writeFile(join(sourceDir, 'LICENSES.chromium.html'), chromiumLicenseContent, 'utf8');
 
@@ -52,6 +58,7 @@ describe('prepare-win-portable script', () => {
     await expect(readFile(join(sourceDir, 'third-party-licenses', 'LICENSE.electron.txt'), 'utf8')).resolves.toBe(electronLicenseContent);
     await expect(readFile(join(sourceDir, 'third-party-licenses', 'LICENSES.chromium.html'), 'utf8')).resolves.toBe(chromiumLicenseContent);
     await expect(readFile(join(sourceDir, 'portable.flag'), 'utf8')).resolves.toContain('Portable mode enabled.');
+    await expect(readFile(join(sourceDir, 'uclaw-cloud-endpoints.json'), 'utf8')).resolves.toContain('"version":1');
     const resetScript = await readFile(result.resetScriptPath, 'utf8');
     expect(resetScript).toContain('Press any key to continue, or close this window to cancel.');
     expect(resetScript).toContain('taskkill /F /T /IM "U-Claw.exe"');
