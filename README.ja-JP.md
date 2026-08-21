@@ -36,7 +36,7 @@
 
 > **U-Claw ポータブル薄型シェル:** 本リポジトリは最新安定版 **ClawX v0.5.4** からクリーンに再構築し、Windows ポータブルモード、Xiapan Cloud デバイスウォレット、ワンクリックチャージ、既定の画像生成連携、手動テクニカルサポート画面を追加しています。旧ハードウェア指紋／ライセンス機構は含みません。Key の共有とローテーション仕様は [docs/device-wallet.md](docs/device-wallet.md) を参照してください。
 
-Windows ポータブル版は `pnpm run init` の後に `pnpm package:win:portable` を実行し、`release/win-unpacked` を使用します。初回起動はクリーンな PC または実際の USB ドライブで検証してください。ホストの `%APPDATA%/clawx` に以前のウォレットがある場合、ポータブル版は取り込む前に確認し、別のウォレットを黙って作成しません。USB のランダム書き込みを避けるため、破棄可能な Chromium セッションキャッシュだけは既定でホストのシステムキャッシュを使用します。
+Windows ポータブル版は `pnpm run init` の後に `pnpm package:win:portable` を実行し、`release/win-unpacked` を使用します。初回起動はクリーンな PC または実際の USB ドライブで検証してください。ホストの `%APPDATA%/clawx` に以前のウォレットがある場合、ポータブル版は取り込む前に確認し、別のウォレットを黙って作成しません。管理対象 Gateway がすでに動作中なら、ウォレットと Provider 設定を保存した後にバックグラウンドで再起動します。USB のランダム書き込みを避けるため、破棄可能な Chromium セッションキャッシュだけは既定でホストのシステムキャッシュを使用します。
 
 ## 概要
 

@@ -10,6 +10,10 @@ Older builds accidentally stored the wallet under the host `%APPDATA%/clawx` dir
 
 旧版本曾把钱包误写到宿主机 `%APPDATA%/clawx`。无钱包的便携版发现该文件后会暂停自动 bind，只向界面显示脱敏 Key 和只读余额，由用户明确选择**导入旧钱包**或**创建新钱包**。导入仍走标准 adopt/provider 应用入口；创建新钱包也不会删除旧文件、旧 Key 或服务端余额。旧钱包明文 Key 永远不会返回渲染层，更不能进入发布包。
 
+If the managed Gateway is already running when a wallet is imported or changed, U-Claw briefly stops it, persists the wallet, provider, and OpenClaw runtime configuration while offline, then restarts the Gateway in the background. This avoids a chain of live `config.get`/`config.set` timeouts and lets the wallet and provider UI converge immediately. A Gateway that the user intentionally stopped is not started.
+
+如果导入或更换钱包时受管 Gateway 已在运行，U-Claw 会短暂停止它，离线原子写入钱包、Provider 与 OpenClaw 运行时配置，再在后台重新启动。这样不会串行等待多次 `config.get`/`config.set` 超时，钱包区与 Provider 区也能立即同步。用户原本主动停止的 Gateway 不会被自动唤醒。
+
 ## Security model / 安全模型
 
 - The API key is the wallet credential. Anyone holding it can spend the wallet's entire available balance; adopting a key on another computer does **not** split or limit the balance.

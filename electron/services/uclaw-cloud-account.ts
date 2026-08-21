@@ -174,14 +174,33 @@ async function applyKeyToProvider(apiKey: string | null, gatewayManager?: Gatewa
   }
 
   await providerService.setDefaultAccount(UCLAW_CLOUD_PROVIDER_ID);
-  await syncDefaultProviderToRuntime(UCLAW_CLOUD_PROVIDER_ID, gatewayManager);
+  const gatewayState = gatewayManager?.getStatus().state;
+  const resumeManagedGateway = gatewayState === 'running' || gatewayState === 'starting';
 
-  // image_generate 用独立的 OpenAI Images 兼容端点，和聊天 provider 无关。
-  // best-effort：配不上不影响聊天。
-  await ensureUclawCloudImageDefaults(apiKey, {
-    apiBaseUrl: account.baseUrl,
-    model: curated.image,
-  });
+  // 钱包可能在 Gateway 已经启动（而且启动时 providerKeys=0）后才由用户导入。
+  // 此时连续走 config.get/config.set 不仅可能每步等 30 秒，还会形成“钱包已落盘，
+  // UI 却仍在等待”的半成功状态。先停受管 Gateway，让统一配置协调器原子写文件，
+  // 再从新的 provider/key 状态后台启动；用户能立即看到钱包与 Provider 已收敛。
+  if (resumeManagedGateway && gatewayManager) {
+    await gatewayManager.stop();
+  }
+
+  try {
+    await syncDefaultProviderToRuntime(UCLAW_CLOUD_PROVIDER_ID, gatewayManager);
+
+    // image_generate 用独立的 OpenAI Images 兼容端点，和聊天 provider 无关。
+    // best-effort：配不上不影响聊天。
+    await ensureUclawCloudImageDefaults(apiKey, {
+      apiBaseUrl: account.baseUrl,
+      model: curated.image,
+    });
+  } finally {
+    if (resumeManagedGateway && gatewayManager) {
+      // 不等待冷启动，避免 U 盘首次导入把钱包按钮锁几十秒。debouncedRestart
+      // 会处理尚未退出的 startLock，并且不会唤醒用户原本主动停止的 Gateway。
+      gatewayManager.debouncedRestart(250);
+    }
+  }
 }
 
 /**

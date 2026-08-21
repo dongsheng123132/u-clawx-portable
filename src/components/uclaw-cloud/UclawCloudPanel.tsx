@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { hostApi } from '@/lib/host-api';
+import { useProviderStore } from '@/stores/providers';
 import { useUclawCloudStore } from '@/stores/uclaw-cloud';
 
 /**
@@ -33,6 +34,7 @@ export function UclawCloudPanel() {
   const importLegacyWallet = useUclawCloudStore((s) => s.importLegacyWallet);
   const createFreshWallet = useUclawCloudStore((s) => s.createFreshWallet);
   const resetLocalWallet = useUclawCloudStore((s) => s.resetLocalWallet);
+  const refreshProviderSnapshot = useProviderStore((s) => s.refreshProviderSnapshot);
 
   const [refreshing, setRefreshing] = useState(false);
   const [keyCopied, setKeyCopied] = useState(false);
@@ -91,7 +93,11 @@ export function UclawCloudPanel() {
   async function guarded(action: () => Promise<string>, fallback: string) {
     setBusy(true);
     try {
-      toast.success((await action()) || fallback);
+      const message = await action();
+      // 钱包动作会创建、更新或删除同一把受管 Provider。同步刷新两块 UI，
+      // 避免上方钱包已就绪、下方仍显示“未配置提供商”的陈旧快照。
+      await refreshProviderSnapshot();
+      toast.success(message || fallback);
     } catch (error) {
       toast.error(translatedError(error));
     } finally {

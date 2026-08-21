@@ -19,4 +19,6 @@ Device-wallet credentials have one local authority and must follow `docs/device-
 - No-wallet and network-failure states never block the rest of the application.
 - A wallet-less portable build checks for the historical host-userData wallet before bind. A valid candidate pauses bind until the user explicitly imports it or chooses a separate new wallet.
 - Legacy import exposes only a masked key and read-only balance to Renderer, converges through the existing adopt/provider-application path, and never deletes or rewrites the legacy wallet.
+- If a wallet credential changes while the managed Gateway is running or starting, pause it before runtime config persistence and restart it in the background afterward; never hold the wallet action open across repeated live config RPC timeouts.
+- A successful wallet action refreshes both the wallet snapshot and the provider snapshot so the two UI surfaces cannot disagree.
 - Renderer controls use the typed `hostApi.uclaw` surface; visible text is translated in English, Chinese, Japanese, and Russian.

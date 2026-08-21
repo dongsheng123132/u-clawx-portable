@@ -72,6 +72,10 @@ test.describe('Device wallet', { tag: E2E_EXCLUSIVE_TAG }, () => {
     await expect(legacyCard).toContainText('sk-paid...legacy');
     await expect(legacyCard).toContainText('500,004');
 
+    const providerRefreshesBeforeImport = (await getRecordedHostInvocations(electronApp))
+      .filter((entry) => entry.module === 'providers' && entry.action === 'accounts')
+      .length;
+
     await page.getByTestId('uclaw-cloud-import-legacy-wallet').click();
     await expect(page.getByRole('dialog')).toContainText('Import this previous wallet?');
     await page.getByRole('button', { name: 'Import wallet' }).click();
@@ -80,5 +84,10 @@ test.describe('Device wallet', { tag: E2E_EXCLUSIVE_TAG }, () => {
       (await getRecordedHostInvocations(electronApp))
         .some((entry) => entry.module === 'uclaw' && entry.action === 'importLegacyWallet')
     )).toBe(true);
+    await expect.poll(async () => (
+      (await getRecordedHostInvocations(electronApp))
+        .filter((entry) => entry.module === 'providers' && entry.action === 'accounts')
+        .length
+    )).toBeGreaterThan(providerRefreshesBeforeImport);
   });
 });
