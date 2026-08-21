@@ -21,6 +21,10 @@ type UclawCloudState = {
   rotateKey: () => Promise<string>;
   /** 填入一把已有凭证（换电脑 / 重装 / 找回老钱包）。 */
   adoptKey: (key: string) => Promise<string>;
+  /** 用户确认后导入旧版宿主机钱包。 */
+  importLegacyWallet: () => Promise<string>;
+  /** 用户明确放弃导入后，创建一个独立的新钱包。 */
+  createFreshWallet: () => Promise<string>;
   /** 只清本机消费者与钱包状态；不删除服务端钱包或余额。 */
   resetLocalWallet: () => Promise<string>;
 };
@@ -78,6 +82,20 @@ export const useUclawCloudStore = create<UclawCloudState>((set, get) => ({
     const result = await hostApi.uclaw.adoptKey({ key });
     if (!result.success) throw new Error(result.error || '密钥保存失败');
     // 换的是另一个钱包，余额整个不一样，必须重新拉。
+    await get().refresh();
+    return result.message || '';
+  },
+
+  importLegacyWallet: async () => {
+    const result = await hostApi.uclaw.importLegacyWallet();
+    if (!result.success) throw new Error(result.error || 'DEVICE_WALLET_LEGACY_IMPORT_FAILED');
+    await get().refresh();
+    return result.message || '';
+  },
+
+  createFreshWallet: async () => {
+    const result = await hostApi.uclaw.createFreshWallet();
+    if (!result.success) throw new Error(result.error || 'DEVICE_WALLET_CREATE_FRESH_FAILED');
     await get().refresh();
     return result.message || '';
   },

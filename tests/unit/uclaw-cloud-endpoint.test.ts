@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   detectBestEndpoint,
+  fetchUclawCloudApiWithFailover,
   loadUclawCloudEndpointCandidates,
   resetEndpointCache,
   UCLAW_CLOUD_FALLBACK_API_BASE,
@@ -64,6 +65,35 @@ describe('U-Claw cloud endpoint failover', () => {
     await detectBestEndpoint();
     await detectBestEndpoint();
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries the concrete API route on fallback when the healthy primary edge returns 404', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ status: 200 } as Response) // primary /models probe
+      .mockResolvedValueOnce({ status: 404 } as Response) // primary usage route
+      .mockResolvedValueOnce({ status: 200 } as Response); // fallback usage route
+    globalThis.fetch = fetchMock;
+
+    const response = await fetchUclawCloudApiWithFailover('/api/usage/token/', {
+      headers: { Authorization: 'Bearer sk-test-only' },
+    });
+
+    expect(response.status).toBe(200);
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toEqual([
+      `${UCLAW_CLOUD_PRIMARY_API_BASE}/models`,
+      `${UCLAW_CLOUD_PRIMARY_PAY_BASE}/api/usage/token/`,
+      `${UCLAW_CLOUD_FALLBACK_PAY_BASE}/api/usage/token/`,
+    ]);
+  });
+
+  it('does not evade an authentication or rate-limit decision through fallback', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ status: 200 } as Response)
+      .mockResolvedValueOnce({ status: 401 } as Response);
+    globalThis.fetch = fetchMock;
+
+    expect((await fetchUclawCloudApiWithFailover('/api/usage/token/')).status).toBe(401);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('loads an operator-editable HTTPS A/B list and rejects an invalid file', () => {

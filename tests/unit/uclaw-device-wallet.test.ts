@@ -2,8 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   adoptDeviceKey,
+  createFreshDeviceWallet,
   createMemoryDeviceWalletStore,
   ensureDeviceKey,
+  importLegacyDeviceWallet,
   KEY_KIND_RANDOM,
   resetLocalDeviceWallet,
   rotateDeviceKey,
@@ -148,6 +150,104 @@ describe('ensureDeviceKey', () => {
 
     expect(r.apiKey).toBe('sk-old');
     expect(calls).toEqual([]);
+  });
+
+  it('发现有效旧钱包时暂停自动 bind，等待用户决定', async () => {
+    const store = createMemoryDeviceWalletStore();
+    const { fetchImpl, calls } = fakeServer({
+      '/device/bind': { status: 200, body: { walletId: 'wal_new', apiKey: 'sk-new' } },
+    });
+
+    const result = await ensureDeviceKey({
+      store,
+      fetch: fetchImpl,
+      discoverLegacyWallet: async () => ({
+        status: 'candidate',
+        key: 'sk-paid-legacy',
+        walletId: 'wal_legacy',
+      }),
+    });
+
+    expect(result.apiKey).toBe('');
+    expect(calls).toEqual([]);
+    expect((await store.get()).key).toBe('');
+  });
+
+  it('旧钱包损坏或有 pending 时也不静默创建竞争钱包', async () => {
+    const store = createMemoryDeviceWalletStore();
+    const { fetchImpl, calls } = fakeServer({
+      '/device/bind': { status: 200, body: { walletId: 'wal_new', apiKey: 'sk-new' } },
+    });
+
+    const result = await ensureDeviceKey({
+      store,
+      fetch: fetchImpl,
+      discoverLegacyWallet: async () => ({ status: 'blocked', reason: 'pending' }),
+    });
+
+    expect(result.apiKey).toBe('');
+    expect(calls).toEqual([]);
+  });
+});
+
+describe('legacy wallet migration', () => {
+  it('确认导入后走 adopt，验证成功才落到当前便携 store', async () => {
+    const store = createMemoryDeviceWalletStore();
+    const result = await importLegacyDeviceWallet({
+      store,
+      verifyKey: alwaysValid,
+      discoverLegacyWallet: async () => ({
+        status: 'candidate',
+        key: 'sk-paid-legacy',
+        walletId: 'wal_legacy',
+      }),
+    });
+
+    expect(result.apiKey).toBe('sk-paid-legacy');
+    expect((await store.get()).key).toBe('sk-paid-legacy');
+  });
+
+  it('用户明确选择新钱包后才绕过旧钱包保护，而且并发只 bind 一次', async () => {
+    const store = createMemoryDeviceWalletStore();
+    let bindCalls = 0;
+    const fetchImpl = (async () => {
+      bindCalls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ walletId: 'wal_fresh', apiKey: 'sk-fresh' }),
+      } as Response;
+    }) as typeof fetch;
+    const deps = {
+      store,
+      fetch: fetchImpl,
+      discoverLegacyWallet: async () => ({
+        status: 'candidate' as const,
+        key: 'sk-paid-legacy',
+        walletId: 'wal_legacy',
+      }),
+    };
+
+    const [first, second] = await Promise.all([
+      createFreshDeviceWallet(deps),
+      createFreshDeviceWallet(deps),
+    ]);
+
+    expect(first.apiKey).toBe('sk-fresh');
+    expect(second.apiKey).toBe('sk-fresh');
+    expect(bindCalls).toBe(1);
+  });
+
+  it('旧钱包有 pending 时拒绝导入，不猜状态', async () => {
+    const store = createMemoryDeviceWalletStore();
+
+    await expect(importLegacyDeviceWallet({
+      store,
+      discoverLegacyWallet: async () => ({ status: 'blocked', reason: 'pending' }),
+    })).rejects.toThrow('DEVICE_WALLET_LEGACY_PENDING');
+
+    expect((await store.get()).key).toBe('');
   });
 });
 

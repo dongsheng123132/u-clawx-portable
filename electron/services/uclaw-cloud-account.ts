@@ -6,6 +6,7 @@ import { getProviderService } from './providers/provider-service';
 import { syncDefaultProviderToRuntime } from './providers/provider-runtime-sync';
 import {
   detectBestEndpoint,
+  fetchUclawCloudApiWithFailover,
   UCLAW_CLOUD_PRIMARY_API_BASE,
   UCLAW_CLOUD_PRIMARY_PAY_BASE,
 } from './providers/uclaw-cloud-endpoint';
@@ -21,7 +22,10 @@ import { providerAccountToConfig } from './providers/provider-store';
 import { syncDeletedProviderApiKeyToRuntime } from './providers/provider-runtime-sync';
 import {
   adoptDeviceKey,
+  createFreshDeviceWallet,
+  discoverLegacyDeviceWallet,
   ensureDeviceKey,
+  importLegacyDeviceWallet,
   resetLocalDeviceWallet,
   rotateDeviceKey,
 } from './uclaw-device-wallet';
@@ -55,7 +59,6 @@ async function offeredModelIds(apiKey: string, curatedChat: string[]): Promise<s
   return resolveOfferedModelIds(curatedChat, available);
 }
 
-const NETWORK_TIMEOUT_MS = 10_000;
 
 export type UclawBalance = {
   available: boolean;
@@ -72,20 +75,18 @@ export type UclawWalletInfo = {
   ready: boolean;
   apiKeyMasked?: string;
   walletId?: string;
+  legacyWallet?: {
+    status: 'candidate' | 'blocked';
+    apiKeyMasked?: string;
+    remainTokens?: number;
+    reason?: 'invalid' | 'pending';
+  };
 };
 
 function maskApiKey(apiKey?: string): string {
   if (!apiKey) return '';
   if (apiKey.length <= 13) return `${apiKey.slice(0, 4)}...`;
   return `${apiKey.slice(0, 7)}...${apiKey.slice(-6)}`;
-}
-
-function joinUrl(baseUrl: string, path: string): string {
-  return `${baseUrl.replace(/\/+$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
-}
-
-function timeoutSignal(): AbortSignal | undefined {
-  return typeof AbortSignal?.timeout === 'function' ? AbortSignal.timeout(NETWORK_TIMEOUT_MS) : undefined;
 }
 
 function apiOrigin(apiBase: string): string {
@@ -205,24 +206,34 @@ export async function ensureUclawCloudAccount(gatewayManager?: GatewayManager): 
 /** 当前钱包信息（掩码，不含明文 key）。 */
 export async function getWalletInfo(): Promise<UclawWalletInfo> {
   const wallet = await ensureDeviceKey();
-  return wallet.apiKey
-    ? { ready: true, apiKeyMasked: maskApiKey(wallet.apiKey), walletId: wallet.walletId }
-    : { ready: false };
+  if (wallet.apiKey) {
+    return { ready: true, apiKeyMasked: maskApiKey(wallet.apiKey), walletId: wallet.walletId };
+  }
+
+  const legacy = await discoverLegacyDeviceWallet();
+  if (legacy.status === 'blocked') {
+    return { ready: false, legacyWallet: { status: 'blocked', reason: legacy.reason } };
+  }
+  if (legacy.status === 'candidate') {
+    const balance = await getBalanceForKey(legacy.key);
+    return {
+      ready: false,
+      legacyWallet: {
+        status: 'candidate',
+        apiKeyMasked: maskApiKey(legacy.key),
+        remainTokens: balance.remainTokens,
+      },
+    };
+  }
+  return { ready: false };
 }
 
-/** 虾粮余额。 */
-export async function getBalance(): Promise<UclawBalance> {
-  const wallet = await ensureDeviceKey();
-  if (!wallet.apiKey) {
-    return { available: false, error: 'no_wallet' };
-  }
-  const masked = maskApiKey(wallet.apiKey);
+async function getBalanceForKey(apiKey: string): Promise<UclawBalance> {
+  const masked = maskApiKey(apiKey);
   try {
-    const endpoint = await detectBestEndpoint();
-    const res = await fetch(joinUrl(apiOrigin(endpoint.apiBase), '/api/usage/token/'), {
+    const res = await fetchUclawCloudApiWithFailover('/api/usage/token/', {
       method: 'GET',
-      headers: { Authorization: `Bearer ${wallet.apiKey}` },
-      signal: timeoutSignal(),
+      headers: { Authorization: `Bearer ${apiKey}` },
     });
     const payload = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     const usage = (payload.data && typeof payload.data === 'object' && !Array.isArray(payload.data)
@@ -245,6 +256,15 @@ export async function getBalance(): Promise<UclawBalance> {
       error: error instanceof Error ? error.message : String(error),
     };
   }
+}
+
+/** 虾粮余额。 */
+export async function getBalance(): Promise<UclawBalance> {
+  const wallet = await ensureDeviceKey();
+  if (!wallet.apiKey) {
+    return { available: false, error: 'no_wallet' };
+  }
+  return getBalanceForKey(wallet.apiKey);
 }
 
 /** 一键充值：带上本机钱包 key 的充值页地址。 */
@@ -280,6 +300,25 @@ export async function adoptKey(
   const result = await adoptDeviceKey(key);
   await applyKeyToProvider(result.apiKey, gatewayManager);
   return result;
+}
+
+/** 用户确认后导入宿主机旧钱包；旧文件与服务端余额保持原样。 */
+export async function importLegacyWallet(
+  gatewayManager?: GatewayManager,
+): Promise<{ apiKey: string; message: string }> {
+  const result = await importLegacyDeviceWallet();
+  await applyKeyToProvider(result.apiKey, gatewayManager);
+  return { ...result, message: '' };
+}
+
+/** 用户明确选择不导入旧钱包后，创建一个相互独立的新钱包。 */
+export async function createFreshWallet(
+  gatewayManager?: GatewayManager,
+): Promise<{ apiKey: string; message: string }> {
+  const result = await createFreshDeviceWallet();
+  if (!result.apiKey) throw new Error('DEVICE_WALLET_CREATE_FRESH_FAILED');
+  await applyKeyToProvider(result.apiKey, gatewayManager);
+  return { apiKey: result.apiKey, message: '' };
 }
 
 /** 移除本机钱包；不调用任何服务端删除/清余额接口。 */

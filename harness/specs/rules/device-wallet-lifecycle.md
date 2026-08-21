@@ -17,4 +17,6 @@ Device-wallet credentials have one local authority and must follow `docs/device-
 - Removing the local wallet clears every ClawX-managed consumer before clearing the five wallet fields. It never deletes the server wallet or balance.
 - Unknown pending operations fail closed. A known pending rotation is settled before removal and requires the user to confirm again against the resulting key.
 - No-wallet and network-failure states never block the rest of the application.
+- A wallet-less portable build checks for the historical host-userData wallet before bind. A valid candidate pauses bind until the user explicitly imports it or chooses a separate new wallet.
+- Legacy import exposes only a masked key and read-only balance to Renderer, converges through the existing adopt/provider-application path, and never deletes or rewrites the legacy wallet.
 - Renderer controls use the typed `hostApi.uclaw` surface; visible text is translated in English, Chinese, Japanese, and Russian.

@@ -265,6 +265,26 @@
     "refresh": "刷新",
     "balanceRefreshed": "余额已刷新",
     "noWallet": "这台机器还没有钱包，联网后会自动获取；也可以在下面填入已有密钥。",
+    "legacy": {
+      "title": "发现旧钱包",
+      "found": "检测到旧版钱包 {{key}}，可用余额 {{balance}}。确认之前不会创建新钱包。",
+      "import": "导入旧钱包",
+      "createFresh": "创建新钱包",
+      "imported": "旧钱包已导入，余额保持不变",
+      "freshCreated": "已创建一个独立的新钱包",
+      "pending": "检测到旧钱包有未完成的密钥操作，已暂停自动创建。请先用旧版完成操作，或手工填入已确认的密钥。",
+      "invalid": "检测到旧钱包文件，但无法安全读取，已暂停自动创建。请先备份文件并联系技术支持。",
+      "importDialog": {
+        "title": "导入这个旧钱包？",
+        "message": "将导入 {{key}}（可用余额 {{balance}}），并把它配置给 U-Claw。旧文件仍会保留，服务端余额不会变化。",
+        "confirm": "确认导入"
+      },
+      "freshDialog": {
+        "title": "不导入旧钱包，创建新的？",
+        "message": "这会创建一个彼此独立的新钱包。旧钱包及其余额不会删除，但余额也不会转入新钱包；以后只有拿到旧密钥才能找回。",
+        "confirm": "仍然创建"
+      }
+    },
     "recharge": "一键充值",
     "management": "钱包管理",
     "backupPrefix": "密钥由服务端签发，",
@@ -300,7 +320,12 @@
       "unknownPending": "有无法识别的未完成钱包操作，本机状态未改动，请先处理后再移除",
       "pendingNotSettled": "上次换密钥尚未完成，本机状态未改动，请稍后重试",
       "pendingSettled": "已完成上次换密钥；当前密钥已经变化，请重新备份并再次确认移除",
-      "resetFailed": "移除本机钱包失败"
+      "resetFailed": "移除本机钱包失败",
+      "legacyPending": "旧钱包有未完成的密钥操作，不能自动导入",
+      "legacyInvalid": "旧钱包文件无法安全读取，不能自动导入",
+      "legacyNotFound": "没有找到可导入的旧钱包",
+      "legacyImportFailed": "导入旧钱包失败",
+      "createFreshFailed": "创建新钱包失败"
     }
   },
   "about": {

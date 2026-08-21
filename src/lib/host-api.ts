@@ -123,6 +123,8 @@ export const hostApi = {
     apiKey: () => invokeHost('uclaw', 'apiKey'),
     rotateKey: () => invokeHost('uclaw', 'rotateKey'),
     adoptKey: (payload: { key: string }) => invokeHost('uclaw', 'adoptKey', payload),
+    importLegacyWallet: () => invokeHost('uclaw', 'importLegacyWallet'),
+    createFreshWallet: () => invokeHost('uclaw', 'createFreshWallet'),
     resetLocalWallet: () => invokeHost('uclaw', 'resetLocalWallet'),
   },
   shell: {

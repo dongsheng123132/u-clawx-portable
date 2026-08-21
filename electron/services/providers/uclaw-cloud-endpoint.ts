@@ -15,6 +15,7 @@ export const UCLAW_CLOUD_FALLBACK_API_BASE = UCLAW_CLOUD_FALLBACK_ENDPOINT.apiBa
 export const UCLAW_CLOUD_FALLBACK_PAY_BASE = UCLAW_CLOUD_FALLBACK_ENDPOINT.payBase;
 
 const PROBE_TIMEOUT_MS = 3000;
+const REQUEST_TIMEOUT_MS = 20_000;
 export const UCLAW_CLOUD_ENDPOINT_CONFIG_FILE = 'uclaw-cloud-endpoints.json';
 
 export type UclawCloudEndpoint = {
@@ -129,6 +130,54 @@ export function detectBestEndpoint(): Promise<UclawCloudEndpoint> {
       });
   }
   return cachedPromise;
+}
+
+/**
+ * Call an API route using the detected endpoint first, then the remaining
+ * operator-configured candidates. A general probe can succeed while one
+ * route is missing from that edge, so 404/5xx and transport failures retry
+ * the next domain. Authentication and rate-limit decisions stay authoritative
+ * and are never bypassed by switching domains.
+ */
+export async function fetchUclawCloudApiWithFailover(
+  path: string,
+  init: RequestInit = {},
+  fetchImpl: typeof fetch = fetch,
+): Promise<Response> {
+  const detected = await detectBestEndpoint().catch(() => null);
+  const apiBases = Array.from(new Set([
+    detected?.apiBase,
+    ...loadUclawCloudEndpointCandidates().map((candidate) => candidate.apiBase),
+  ].filter((base): base is string => !!base)));
+
+  let lastResponse: Response | null = null;
+  let lastError: unknown = null;
+  for (let index = 0; index < apiBases.length; index += 1) {
+    const apiBase = apiBases[index];
+    try {
+      const response = await fetchImpl(joinUrl(apiOrigin(apiBase), path), {
+        ...init,
+        signal: init.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+      if (response.status !== 404 && response.status < 500) return response;
+      lastResponse = response;
+      if (index < apiBases.length - 1) {
+        logger.warn(`[uclaw-cloud-endpoint] route ${path} unavailable on candidate ${index + 1}, trying next endpoint`);
+      }
+    } catch (error) {
+      lastError = error;
+      if (index < apiBases.length - 1) {
+        logger.warn(`[uclaw-cloud-endpoint] route ${path} transport failed on candidate ${index + 1}, trying next endpoint`);
+      }
+    }
+  }
+
+  if (lastResponse) return lastResponse;
+  throw lastError instanceof Error ? lastError : new Error(`No U-Claw cloud endpoint available for ${path}`);
+}
+
+function apiOrigin(apiBase: string): string {
+  return new URL(apiBase).origin;
 }
 
 export function resetEndpointCache(): void {

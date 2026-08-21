@@ -30,12 +30,16 @@ export function UclawCloudPanel() {
   const getApiKey = useUclawCloudStore((s) => s.getApiKey);
   const rotateKey = useUclawCloudStore((s) => s.rotateKey);
   const adoptKey = useUclawCloudStore((s) => s.adoptKey);
+  const importLegacyWallet = useUclawCloudStore((s) => s.importLegacyWallet);
+  const createFreshWallet = useUclawCloudStore((s) => s.createFreshWallet);
   const resetLocalWallet = useUclawCloudStore((s) => s.resetLocalWallet);
 
   const [refreshing, setRefreshing] = useState(false);
   const [keyCopied, setKeyCopied] = useState(false);
   const [rotateConfirmOpen, setRotateConfirmOpen] = useState(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [legacyImportConfirmOpen, setLegacyImportConfirmOpen] = useState(false);
+  const [legacyFreshConfirmOpen, setLegacyFreshConfirmOpen] = useState(false);
   const [adoptValue, setAdoptValue] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -52,6 +56,12 @@ export function UclawCloudPanel() {
         t('deviceWallet.unavailable'),
       )
     : t('deviceWallet.unavailable');
+  const legacyBalanceLabel = formatTokens(
+    wallet?.legacyWallet?.remainTokens,
+    i18n.resolvedLanguage || i18n.language,
+    t('deviceWallet.tokenUnit'),
+    t('deviceWallet.unavailable'),
+  );
 
   function translatedError(error: unknown): string {
     const message = error instanceof Error ? error.message : String(error);
@@ -60,6 +70,11 @@ export function UclawCloudPanel() {
       DEVICE_WALLET_PENDING_NOT_SETTLED: 'deviceWallet.errors.pendingNotSettled',
       DEVICE_WALLET_PENDING_SETTLED: 'deviceWallet.errors.pendingSettled',
       DEVICE_WALLET_RESET_FAILED: 'deviceWallet.errors.resetFailed',
+      DEVICE_WALLET_LEGACY_PENDING: 'deviceWallet.errors.legacyPending',
+      DEVICE_WALLET_LEGACY_INVALID: 'deviceWallet.errors.legacyInvalid',
+      DEVICE_WALLET_LEGACY_NOT_FOUND: 'deviceWallet.errors.legacyNotFound',
+      DEVICE_WALLET_LEGACY_IMPORT_FAILED: 'deviceWallet.errors.legacyImportFailed',
+      DEVICE_WALLET_CREATE_FRESH_FAILED: 'deviceWallet.errors.createFreshFailed',
     };
     return keyByCode[message] ? t(keyByCode[message]) : message;
   }
@@ -169,7 +184,58 @@ export function UclawCloudPanel() {
           </div>
         </div>
 
-        {wallet && !wallet.ready && (
+        {wallet && !wallet.ready && wallet.legacyWallet?.status === 'candidate' && (
+          <div
+            data-testid="uclaw-cloud-legacy-wallet"
+            className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4"
+          >
+            <div className="space-y-1">
+              <p className="text-[13px] font-semibold text-foreground">
+                {t('deviceWallet.legacy.title')}
+              </p>
+              <p className="text-[12px] leading-relaxed text-muted-foreground">
+                {t('deviceWallet.legacy.found', {
+                  key: wallet.legacyWallet.apiKeyMasked || '-',
+                  balance: legacyBalanceLabel,
+                })}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                data-testid="uclaw-cloud-import-legacy-wallet"
+                className="h-9 flex-1 rounded-lg"
+                disabled={busy}
+                onClick={() => setLegacyImportConfirmOpen(true)}
+              >
+                {t('deviceWallet.legacy.import')}
+              </Button>
+              <Button
+                type="button"
+                data-testid="uclaw-cloud-create-fresh-wallet"
+                variant="outline"
+                className="h-9 flex-1 rounded-lg"
+                disabled={busy}
+                onClick={() => setLegacyFreshConfirmOpen(true)}
+              >
+                {t('deviceWallet.legacy.createFresh')}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {wallet && !wallet.ready && wallet.legacyWallet?.status === 'blocked' && (
+          <p
+            data-testid="uclaw-cloud-legacy-wallet-blocked"
+            className="rounded-lg bg-red-500/10 px-3 py-2 text-[12px] text-red-700 dark:text-red-400"
+          >
+            {t(wallet.legacyWallet.reason === 'pending'
+              ? 'deviceWallet.legacy.pending'
+              : 'deviceWallet.legacy.invalid')}
+          </p>
+        )}
+
+        {wallet && !wallet.ready && !wallet.legacyWallet && (
           <p
             data-testid="uclaw-cloud-no-wallet"
             className="rounded-lg bg-black/5 px-3 py-2 text-[12px] text-muted-foreground dark:bg-white/5"
@@ -276,6 +342,34 @@ export function UclawCloudPanel() {
         </div>
       </CardContent>
 
+      <ConfirmDialog
+        open={legacyImportConfirmOpen}
+        title={t('deviceWallet.legacy.importDialog.title')}
+        message={t('deviceWallet.legacy.importDialog.message', {
+          key: wallet?.legacyWallet?.apiKeyMasked || '-',
+          balance: legacyBalanceLabel,
+        })}
+        confirmLabel={t('deviceWallet.legacy.importDialog.confirm')}
+        cancelLabel={t('deviceWallet.cancel')}
+        onConfirm={async () => {
+          setLegacyImportConfirmOpen(false);
+          await guarded(importLegacyWallet, t('deviceWallet.legacy.imported'));
+        }}
+        onCancel={() => setLegacyImportConfirmOpen(false)}
+      />
+      <ConfirmDialog
+        open={legacyFreshConfirmOpen}
+        title={t('deviceWallet.legacy.freshDialog.title')}
+        message={t('deviceWallet.legacy.freshDialog.message')}
+        confirmLabel={t('deviceWallet.legacy.freshDialog.confirm')}
+        cancelLabel={t('deviceWallet.cancel')}
+        variant="destructive"
+        onConfirm={async () => {
+          setLegacyFreshConfirmOpen(false);
+          await guarded(createFreshWallet, t('deviceWallet.legacy.freshCreated'));
+        }}
+        onCancel={() => setLegacyFreshConfirmOpen(false)}
+      />
       <ConfirmDialog
         open={rotateConfirmOpen}
         title={t('deviceWallet.rotateDialog.title')}

@@ -296,6 +296,13 @@ export type UclawWalletSnapshot = {
   ready: boolean;
   apiKeyMasked?: string;
   walletId?: string;
+  /** 旧版宿主机钱包候选。只暴露掩码/余额，绝不把明文 key 送到 Renderer。 */
+  legacyWallet?: {
+    status: 'candidate' | 'blocked';
+    apiKeyMasked?: string;
+    remainTokens?: number;
+    reason?: 'invalid' | 'pending';
+  };
 };
 export type UclawKeyMutationResult = { success: boolean; message?: string; error?: string };
 export type ProviderType =
@@ -853,6 +860,10 @@ export type HostApiContract = {
     rotateKey: () => UclawKeyMutationResult;
     /** 填入一把已有凭证（换电脑 / 重装 / 找回老钱包）。 */
     adoptKey: (payload: { key: string }) => UclawKeyMutationResult;
+    /** 用户确认后导入旧版宿主机钱包。 */
+    importLegacyWallet: () => UclawKeyMutationResult;
+    /** 用户明确放弃旧钱包后创建一个独立的新钱包。 */
+    createFreshWallet: () => UclawKeyMutationResult;
     /** 只移除本机钱包；服务端钱包与余额保持不变。 */
     resetLocalWallet: () => UclawKeyMutationResult;
   };

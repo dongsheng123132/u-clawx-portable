@@ -2,10 +2,12 @@ import type { CompleteHostServiceRegistry } from '../main/ipc/host-contract';
 import type { GatewayManager } from '../gateway/manager';
 import {
   adoptKey,
+  createFreshWallet,
   getApiKey,
   getBalance,
   getRechargeUrl,
   getWalletInfo,
+  importLegacyWallet,
   resetLocalWallet,
   rotateKey,
 } from './uclaw-cloud-account';
@@ -39,6 +41,20 @@ export function createUclawApi(gatewayManager?: GatewayManager): CompleteHostSer
     adoptKey: async (payload) => {
       try {
         return { success: true, ...(await adoptKey(payload?.key ?? '')) };
+      } catch (error) {
+        return { success: false, error: toMessage(error) };
+      }
+    },
+    importLegacyWallet: async () => {
+      try {
+        return { success: true, ...(await importLegacyWallet(gatewayManager)) };
+      } catch (error) {
+        return { success: false, error: toMessage(error) };
+      }
+    },
+    createFreshWallet: async () => {
+      try {
+        return { success: true, ...(await createFreshWallet(gatewayManager)) };
       } catch (error) {
         return { success: false, error: toMessage(error) };
       }

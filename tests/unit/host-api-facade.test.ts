@@ -13,6 +13,25 @@ beforeEach(() => {
 });
 
 describe('hostApi facade', () => {
+  it('routes legacy wallet decisions through typed hostInvoke actions', async () => {
+    hostInvoke
+      .mockResolvedValueOnce({ id: 'req-1', ok: true, data: { success: true } })
+      .mockResolvedValueOnce({ id: 'req-2', ok: true, data: { success: true } });
+    const { hostApi } = await import('@/lib/host-api');
+
+    await hostApi.uclaw.importLegacyWallet();
+    await hostApi.uclaw.createFreshWallet();
+
+    expect(hostInvoke).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      module: 'uclaw',
+      action: 'importLegacyWallet',
+    }));
+    expect(hostInvoke).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      module: 'uclaw',
+      action: 'createFreshWallet',
+    }));
+  });
+
   it('calls settings.getAll through hostInvoke', async () => {
     hostInvoke.mockResolvedValueOnce({ id: 'req', ok: true, data: { theme: 'dark' } });
     const { hostApi } = await import('@/lib/host-api');

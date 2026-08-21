@@ -46,4 +46,37 @@ test.describe('Device wallet', { tag: E2E_EXCLUSIVE_TAG }, () => {
         .some((entry) => entry.module === 'uclaw' && entry.action === 'resetLocalWallet')
     )).toBe(true);
   });
+
+  test('shows a masked paid legacy wallet and imports it only after confirmation', async ({ electronApp, page }) => {
+    await completeSetup(page);
+    await installIpcMocks(electronApp, {
+      recordHostInvocations: true,
+      hostApi: {
+        '["uclaw","wallet",null]': {
+          ready: false,
+          legacyWallet: {
+            status: 'candidate',
+            apiKeyMasked: 'sk-paid...legacy',
+            remainTokens: 500004,
+          },
+        },
+        '["uclaw","importLegacyWallet",null]': { success: true },
+      },
+    });
+
+    await page.getByTestId('sidebar-nav-models').click();
+    const legacyCard = page.getByTestId('uclaw-cloud-legacy-wallet');
+    await expect(legacyCard).toBeVisible();
+    await expect(legacyCard).toContainText('sk-paid...legacy');
+    await expect(legacyCard).toContainText('500,004');
+
+    await page.getByTestId('uclaw-cloud-import-legacy-wallet').click();
+    await expect(page.getByRole('dialog')).toContainText('Import this previous wallet?');
+    await page.getByRole('button', { name: 'Import wallet' }).click();
+
+    await expect.poll(async () => (
+      (await getRecordedHostInvocations(electronApp))
+        .some((entry) => entry.module === 'uclaw' && entry.action === 'importLegacyWallet')
+    )).toBe(true);
+  });
 });

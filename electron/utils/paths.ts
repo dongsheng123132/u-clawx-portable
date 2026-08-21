@@ -75,11 +75,13 @@ function getElectronApp() {
   }
 
   const fallbackUserData = process.env.CLAWX_USER_DATA_DIR?.trim() || join(homedir(), '.clawx');
+  const fallbackAppData = process.env.APPDATA?.trim() || dirname(fallbackUserData);
   const fallbackAppPath = process.cwd();
   const fallbackApp: ElectronAppLike = {
     isPackaged: false,
     getPath: (name) => {
       if (name === 'userData') return fallbackUserData;
+      if (name === 'appData') return fallbackAppData;
       return fallbackUserData;
     },
     getAppPath: () => fallbackAppPath,
@@ -212,6 +214,14 @@ export function getDataDir(): string {
     return join(getPortableDataDir(), 'clawx-state');
   }
   return getElectronApp().getPath('userData');
+}
+
+/**
+ * 宿主机的应用数据根。便携模式也刻意不改这个路径：只用于只读发现旧版
+ * `%APPDATA%/clawx` 钱包，绝不能作为便携版的新写入位置。
+ */
+export function getHostAppDataDir(): string {
+  return getElectronApp().getPath('appData');
 }
 
 /**

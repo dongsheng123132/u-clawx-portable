@@ -1,4 +1,7 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { logger } from '../utils/logger';
+import { getHostAppDataDir, isPortableMode } from '../utils/paths';
 import {
   detectBestEndpoint,
   loadUclawCloudEndpointCandidates,
@@ -165,12 +168,62 @@ export type WalletResult = {
   walletId: string;
 };
 
+export type LegacyWalletDiscovery =
+  | { status: 'none' }
+  | { status: 'candidate'; key: string; walletId: string }
+  | { status: 'blocked'; reason: 'invalid' | 'pending' };
+
 export type WalletDeps = {
   store?: DeviceWalletStore;
   fetch?: typeof fetch;
   /** 只读校验一把 key 是否真的可用。默认查订阅状态 —— **不消耗额度**。 */
   verifyKey?: (apiKey: string) => Promise<boolean>;
+  /** 测试注入；生产默认只读检查宿主机旧版 `%APPDATA%/clawx` 钱包。 */
+  discoverLegacyWallet?: () => Promise<LegacyWalletDiscovery>;
+  /** 仅供用户明确点“创建新钱包”后绕过旧钱包保护。 */
+  allowFreshBind?: boolean;
 };
+
+function parseLegacyWallet(raw: string): LegacyWalletDiscovery {
+  try {
+    const parsed = JSON.parse(raw) as StoreShape;
+    const state = { ...EMPTY_STATE, ...(parsed.device ?? {}) };
+    if (state.pendingKey) return { status: 'blocked', reason: 'pending' };
+    const key = String(state.key ?? '').trim();
+    if (!key.startsWith('sk-') || key.length < 8 || /\s/.test(key)) {
+      return { status: 'blocked', reason: 'invalid' };
+    }
+    return { status: 'candidate', key, walletId: String(state.walletId ?? '') };
+  } catch {
+    return { status: 'blocked', reason: 'invalid' };
+  }
+}
+
+/**
+ * 只读发现旧版宿主机钱包。只在便携模式启用；不会复制、改写或删除旧文件。
+ * 文件存在但损坏/有 pending 时也要暂停自动 bind，避免悄悄创建竞争钱包。
+ */
+export async function discoverLegacyDeviceWallet(): Promise<LegacyWalletDiscovery> {
+  if (!isPortableMode()) return { status: 'none' };
+  const legacyPath = join(getHostAppDataDir(), 'clawx', `${STORE_NAME}.json`);
+  try {
+    return parseLegacyWallet(await readFile(legacyPath, 'utf8'));
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException)?.code;
+    if (code !== 'ENOENT') {
+      logger.warn('[uclaw-device] 读取旧钱包失败，暂停自动创建新钱包:', code || 'unknown');
+      return { status: 'blocked', reason: 'invalid' };
+    }
+    return { status: 'none' };
+  }
+}
+
+async function discoverLegacyForEnsure(deps: WalletDeps): Promise<LegacyWalletDiscovery> {
+  if (deps.discoverLegacyWallet) return deps.discoverLegacyWallet();
+  // 显式 store 是单测/隔离调用，不应意外读取开发机真实 AppData。
+  if (deps.store) return { status: 'none' };
+  return discoverLegacyDeviceWallet();
+}
 
 /**
  * 首启收敛：有钱包就用，没有就绑一个；顺带把上次没走完的 rotate 收尾。
@@ -231,12 +284,40 @@ async function doEnsureDeviceKey(deps: WalletDeps): Promise<WalletResult> {
     if (state.key) {
       return { apiKey: state.key, walletId: state.walletId };
     }
+    if (!deps.allowFreshBind) {
+      const legacy = await discoverLegacyForEnsure(deps);
+      if (legacy.status !== 'none') {
+        logger.info('[uclaw-device] 发现旧版宿主机钱包，等待用户确认后再导入或新建');
+        return { apiKey: '', walletId: '' };
+      }
+    }
     state = await bindFresh(store, fetchImpl);
     return { apiKey: state.key, walletId: state.walletId };
   } catch (error) {
     logger.warn('[uclaw-device] 收敛失败，下次启动重试:', error);
     return { apiKey: state.key, walletId: state.walletId };
   }
+}
+
+/** 用户明确放弃导入旧钱包后，才允许创建一个独立的新钱包。 */
+export async function createFreshDeviceWallet(deps: WalletDeps = {}): Promise<WalletResult> {
+  // 先等可能正在运行的普通收敛结束，再用同一个 in-flight 入口执行一次显式 bind。
+  await ensureDeviceKey(deps);
+  return ensureDeviceKey({ ...deps, allowFreshBind: true });
+}
+
+/** 读取并验证旧钱包，然后走既有 adopt 路径；旧文件始终保持原样。 */
+export async function importLegacyDeviceWallet(
+  deps: WalletDeps = {},
+): Promise<{ apiKey: string; message: string }> {
+  const legacy = await discoverLegacyForEnsure(deps);
+  if (legacy.status === 'blocked') {
+    throw new Error(legacy.reason === 'pending'
+      ? 'DEVICE_WALLET_LEGACY_PENDING'
+      : 'DEVICE_WALLET_LEGACY_INVALID');
+  }
+  if (legacy.status !== 'candidate') throw new Error('DEVICE_WALLET_LEGACY_NOT_FOUND');
+  return adoptDeviceKey(legacy.key, deps);
 }
 
 /** 把 pending 走完：验通新 key → commit → 转正。 */
