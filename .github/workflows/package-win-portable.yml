@@ -88,11 +88,16 @@ jobs:
             throw "Portable archive was not created: $archive"
           }
 
-          $listing = (& 7z l $archive) -join "`n"
-          if ($listing -notmatch 'U-Claw\\U-Claw\.exe' -or
-              $listing -notmatch 'U-Claw\\portable\.flag' -or
-              $listing -notmatch 'U-Claw\\一键重置\.bat') {
-            throw 'Portable archive layout verification failed.'
+          $listing = ((& 7z l $archive) -join "`n").Replace('\', '/')
+          $archiveEntries = @(
+            'U-Claw/U-Claw.exe',
+            'U-Claw/portable.flag',
+            'U-Claw/uclaw-cloud-endpoints.json'
+          )
+          foreach ($entry in $archiveEntries) {
+            if (-not $listing.Contains($entry)) {
+              throw "Portable archive entry is missing: $entry"
+            }
           }
 
           $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash
