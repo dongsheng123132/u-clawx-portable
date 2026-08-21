@@ -1,0 +1,136 @@
+name: Package Windows Portable
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to package (branch, tag, or SHA)'
+        required: true
+        default: 'main'
+      release_tag:
+        description: 'Existing GitHub Release tag to receive the portable ZIP (optional)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  package-portable:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source ref
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Prefer HTTPS for public GitHub git dependencies
+        shell: bash
+        run: |
+          git config --global "url.https://github.com/.insteadOf" "git@github.com:"
+          git config --global --add "url.https://github.com/.insteadOf" "ssh://git@github.com/"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build portable Windows directory
+        run: pnpm run package:win:portable
+
+      - name: Verify and compress portable directory
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = 'release/win-unpacked'
+          $portableRoot = 'release/U-Claw'
+          $required = @(
+            "$source/U-Claw.exe",
+            "$source/portable.flag",
+            "$source/data",
+            "$source/一键重置.bat",
+            "$source/uclaw-cloud-endpoints.json"
+          )
+
+          foreach ($path in $required) {
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "Required portable file is missing: $path"
+            }
+          }
+
+          if (Test-Path -LiteralPath $portableRoot) {
+            throw "Unexpected pre-existing portable root: $portableRoot"
+          }
+          Move-Item -LiteralPath $source -Destination $portableRoot
+
+          $version = (Get-Content -LiteralPath 'package.json' -Raw | ConvertFrom-Json).version
+          $archiveName = "U-Claw-$version-win-x64-portable.zip"
+          Push-Location release
+          try {
+            & 7z a -tzip -mx=5 -mmt=on $archiveName 'U-Claw'
+            if ($LASTEXITCODE -ne 0) {
+              throw "7-Zip failed with exit code $LASTEXITCODE"
+            }
+          } finally {
+            Pop-Location
+          }
+
+          $archive = "release/$archiveName"
+          if (-not (Test-Path -LiteralPath $archive)) {
+            throw "Portable archive was not created: $archive"
+          }
+
+          $listing = (& 7z l $archive) -join "`n"
+          if ($listing -notmatch 'U-Claw\\U-Claw\.exe' -or
+              $listing -notmatch 'U-Claw\\portable\.flag' -or
+              $listing -notmatch 'U-Claw\\一键重置\.bat') {
+            throw 'Portable archive layout verification failed.'
+          }
+
+          $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash
+          $checksum = "release/$archiveName.sha256"
+          "$hash  $archiveName" | Set-Content -LiteralPath $checksum -Encoding ascii
+
+          "PORTABLE_ARCHIVE=$archive" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "PORTABLE_CHECKSUM=$checksum" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Portable ZIP: $archive"
+          Write-Host "SHA-256: $hash"
+
+      - name: Upload portable build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable-x64
+          path: |
+            ${{ env.PORTABLE_ARCHIVE }}
+            ${{ env.PORTABLE_CHECKSUM }}
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload portable ZIP to GitHub Release
+        if: inputs.release_tag != ''
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            throw "GitHub Release does not exist: $env:RELEASE_TAG"
+          }
+          gh release upload $env:RELEASE_TAG `
+            $env:PORTABLE_ARCHIVE `
+            $env:PORTABLE_CHECKSUM `
+            --repo $env:GITHUB_REPOSITORY `
+            --clobber
+          if ($LASTEXITCODE -ne 0) {
+            throw "Portable Release upload failed with exit code $LASTEXITCODE"
+          }
