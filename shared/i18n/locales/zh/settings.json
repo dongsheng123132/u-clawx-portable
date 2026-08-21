@@ -262,6 +262,7 @@
     "title": "设备钱包",
     "tokenUnit": "虾粮",
     "unavailable": "不可用",
+    "pendingImport": "待导入",
     "refresh": "刷新",
     "balanceRefreshed": "余额已刷新",
     "noWallet": "这台机器还没有钱包，联网后会自动获取；也可以在下面填入已有密钥。",

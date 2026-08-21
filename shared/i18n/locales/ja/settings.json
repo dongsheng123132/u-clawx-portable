@@ -262,6 +262,7 @@
     "title": "デバイスウォレット",
     "tokenUnit": "トークン",
     "unavailable": "利用不可",
+    "pendingImport": "インポート待ち",
     "refresh": "更新",
     "balanceRefreshed": "残高を更新しました",
     "noWallet": "この端末にはまだウォレットがありません。オンライン時に自動取得するか、下に既存のキーを入力できます。",

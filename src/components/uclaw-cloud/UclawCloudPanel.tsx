@@ -47,7 +47,13 @@ export function UclawCloudPanel() {
     void refresh();
   }, [refresh]);
 
-  const apiKeyMasked = balance?.apiKeyMasked || wallet?.apiKeyMasked || '-';
+  const legacyCandidate = wallet?.legacyWallet?.status === 'candidate'
+    ? wallet.legacyWallet
+    : undefined;
+  const apiKeyMasked = balance?.apiKeyMasked
+    || wallet?.apiKeyMasked
+    || legacyCandidate?.apiKeyMasked
+    || '-';
   const balanceLabel = balance?.available
     ? formatTokens(
         balance.remainTokens,
@@ -56,6 +62,9 @@ export function UclawCloudPanel() {
         t('deviceWallet.unavailable'),
       )
     : t('deviceWallet.unavailable');
+  const walletStatusLabel = legacyCandidate
+    ? t('deviceWallet.pendingImport')
+    : balanceLabel;
   const legacyBalanceLabel = formatTokens(
     wallet?.legacyWallet?.remainTokens,
     i18n.resolvedLanguage || i18n.language,
@@ -168,7 +177,7 @@ export function UclawCloudPanel() {
           </div>
           <div className="flex items-center gap-2">
             <span data-testid="uclaw-cloud-balance" className="text-[14px] font-medium text-foreground">
-              {balanceLabel}
+              {walletStatusLabel}
             </span>
             <Button
               type="button"

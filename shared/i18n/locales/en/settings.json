@@ -262,6 +262,7 @@
     "title": "Device Wallet",
     "tokenUnit": "tokens",
     "unavailable": "Unavailable",
+    "pendingImport": "Import pending",
     "refresh": "Refresh",
     "balanceRefreshed": "Balance refreshed",
     "noWallet": "This device has no wallet yet. It will be created when online, or you can enter an existing key below.",

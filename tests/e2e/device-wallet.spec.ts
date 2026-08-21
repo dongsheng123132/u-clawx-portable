@@ -67,6 +67,8 @@ test.describe('Device wallet', { tag: E2E_EXCLUSIVE_TAG }, () => {
     await page.getByTestId('sidebar-nav-models').click();
     const legacyCard = page.getByTestId('uclaw-cloud-legacy-wallet');
     await expect(legacyCard).toBeVisible();
+    await expect(page.getByTestId('uclaw-cloud-key')).toHaveText('sk-paid...legacy');
+    await expect(page.getByTestId('uclaw-cloud-balance')).toHaveText('Import pending');
     await expect(legacyCard).toContainText('sk-paid...legacy');
     await expect(legacyCard).toContainText('500,004');
 
