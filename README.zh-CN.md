@@ -36,7 +36,9 @@
 
 > **U-Claw 便携薄壳**：本仓库从上游最新稳定版 **ClawX v0.5.4** 干净构建，增加 Windows 便携模式、虾盘云设备钱包、一键充值、默认作图接入和手工技术支持页面。旧的硬件指纹/授权系统没有保留。设备钱包的 Key 共享与轮换规则见 [docs/device-wallet.md](docs/device-wallet.md)。
 
-Windows 便携构建：`pnpm run init` 后运行 `pnpm package:win:portable`，产物位于 `release/win-unpacked`。首次测试请在干净电脑或真实 U 盘上进行，确认钱包文件只出现在产物自己的 `data/clawx-state` 中；如果宿主机 `%APPDATA%/clawx` 中存在旧钱包，界面会先询问是否导入，不会静默创建一个竞争钱包；若受管 Gateway 已在运行，钱包与 Provider 配置落盘后会在后台重启 Gateway。为避免 U 盘大量随机写，默认仅把可丢弃的 Chromium 会话缓存放到宿主机系统缓存。
+Windows 便携构建：`pnpm run init` 后运行 `pnpm package:win:portable`，产物位于 `release/win-unpacked`。首次测试请在干净电脑或真实 U 盘上进行，确认钱包文件只出现在产物自己的 `data/clawx-state` 中；如果宿主机 `%APPDATA%/clawx` 中存在旧钱包，界面会先询问是否导入，不会静默创建一个竞争钱包；若受管 Gateway 已在运行，钱包与 Provider 配置落盘后会在后台重启 Gateway。为避免 U 盘大量随机写，默认仅把可丢弃的 Chromium 会话缓存放到宿主机系统缓存，日志也写入宿主机的 `%LOCALAPPDATA%/U-Claw/logs`。
+
+完整边界见 [`docs/portable-storage-boundary.md`](docs/portable-storage-boundary.md)。项目的 `.shadowfork/` 派生契约保护便携路径、设备钱包和上游归因，可运行 `pnpm run shadowfork:contract` 校验。影核动作层优先覆盖钱包、便携状态、运行时和诊断等稳定动作；本象/本境暂不引入完整运行时，等跨设备同步或第二个机器接口真正需要时再扩展。
 
 ## 概述
 

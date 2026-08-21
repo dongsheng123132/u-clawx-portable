@@ -11,6 +11,7 @@ import { app } from 'electron';
 import { join } from 'path';
 import { existsSync, mkdirSync, appendFileSync } from 'fs';
 import { appendFile, open, readdir, stat } from 'fs/promises';
+import { getLogsDir } from './paths';
 
 /**
  * Log levels
@@ -95,7 +96,9 @@ export function initLogger(): void {
       currentLevel = LogLevel.INFO;
     }
 
-    logDir = join(app.getPath('userData'), 'logs');
+    // Portable userData contains the wallet and durable state on the USB
+    // drive. Logs are disposable/high-churn, so keep them in the host cache.
+    logDir = getLogsDir();
 
     if (!existsSync(logDir)) {
       mkdirSync(logDir, { recursive: true });

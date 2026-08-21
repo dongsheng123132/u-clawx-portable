@@ -1,0 +1,45 @@
+apiVersion: shadowfork.io/v1alpha1
+kind: DerivationContract
+
+project:
+  name: u-clawx-portable
+  repository: https://github.com/dongsheng123132/u-clawx-portable
+  derivationLevel: L2
+
+identity:
+  - file: package.json
+    path: $.name
+    note: Keep the fork package identity distinct from upstream ClawX.
+  - file: electron-builder.yml
+    path: $.appId
+    note: Keep Electron data and single-instance identity separate.
+  - file: electron-builder.yml
+    path: $.productName
+    note: Keep the U-Claw product name explicit.
+
+protected:
+  - file: electron/services/uclaw-device-wallet.ts
+    reason: Five-field wallet state, pending rotation recovery, and consumer-first reset.
+  - file: electron/services/uclaw-cloud-account.ts
+    reason: The wallet key has one applyKey consumer synchronization path.
+  - file: electron/utils/paths.ts
+    reason: Portable state must remain on USB and host cache must not receive secrets.
+  - file: electron/main/index.ts
+    reason: userData and sessionData redirection must happen before app.whenReady.
+  - file: electron/utils/logger.ts
+    reason: Portable logs are host cache, not durable USB state.
+  - glob: docs/portable-storage-boundary.md
+    reason: The storage and protocol boundary is part of the fork contract.
+
+extensionPoints:
+  - file: electron/utils/paths.ts
+    kind: host-runtime-cache
+    note: Add pinned runtime download, integrity, staging, activation, and rollback here later.
+  - dir: electron/extensions
+    kind: portable-extensions
+  - file: docs/portable-storage-boundary.md
+    kind: protocol-scope
+
+license:
+  spdx: MIT
+  preserveCopyright: true

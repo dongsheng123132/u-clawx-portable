@@ -1,0 +1,48 @@
+apiVersion: shadowfork.io/v1alpha1
+kind: ShadowProfile
+
+metadata:
+  name: u-clawx-portable
+  displayName: U-Clawx Portable
+
+upstream:
+  repository: https://github.com/ValueCell-ai/ClawX
+  remote: upstream
+  strategy: merge
+  versionPolicy: independent
+
+customizations:
+  - id: portable.storage-boundary
+    kind: protected-paths
+    why: Durable user state and device wallet stay on the USB drive; disposable cache stays on the host.
+    severity: critical
+    paths:
+      - electron/utils/paths.ts
+      - electron/utils/portable-session-data.ts
+      - electron/main/index.ts
+      - electron/utils/logger.ts
+      - electron/services/uclaw-device-wallet.ts
+  - id: portable.wallet-boundary
+    kind: protected-file
+    why: The device-wallet state machine and single applyKey path are the credential safety boundary.
+    severity: critical
+    file: electron/services/uclaw-device-wallet.ts
+  - id: portable.upstream-runtime
+    kind: extension-point
+    why: A future host runtime cache may replace the bundled runtime only after pinning, verification, and rollback are implemented.
+    severity: warn
+    file: electron/utils/paths.ts
+
+extensionPoints:
+  - file: electron/services/uclaw-device-wallet.ts
+    kind: wallet-actions
+  - file: electron/utils/paths.ts
+    kind: portable-paths
+  - dir: electron/extensions
+    kind: builtin-extensions
+
+attribution:
+  files:
+    - LICENSE
+    - README.md
+  note: Preserve upstream ClawX attribution and licenses when syncing.

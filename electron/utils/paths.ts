@@ -29,6 +29,18 @@ export {
 let _portableMode: boolean | undefined;
 let _appRoot: string | undefined;
 
+const PRODUCT_CACHE_DIR = 'U-Claw';
+
+function resolveHostCacheRoot(env: NodeJS.ProcessEnv = process.env): string {
+  if (process.platform === 'win32') {
+    return join(env.LOCALAPPDATA?.trim() || join(homedir(), 'AppData', 'Local'), PRODUCT_CACHE_DIR);
+  }
+  if (process.platform === 'darwin') {
+    return join(homedir(), 'Library', 'Caches', PRODUCT_CACHE_DIR);
+  }
+  return join(env.XDG_CACHE_HOME?.trim() || join(homedir(), '.cache'), PRODUCT_CACHE_DIR);
+}
+
 /** 应用根目录：打包后是 exe 所在目录，开发/测试是项目根。 */
 export function getAppRoot(isPackagedOverride?: boolean): string {
   if (_appRoot !== undefined) return _appRoot;
@@ -53,6 +65,28 @@ export function isPortableMode(): boolean {
 /** 便携数据根：`<appRoot>/data/`。 */
 export function getPortableDataDir(): string {
   return join(getAppRoot(), 'data');
+}
+
+/**
+ * Host-only cache root for portable builds.
+ *
+ * The USB drive owns user state and secrets. The host owns disposable/high-
+ * churn material such as logs, browser data, and (in a future runtime
+ * manager) downloaded runtime versions. This boundary is deliberately
+ * separate from Electron's appData/userData paths so it cannot accidentally
+ * move the device wallet off the USB drive.
+ */
+export function getPortableHostCacheDir(env: NodeJS.ProcessEnv = process.env): string {
+  if (!isPortableMode()) return join(getElectronApp().getPath('userData'), 'cache');
+  return resolveHostCacheRoot(env);
+}
+
+export function getPortableHostLogsDir(env: NodeJS.ProcessEnv = process.env): string {
+  return join(getPortableHostCacheDir(env), 'logs');
+}
+
+export function getPortableHostRuntimeDir(env: NodeJS.ProcessEnv = process.env): string {
+  return join(getPortableHostCacheDir(env), 'runtime');
 }
 
 /**
@@ -203,7 +237,9 @@ export function getClawXConfigDir(): string {
  * Get ClawX logs directory
  */
 export function getLogsDir(): string {
-  return join(getElectronApp().getPath('userData'), 'logs');
+  return isPortableMode()
+    ? getPortableHostLogsDir()
+    : join(getElectronApp().getPath('userData'), 'logs');
 }
 
 /**
