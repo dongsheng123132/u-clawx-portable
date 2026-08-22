@@ -701,10 +701,6 @@ exports.default = async function afterPack(context) {
     { npmName: '@openclaw/discord', pluginId: 'discord' },
     { npmName: '@openclaw/qqbot', pluginId: 'qqbot' },
     { npmName: '@tencent-weixin/openclaw-weixin', pluginId: 'openclaw-weixin' },
-    // Keep in sync with scripts/bundle-openclaw-plugins.mjs — "qwen" is bundled
-    // so OpenClaw's first-run migration never npm-installs it and never needs a
-    // node_modules/openclaw junction, which exFAT USB sticks cannot create.
-    { npmName: '@openclaw/qwen-provider', pluginId: 'qwen' },
   ];
 
   mkdirSync(pluginsDestRoot, { recursive: true });
@@ -743,6 +739,39 @@ exports.default = async function afterPack(context) {
   // The built-in openclaw dist/extensions/feishu tree is redundant, and on macOS
   // its mirrored runtime deps significantly increase codesign file pressure.
   rmSync(join(packExtDir, 'feishu'), { recursive: true, force: true });
+
+  // 1.1b Bundle "qwen" as a built-in OpenClaw extension rather than a ClawX plugin.
+  //
+  //      Upstream moved the Qwen provider out of the runtime into the external
+  //      npm package @openclaw/qwen-provider, so OpenClaw installs it on demand
+  //      whenever it decides the provider is configured. That install creates a
+  //      plugin-local node_modules/openclaw junction, which exFAT — the format
+  //      of essentially every customer USB stick — cannot create; the install
+  //      fails, startup migrations report unclean, and the Gateway refuses to
+  //      become ready.
+  //
+  //      Dropping the package into dist/extensions/ makes OpenClaw discover it
+  //      as bundled (see its src/plugins/bundled-dir.ts: the bundled dir is
+  //      resolved from the package root, and only paths under it are trusted —
+  //      OPENCLAW_BUNDLED_PLUGINS_DIR pointing anywhere else is rejected).
+  //      Bundled plugins are never installed and never need the junction.
+  //
+  //      The env vars that make OpenClaw think qwen is configured are already
+  //      stripped before launch (electron/gateway/process-launcher.ts); this is
+  //      the second line of defence, for a user who configures qwen in the UI.
+  const QWEN_EXTENSION_DEST = join(packExtDir, 'qwen');
+  console.log(`[after-pack] Bundling @openclaw/qwen-provider -> ${QWEN_EXTENSION_DEST}`);
+  if (bundlePlugin(nodeModulesRoot, '@openclaw/qwen-provider', QWEN_EXTENSION_DEST)) {
+    cleanupUnnecessaryFiles(QWEN_EXTENSION_DEST);
+    const qwenNM = join(QWEN_EXTENSION_DEST, 'node_modules');
+    if (existsSync(qwenNM)) {
+      cleanupKoffi(qwenNM, platform, arch);
+      cleanupNativePlatformPackages(qwenNM, platform, arch);
+    }
+  } else {
+    console.warn('[after-pack] ⚠️  qwen provider not bundled; exFAT drives may fail to start the Gateway');
+  }
+
   if (existsSync(buildExtDir)) {
     let extNMCount = 0;
     let mergedPkgCount = 0;

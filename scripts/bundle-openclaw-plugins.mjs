@@ -10,7 +10,6 @@
  *   - @openclaw/discord -> build/openclaw-plugins/discord
  *   - @openclaw/qqbot -> build/openclaw-plugins/qqbot
  *   - @tencent-weixin/openclaw-weixin -> build/openclaw-plugins/openclaw-weixin
- *   - @openclaw/qwen-provider -> build/openclaw-plugins/qwen
  *
  * The output plugin directory contains:
  *   - plugin source files (index.ts, openclaw.plugin.json, package.json, ...)
@@ -45,14 +44,11 @@ const PLUGINS = [
   { npmName: '@openclaw/discord', pluginId: 'discord' },
   { npmName: '@openclaw/qqbot', pluginId: 'qqbot' },
   { npmName: '@tencent-weixin/openclaw-weixin', pluginId: 'openclaw-weixin' },
-  // Not a channel: OpenClaw 2026.7.1 lists "qwen" in its official external
-  // provider catalog, so first-run migrations npm-install it and then try to
-  // create a plugin-local node_modules/openclaw junction. exFAT (what most
-  // customer USB sticks are formatted as) has no junctions, so that step fails
-  // and the gateway refuses to report ready — the portable build never starts.
-  // Bundling it here skips the install entirely; peer deps are dropped below
-  // because the host gateway provides them, so no link is ever needed.
-  { npmName: '@openclaw/qwen-provider', pluginId: 'qwen' },
+  // @openclaw/qwen-provider is deliberately NOT here. It is not a channel, and
+  // this directory is a *ClawX* plugin mirror — OpenClaw does not look in it, so
+  // a copy here would not stop OpenClaw from npm-installing the provider (the
+  // install that fails on exFAT). It is bundled into the runtime's own
+  // dist/extensions/ by scripts/after-pack.cjs instead; see the comment there.
 ];
 
 function getVirtualStoreNodeModules(realPkgPath) {

@@ -81,11 +81,81 @@ const GATEWAY_FETCH_PRELOAD_SOURCE = `'use strict';
 })();
 `;
 
+/**
+ * Environment variables that make OpenClaw treat an *external* provider plugin
+ * as configured, taken from its official external provider catalog.
+ *
+ * Why they must not reach the Gateway: OpenClaw's startup migration installs
+ * every plugin it believes is configured. Installing one creates a plugin-local
+ * `node_modules/openclaw` junction — which exFAT, the filesystem on virtually
+ * every customer USB stick, cannot create. The install fails, migrations report
+ * unclean, and the Gateway refuses to become ready. The portable build then
+ * never starts, with a failure that depends on nothing but which machine the
+ * stick happens to be plugged into.
+ *
+ * That last part is the real problem, and it is why this list is stripped
+ * rather than the individual plugins bundled: a portable drive must behave the
+ * same everywhere. A developer machine with DASHSCOPE_API_KEY set (Alibaba's
+ * CLI) breaks; the identical drive on a clean machine works. Inheriting these
+ * would also silently spend the host owner's API credits.
+ *
+ * ClawX never configured providers through the environment anyway — provider
+ * credentials are passed explicitly at launch (see `loadedProviderKeyCount`),
+ * so nothing that ClawX supports is lost by dropping them.
+ *
+ * Kept honest by `scripts/check-provider-env-catalog-drift.mjs`, which
+ * re-derives this list from the bundled OpenClaw runtime and fails when an
+ * upstream sync adds a provider we do not strip.
+ */
+const OPENCLAW_EXTERNAL_PROVIDER_ENV_VARS = [
+  'AI_GATEWAY_API_KEY',
+  'ARCEEAI_API_KEY',
+  'CEREBRAS_API_KEY',
+  'CHUTES_API_KEY',
+  'CHUTES_OAUTH_TOKEN',
+  'CLOUDFLARE_AI_GATEWAY_API_KEY',
+  'DASHSCOPE_API_KEY',
+  'DEEPINFRA_API_KEY',
+  'DEEPSEEK_API_KEY',
+  'FEATHERLESS_API_KEY',
+  'FIREWORKS_API_KEY',
+  'GROQ_API_KEY',
+  'KILOCODE_API_KEY',
+  'KIMI_API_KEY',
+  'KIMICODE_API_KEY',
+  'LONGCAT_API_KEY',
+  'MODEL_API_KEY',
+  'MODELSTUDIO_API_KEY',
+  'MOONSHOT_API_KEY',
+  'QIANFAN_API_KEY',
+  'QWEN_API_KEY',
+  'STEPFUN_API_KEY',
+  'TOKENHUB_API_KEY',
+  'TOKENPLAN_API_KEY',
+  'VENICE_API_KEY',
+  'ZAI_API_KEY',
+  'Z_AI_API_KEY',
+] as const;
+
 export function buildGatewayRuntimeEnv(
   forkEnv: Record<string, string | undefined>,
 ): Record<string, string | undefined> {
+  const sanitized: Record<string, string | undefined> = { ...forkEnv };
+  const stripped: string[] = [];
+  for (const envVar of OPENCLAW_EXTERNAL_PROVIDER_ENV_VARS) {
+    if (typeof sanitized[envVar] !== 'string' || sanitized[envVar]?.trim() === '') continue;
+    delete sanitized[envVar];
+    stripped.push(envVar);
+  }
+  if (stripped.length > 0) {
+    // Names only — the values are third-party credentials.
+    logger.info(
+      `Stripped ${stripped.length} host provider credential env var(s) from the Gateway environment: ${stripped.join(', ')}`,
+    );
+  }
+
   return {
-    ...forkEnv,
+    ...sanitized,
     // ClawX does not expose LAN discovery, so keep Bonjour disabled even if
     // the parent process inherited an explicit opt-in value.
     OPENCLAW_DISABLE_BONJOUR: '1',
