@@ -430,10 +430,26 @@ function openClawPeerLinkPointsTo(linkPath: string, openclawDir: string): boolea
     }
     if (stat.isDirectory()) {
       try {
-        const packageJson = JSON.parse(readFileSync(fsPath(join(linkPath, 'package.json')), 'utf-8')) as { name?: unknown };
-        if (packageJson.name === 'openclaw') {
-          return canonicalComparablePath(linkPath) === canonicalComparablePath(openclawDir);
+        const packageJson = JSON.parse(readFileSync(fsPath(join(linkPath, 'package.json')), 'utf-8')) as {
+          name?: unknown;
+          clawxPeerShim?: unknown;
+          clawxPeerTarget?: unknown;
+        };
+        if (packageJson.name !== 'openclaw') {
+          return false;
         }
+        if (canonicalComparablePath(linkPath) === canonicalComparablePath(openclawDir)) {
+          return true;
+        }
+        // exFAT fallback: a materialized peer shim (see materializeOpenClawPeerShim)
+        // is a real directory whose own path never equals openclawDir's, so the
+        // check above always fails for it. Recognize it by its sentinel field
+        // instead, and confirm it still forwards to the current runtime dir.
+        return (
+          packageJson.clawxPeerShim === true
+          && typeof packageJson.clawxPeerTarget === 'string'
+          && canonicalComparablePath(packageJson.clawxPeerTarget) === canonicalComparablePath(openclawDir)
+        );
       } catch {
         return false;
       }
@@ -442,6 +458,116 @@ function openClawPeerLinkPointsTo(linkPath: string, openclawDir: string): boolea
     return false;
   }
   return false;
+}
+
+/** Map an export subpath ("." or "./a/b") to its generated file inside the shim ("index.js" / "a/b.js"). */
+function shimFileForExportSubpath(subpath: string): string {
+  if (subpath === '.') return 'index.js';
+  return `${subpath.replace(/^\.\//, '')}.js`;
+}
+
+/** Resolve the real runtime file an exports-map entry points to (string form, or the object's `default`). */
+function resolveRealExportTarget(exportsValue: unknown): string | null {
+  if (typeof exportsValue === 'string') return exportsValue;
+  if (exportsValue && typeof exportsValue === 'object' && !Array.isArray(exportsValue)) {
+    const defaultTarget = (exportsValue as Record<string, unknown>).default;
+    if (typeof defaultTarget === 'string') return defaultTarget;
+  }
+  return null;
+}
+
+/** POSIX relative import specifier from a generated shim file's directory to the real runtime file. */
+function relativeImportSpecifier(fromDir: string, toFile: string): string {
+  const relative = path.relative(fromDir, toFile).split(path.sep).join('/');
+  return relative.startsWith('.') ? relative : `./${relative}`;
+}
+
+/**
+ * Best-effort detection of whether a (typically minified) ESM chunk has a
+ * default export, so the generated re-export file only forwards `default`
+ * when one actually exists — re-exporting a missing default is a hard ESM
+ * link error, so this stays conservative and only matches on the two forms
+ * the bundled output actually uses (`export default ...` / `x as default`).
+ */
+function fileHasDefaultExport(filePath: string): boolean {
+  try {
+    const content = readFileSync(fsPath(filePath), 'utf-8');
+    return /export\s*default/.test(content) || /\bas\s+default\b/.test(content);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Materialize a real directory at `shimDir` that stands in for a junction to
+ * the bundled OpenClaw runtime at `openclawDir`. exFAT (the common portable
+ * USB filesystem) supports neither junctions nor unprivileged symlinks, so
+ * `repairPluginOpenClawPeerLink` falls back to this when the junction cannot
+ * be created. The shim is a "forwarding package": its package.json declares
+ * the same name/exports map as the real runtime, but every exported subpath
+ * is a tiny generated file that re-exports the real file via a relative
+ * import — plain files work on any filesystem, no link required.
+ */
+function materializeOpenClawPeerShim(shimDir: string, openclawDir: string): boolean {
+  let realPackageJson: Record<string, unknown>;
+  try {
+    realPackageJson = JSON.parse(readFileSync(fsPath(join(openclawDir, 'package.json')), 'utf-8')) as Record<string, unknown>;
+  } catch (error) {
+    logger.warn(`[plugin] Cannot read OpenClaw runtime package.json at ${openclawDir}:`, error);
+    return false;
+  }
+
+  const realExports = realPackageJson.exports;
+  if (!realExports || typeof realExports !== 'object' || Array.isArray(realExports)) {
+    logger.warn(`[plugin] OpenClaw runtime package.json has no exports map at ${openclawDir}`);
+    return false;
+  }
+
+  try {
+    // Rebuild from scratch: a stale shim's generated files may point at a
+    // previous runtime location and must not linger alongside the new ones.
+    safeRmSync(fsPath(shimDir));
+    mkdirSync(fsPath(shimDir), { recursive: true });
+
+    const shimExports: Record<string, string> = {};
+    for (const [subpath, exportsValue] of Object.entries(realExports as Record<string, unknown>)) {
+      const realRelativeTarget = resolveRealExportTarget(exportsValue);
+      if (!realRelativeTarget) continue; // conditional export shape we don't understand — skip rather than guess
+
+      const realFile = path.resolve(openclawDir, realRelativeTarget);
+      const shimRelFile = shimFileForExportSubpath(subpath);
+      const shimFilePath = join(shimDir, shimRelFile);
+      mkdirSync(fsPath(path.dirname(shimFilePath)), { recursive: true });
+
+      const importSpecifier = relativeImportSpecifier(path.dirname(shimFilePath), realFile);
+      let content = `export * from '${importSpecifier}';\n`;
+      if (fileHasDefaultExport(realFile)) {
+        content += `export { default } from '${importSpecifier}';\n`;
+      }
+      writeFileSync(fsPath(shimFilePath), content, 'utf-8');
+
+      // The exports-map value must stay inside the package (Node rejects
+      // targets that escape it) — unlike the re-export specifier above, which
+      // is plain module resolution and may freely point outside the shim.
+      shimExports[subpath] = `./${shimRelFile.split(path.sep).join('/')}`;
+    }
+
+    const shimPackageJson = {
+      name: 'openclaw',
+      version: realPackageJson.version,
+      type: 'module',
+      // Sentinel so openClawPeerLinkPointsTo recognizes this directory as a
+      // valid stand-in for the real runtime instead of an unrelated package.
+      clawxPeerShim: true,
+      clawxPeerTarget: path.resolve(openclawDir),
+      exports: shimExports,
+    };
+    writeFileSync(fsPath(join(shimDir, 'package.json')), JSON.stringify(shimPackageJson, null, 2) + '\n', 'utf-8');
+    return true;
+  } catch (error) {
+    logger.warn(`[plugin] Failed to materialize OpenClaw peer shim at ${shimDir}:`, error);
+    return false;
+  }
 }
 
 /**
@@ -519,7 +645,27 @@ export function repairPluginOpenClawPeerLink(
     }
 
     const junctionTarget = path.resolve(openclawDir);
-    symlinkSync(fsPath(junctionTarget), fsPath(linkPath), 'junction');
+    try {
+      symlinkSync(fsPath(junctionTarget), fsPath(linkPath), 'junction');
+    } catch (junctionError) {
+      // exFAT — the common portable-USB filesystem — supports neither
+      // junctions nor unprivileged symlinks (Windows reports "参数不正确").
+      // Fall back to a real forwarding-package directory instead; keep the
+      // junction as the preferred path on NTFS since it's a single fast link.
+      logger.info(
+        `[plugin] Filesystem has no junction support at ${linkPath} (${toErrorDiagnostic(junctionError).message}); materializing OpenClaw peer shim instead`,
+      );
+      if (!materializeOpenClawPeerShim(linkPath, junctionTarget)) {
+        logger.warn(`[plugin] Failed to materialize OpenClaw peer shim at ${linkPath}`);
+        return false;
+      }
+      if (!openClawPeerLinkPointsTo(linkPath, openclawDir)) {
+        logger.warn(`[plugin] OpenClaw peer shim audit failed after creating ${linkPath}`);
+        return false;
+      }
+      logger.info(`[plugin] Materialized OpenClaw peer shim: ${linkPath} → ${openclawDir}`);
+      return true;
+    }
     if (!openClawPeerLinkPointsTo(linkPath, openclawDir)) {
       logger.warn(`[plugin] OpenClaw peer link audit failed after creating ${linkPath}`);
       return false;
