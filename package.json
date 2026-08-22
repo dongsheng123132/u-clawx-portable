@@ -92,6 +92,7 @@
     },
     "dependencies": {
         "@agentclientprotocol/sdk": "1.1.0",
+        "@openclaw/qwen-provider": "2026.7.1",
         "electron-store": "^11.0.2",
         "electron-updater": "^6.8.3",
         "json5": "2.2.3",

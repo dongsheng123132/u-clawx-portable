@@ -701,6 +701,10 @@ exports.default = async function afterPack(context) {
     { npmName: '@openclaw/discord', pluginId: 'discord' },
     { npmName: '@openclaw/qqbot', pluginId: 'qqbot' },
     { npmName: '@tencent-weixin/openclaw-weixin', pluginId: 'openclaw-weixin' },
+    // Keep in sync with scripts/bundle-openclaw-plugins.mjs — "qwen" is bundled
+    // so OpenClaw's first-run migration never npm-installs it and never needs a
+    // node_modules/openclaw junction, which exFAT USB sticks cannot create.
+    { npmName: '@openclaw/qwen-provider', pluginId: 'qwen' },
   ];
 
   mkdirSync(pluginsDestRoot, { recursive: true });

@@ -19,6 +19,9 @@ importers:
       '@agentclientprotocol/sdk':
         specifier: 1.1.0
         version: 1.1.0(zod@4.4.3)
+      '@openclaw/qwen-provider':
+        specifier: 2026.7.1
+        version: 2026.7.1(openclaw@2026.7.1-2(patch_hash=fbdd382bdaaebbaa3b1b61bd8329bbd6cd4e7c37cbfc0b6197e696d1d0d40db3)(encoding@0.1.13))
       electron-store:
         specifier: ^11.0.2
         version: 11.0.2
@@ -1400,6 +1403,15 @@ packages:
       - silk-wasm
       - ws
       - zod
+
+  '@openclaw/qwen-provider@2026.7.1':
+    resolution: {integrity: sha512-1UqH8MY0gGL8rtTEKBI/M4PEtSAuPNEs8DodJ7y752p3pE2BkIPed6Sm1RRJ+g1WfL0IxmTlkxdwZ8xXrdBhqw==}
+    peerDependencies:
+      openclaw: '>=2026.7.1'
+    peerDependenciesMeta:
+      openclaw:
+        optional: true
+    bundledDependencies: []
 
   '@opentelemetry/semantic-conventions@1.43.0':
     resolution: {integrity: sha512-eSYWTm620tTk45EKSedaUL8MFYI8hW164hIXsgIHyxu3VobUB3fFCu5t0hQby6OoWRPsG1KkKUG2M5UadiLiVg==}
@@ -7647,6 +7659,10 @@ snapshots:
       undici: 8.5.0
 
   '@openclaw/qqbot@2026.7.1(openclaw@2026.7.1-2(patch_hash=fbdd382bdaaebbaa3b1b61bd8329bbd6cd4e7c37cbfc0b6197e696d1d0d40db3)(encoding@0.1.13))':
+    optionalDependencies:
+      openclaw: 2026.7.1-2(patch_hash=fbdd382bdaaebbaa3b1b61bd8329bbd6cd4e7c37cbfc0b6197e696d1d0d40db3)(encoding@0.1.13)
+
+  '@openclaw/qwen-provider@2026.7.1(openclaw@2026.7.1-2(patch_hash=fbdd382bdaaebbaa3b1b61bd8329bbd6cd4e7c37cbfc0b6197e696d1d0d40db3)(encoding@0.1.13))':
     optionalDependencies:
       openclaw: 2026.7.1-2(patch_hash=fbdd382bdaaebbaa3b1b61bd8329bbd6cd4e7c37cbfc0b6197e696d1d0d40db3)(encoding@0.1.13)
 
