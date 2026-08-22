@@ -7,6 +7,7 @@ import {
   ensureDeviceKey,
   importLegacyDeviceWallet,
   KEY_KIND_RANDOM,
+  parseLegacyWallet,
   resetLocalDeviceWallet,
   rotateDeviceKey,
 } from '../../electron/services/uclaw-device-wallet';
@@ -187,6 +188,32 @@ describe('ensureDeviceKey', () => {
 
     expect(result.apiKey).toBe('');
     expect(calls).toEqual([]);
+  });
+});
+
+describe('旧钱包文件的判定', () => {
+  // 跑过一次非便携版 ClawX 的电脑上，%APPDATA%/clawx/uclaw-device.json 里只有一个
+  // 没有 key 的 device 空壳。把它算作“发现旧钱包”，便携版就永远停在等用户确认 ——
+  // 既不绑新钱包，又没有任何东西可导入，用户看到的是“密钥用不了”。
+  it('空壳旧文件（没有凭证）不算发现旧钱包', () => {
+    expect(parseLegacyWallet(JSON.stringify({ device: {} }))).toEqual({ status: 'none' });
+    expect(parseLegacyWallet(JSON.stringify({ device: { key: '   ' } }))).toEqual({ status: 'none' });
+    expect(parseLegacyWallet(JSON.stringify({}))).toEqual({ status: 'none' });
+  });
+
+  it('有凭证就是候选，等用户确认导入', () => {
+    expect(parseLegacyWallet(JSON.stringify({ device: { key: 'sk-paid-legacy', walletId: 'wal_1' } })))
+      .toEqual({ status: 'candidate', key: 'sk-paid-legacy', walletId: 'wal_1' });
+  });
+
+  // 有 key 但形状不对 / 文件读不成 JSON：背后可能挂着真余额，继续挡住自动 bind，
+  // 免得在旁边悄悄开一个竞争钱包。
+  it('凭证写坏或有 pending 时仍然挡住自动 bind', () => {
+    expect(parseLegacyWallet(JSON.stringify({ device: { key: 'not-a-key' } })))
+      .toEqual({ status: 'blocked', reason: 'invalid' });
+    expect(parseLegacyWallet(JSON.stringify({ device: { pendingKey: 'sk-mid-rotate' } })))
+      .toEqual({ status: 'blocked', reason: 'pending' });
+    expect(parseLegacyWallet('{ 半截坏文件')).toEqual({ status: 'blocked', reason: 'invalid' });
   });
 });
 

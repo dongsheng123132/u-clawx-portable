@@ -184,12 +184,24 @@ export type WalletDeps = {
   allowFreshBind?: boolean;
 };
 
-function parseLegacyWallet(raw: string): LegacyWalletDiscovery {
+/** 导出仅为可测：判定「这个旧文件算不算发现了旧钱包」是纯函数，但结论决定
+ *  首启到底绑不绑钱包，值得单独锁住。 */
+export function parseLegacyWallet(raw: string): LegacyWalletDiscovery {
   try {
     const parsed = JSON.parse(raw) as StoreShape;
     const state = { ...EMPTY_STATE, ...(parsed.device ?? {}) };
     if (state.pendingKey) return { status: 'blocked', reason: 'pending' };
     const key = String(state.key ?? '').trim();
+    // 文件在、但一把凭证都没有 —— 没东西可导入，也没有余额会被抢走，所以按
+    // “没有旧钱包”处理，让首启照常绑一把新的。
+    //
+    // 这不是吹毛求疵：任何跑过一次非便携版 ClawX 的电脑，都会在
+    // `%APPDATA%/clawx/uclaw-device.json` 留下一个只有 `device` 空壳、没有 key
+    // 的文件。之前把它也算作“发现旧钱包”，便携版就永远停在等用户确认的状态 ——
+    // 既不绑新的，又根本没有东西可导入，用户看到的就是“密钥用不了”。
+    if (!key) return { status: 'none' };
+    // 有 key 但形状不对：可能是一把被写坏的真凭证，背后挂着真余额。这种情况
+    // 继续挡住自动 bind —— 宁可让用户手工处置，也不要在旁边悄悄开一个竞争钱包。
     if (!key.startsWith('sk-') || key.length < 8 || /\s/.test(key)) {
       return { status: 'blocked', reason: 'invalid' };
     }
