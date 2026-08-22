@@ -4,6 +4,7 @@ import { logger } from '../utils/logger';
 import { getHostAppDataDir, isPortableMode } from '../utils/paths';
 import {
   detectBestEndpoint,
+  fetchUclawCloudApiWithFailover,
   loadUclawCloudEndpointCandidates,
 } from './providers/uclaw-cloud-endpoint';
 
@@ -397,10 +398,15 @@ async function bindFresh(store: DeviceWalletStore, fetchImpl: typeof fetch): Pro
  * 用真实模型调用来验的话，一把 0 余额的新 key 永远验不过。
  */
 async function defaultVerifyKey(apiKey: string): Promise<boolean> {
-  const endpoint = await detectBestEndpoint();
-  const apiBase = endpoint.apiBase;
   try {
-    const res = await fetch(joinUrl(apiBase, '/dashboard/billing/subscription'), {
+    // 必须走带故障切换的那条路，不能只打 detectBestEndpoint() 选中的那一个。
+    //
+    // 云端是多端点的（国内可达的那个域名和记账的那个域名不是同一台）。只打一个
+    // 端点时，那台机器抖一下、或者用户网络对它做 SNI reset，验证就返回 false ——
+    // 而 adoptDeviceKey 会把 false 解释成「这把密钥用不了，没有保存」。于是一把
+    // 完全正常、账上还有钱的 key 被拒收，报错却指向 key 本身，用户无从自查。
+    // 余额那条路早就用 failover 了，验证这条漏了。
+    const res = await fetchUclawCloudApiWithFailover('/dashboard/billing/subscription', {
       headers: { Authorization: `Bearer ${apiKey}` },
       signal: AbortSignal.timeout(NETWORK_TIMEOUT_MS),
     });
