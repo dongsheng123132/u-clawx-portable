@@ -149,6 +149,58 @@ describe('runGatewayStartupSequence', () => {
     expect(hooks.onConnectedToManagedGateway).toHaveBeenCalledTimes(1);
   });
 
+  it('waits out the startup-migration lease and retries instead of failing (pc-8308 regression)', async () => {
+    let attemptNumber = 0;
+    const LOCK_LINES = [
+      '[openclaw] Reason: OpenClaw startup migrations are already running for this state directory; retry after the other gateway finishes or after 2026-08-24T06:26:37.095Z.',
+    ];
+    const hooks = createMockHooks({
+      findExistingGateway: vi.fn().mockResolvedValue(null),
+      hasOwnedProcess: vi.fn().mockReturnValue(false),
+      startProcess: vi.fn().mockImplementation(async () => {
+        attemptNumber++;
+        if (attemptNumber === 1) {
+          throw new Error('Gateway process exited before becoming ready (code=1)');
+        }
+      }),
+      // Deadline already passed at test runtime → orchestrator should wait only
+      // the short nudge delay and retry, not give up.
+      getStartupStderrLines: vi.fn().mockReturnValue(LOCK_LINES),
+      maxStartAttempts: 3,
+    });
+
+    await runGatewayStartupSequence(hooks);
+
+    expect(hooks.startProcess).toHaveBeenCalledTimes(2);
+    expect(hooks.delay).toHaveBeenCalledWith(5_000);
+    expect(hooks.onConnectedToManagedGateway).toHaveBeenCalledTimes(1);
+    expect(hooks.runDoctorRepair).not.toHaveBeenCalled();
+  });
+
+  it('gives up after three waited migration-lock retries when the lease never clears', async () => {
+    const LOCK_LINES = [
+      '[openclaw] Reason: OpenClaw startup migrations are already running for this state directory; retry after the other gateway finishes or after 2026-08-24T06:26:37.095Z.',
+    ];
+    const hooks = createMockHooks({
+      findExistingGateway: vi.fn().mockResolvedValue(null),
+      hasOwnedProcess: vi.fn().mockReturnValue(false),
+      startProcess: vi
+        .fn()
+        .mockRejectedValue(new Error('Gateway process exited before becoming ready (code=1)')),
+      getStartupStderrLines: vi.fn().mockReturnValue(LOCK_LINES),
+      maxStartAttempts: 3,
+    });
+
+    await expect(runGatewayStartupSequence(hooks)).rejects.toThrow(
+      'Gateway process exited before becoming ready',
+    );
+
+    // Initial attempt + 3 waited lock retries = 4 startProcess calls total.
+    expect(hooks.startProcess).toHaveBeenCalledTimes(4);
+    expect(hooks.delay).toHaveBeenCalledTimes(3);
+    expect(hooks.delay).toHaveBeenNthCalledWith(1, 5_000);
+  });
+
   it('runs doctor repair on config-invalid stderr signal', async () => {
     let attemptNumber = 0;
     const hooks = createMockHooks({

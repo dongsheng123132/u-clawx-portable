@@ -27,6 +27,22 @@ const STARTUP_MIGRATION_LOCK_PATTERNS: RegExp[] = [
   /\bretry after the other gateway finishes\b/i,
 ];
 
+/**
+ * Matches the retry deadline OpenClaw embeds in the startup-migration lock
+ * error, e.g. "…retry after the other gateway finishes or after
+ * 2026-08-24T06:26:37.095Z." (observed verbatim on a customer machine).
+ */
+const STARTUP_MIGRATION_LOCK_RETRY_AFTER_PATTERN =
+  /retry after [^]*?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)/i;
+
+/**
+ * OpenClaw's startup-migration lease TTL is 5 minutes (STARTUP_MIGRATION_LEASE_TTL_MS
+ * in dist/startup-migration-checkpoint-*.js). Allow one renewal cycle plus margin,
+ * so a live migrator that legitimately renews still gets waited out — bounded.
+ */
+export const STARTUP_MIGRATION_LEASE_TTL_MS = 5 * 60_000;
+export const STARTUP_MIGRATION_LOCK_MAX_WAIT_MS = 6 * 60_000;
+
 const TRANSIENT_START_ERROR_PATTERNS: RegExp[] = [
   /WebSocket closed before handshake/i,
   /ECONNREFUSED/i,
@@ -101,6 +117,72 @@ export function hasStartupMigrationLockSignal(
 ): boolean {
   return startupFailureCandidates(startupError, startupStderrLines)
     .some((text) => STARTUP_MIGRATION_LOCK_PATTERNS.some((pattern) => pattern.test(text)));
+}
+
+/**
+ * Extracts the lease expiry timestamp OpenClaw embeds in the lock error.
+ *
+ * The error text looks like:
+ *   "OpenClaw startup migrations are already running for this state directory;
+ *    retry after the other gateway finishes or after 2026-08-24T06:26:37.095Z."
+ *
+ * Returns the parsed Date, or null when the message carries no parseable deadline
+ * (caller then falls back to the fixed TTL).
+ */
+export function parseStartupMigrationLockRetryAfter(
+  startupError: unknown,
+  startupStderrLines: string[],
+): Date | null {
+  for (const text of startupFailureCandidates(startupError, startupStderrLines)) {
+    const match = STARTUP_MIGRATION_LOCK_RETRY_AFTER_PATTERN.exec(text);
+    if (!match?.[1]) continue;
+    const date = new Date(match[1]);
+    if (!Number.isNaN(date.getTime())) return date;
+  }
+  return null;
+}
+
+/** Small buffer added on top of the parsed lease expiry before retrying. */
+const STARTUP_MIGRATION_RETRY_AFTER_GRACE_MS = 1_500;
+/** Parsed deadline already passed: short nudge before probing again. */
+const STARTUP_MIGRATION_PAST_DEADLINE_RETRY_MS = 5_000;
+/** No parseable deadline in the message: probe again after one minute. */
+const STARTUP_MIGRATION_UNKNOWN_DEADLINE_RETRY_MS = 60_000;
+
+/**
+ * How long to wait before retrying Gateway startup when OpenClaw's
+ * startup-migration lease blocks us. Returns null when the failure is NOT a
+ * startup-migration lock (caller should use normal recovery rules).
+ *
+ * Root cause this serves (pc-8308 customer machine, 2026-08-24): the shell used
+ * to treat the lock as fatal and gave up, leaving the window dead until the user
+ * manually restarted after the 5-minute lease expired. Waiting out the embedded
+ * deadline turns that 13-minute dead window into a transparent recovery.
+ */
+export function getStartupMigrationLockWaitDelayMs(options: {
+  startupError: unknown;
+  startupStderrLines: string[];
+  nowMs?: number;
+}): number | null {
+  if (!hasStartupMigrationLockSignal(options.startupError, options.startupStderrLines)) {
+    return null;
+  }
+  const nowMs = options.nowMs ?? Date.now();
+  const retryAfter = parseStartupMigrationLockRetryAfter(
+    options.startupError,
+    options.startupStderrLines,
+  );
+  if (!retryAfter) {
+    return STARTUP_MIGRATION_UNKNOWN_DEADLINE_RETRY_MS;
+  }
+  const remainingMs =
+    retryAfter.getTime() + STARTUP_MIGRATION_RETRY_AFTER_GRACE_MS - nowMs;
+  if (remainingMs <= 0) {
+    return STARTUP_MIGRATION_PAST_DEADLINE_RETRY_MS;
+  }
+  // A live migrator keeps renewing its lease (TTL 5 min), so never sleep longer
+  // than one TTL cycle without re-probing.
+  return Math.min(remainingMs, STARTUP_MIGRATION_LOCK_MAX_WAIT_MS);
 }
 
 /**

@@ -1,6 +1,10 @@
 import { logger } from '../utils/logger';
 import { LifecycleSupersededError } from './lifecycle-controller';
-import { connectGatewayWithStartupRetry, getGatewayStartupRecoveryAction } from './startup-recovery';
+import {
+  connectGatewayWithStartupRetry,
+  getGatewayStartupRecoveryAction,
+  getStartupMigrationLockWaitDelayMs,
+} from './startup-recovery';
 
 export interface ExistingGatewayInfo {
   port: number;
@@ -50,6 +54,11 @@ export async function runGatewayStartupSequence(hooks: StartupHooks): Promise<vo
   let configRepairAttempted = false;
   let startAttempts = 0;
   const maxStartAttempts = hooks.maxStartAttempts ?? 3;
+  // Bound the startup-migration lease wait: a healthy migrator self-expires its
+  // 5-minute SQLite lease within one cycle; three waited retries (~18 min worst
+  // case) cover even a slow upgrade, beyond that treat it as a stuck state.
+  let migrationLockWaitCount = 0;
+  const MAX_MIGRATION_LOCK_WAITS = 3;
 
   while (true) {
     startAttempts++;
@@ -111,6 +120,25 @@ export async function runGatewayStartupSequence(hooks: StartupHooks): Promise<vo
     } catch (error) {
       if (error instanceof LifecycleSupersededError) {
         throw error;
+      }
+
+      // OpenClaw's startup-migration lease (SQLite state_leases, TTL 5 min) is
+      // expected during first-run upgrades and self-expires. Waiting it out
+      // transparently recovers; treating the lock as fatal leaves the window
+      // dead until the user manually restarts (pc-8308 incident, 2026-08-24).
+      const migrationLockWaitMs = getStartupMigrationLockWaitDelayMs({
+        startupError: error,
+        startupStderrLines: hooks.getStartupStderrLines(),
+      });
+      if (migrationLockWaitMs !== null && migrationLockWaitCount < MAX_MIGRATION_LOCK_WAITS) {
+        migrationLockWaitCount += 1;
+        logger.warn(
+          `OpenClaw startup-migration lease is held by another gateway; `
+            + `waiting ${Math.round(migrationLockWaitMs / 1000)}s before retrying `
+            + `(${migrationLockWaitCount}/${MAX_MIGRATION_LOCK_WAITS})`,
+        );
+        await hooks.delay(migrationLockWaitMs);
+        continue;
       }
 
       const recoveryAction = getGatewayStartupRecoveryAction({

@@ -2,13 +2,16 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   connectGatewayWithStartupRetry,
   getGatewayStartupRecoveryAction,
+  getStartupMigrationLockWaitDelayMs,
   hasFatalRuntimeFailureSignal,
   hasInvalidConfigFailureSignal,
   hasStartupMigrationLockSignal,
   isGatewayStillStartingError,
   isInvalidConfigSignal,
   isTransientGatewayStartError,
+  parseStartupMigrationLockRetryAfter,
   shouldAttemptConfigAutoRepair,
+  STARTUP_MIGRATION_LOCK_MAX_WAIT_MS,
 } from '@electron/gateway/startup-recovery';
 
 describe('gateway startup recovery heuristics', () => {
@@ -175,6 +178,79 @@ describe('getGatewayStartupRecoveryAction', () => {
     expect(action).toBe('retry');
     expect(isTransientGatewayStartError(new Error('gateway starting; retry shortly'))).toBe(true);
     expect(isGatewayStillStartingError(new Error('gateway starting; retry shortly'))).toBe(true);
+  });
+});
+
+describe('startup-migration lock wait (pc-8308 incident regression)', () => {
+  // Verbatim stderr observed on the customer machine, 2026-08-24.
+  const LOCK_LINES = [
+    '[openclaw] Could not start the CLI.',
+    '[openclaw] Reason: OpenClaw startup migrations are already running for this state directory; retry after the other gateway finishes or after 2026-08-24T06:26:37.095Z.',
+  ];
+  const LOCK_ERROR = new Error('Gateway process exited before becoming ready (code=1)');
+
+  it('parses the retry-after deadline embedded in the lock error', () => {
+    const retryAfter = parseStartupMigrationLockRetryAfter(LOCK_ERROR, LOCK_LINES);
+    expect(retryAfter).not.toBeNull();
+    expect(retryAfter!.toISOString()).toBe('2026-08-24T06:26:37.095Z');
+    expect(parseStartupMigrationLockRetryAfter(new Error('no deadline here'), [])).toBeNull();
+  });
+
+  it('returns null for non-lock failures', () => {
+    expect(
+      getStartupMigrationLockWaitDelayMs({
+        startupError: new Error('WebSocket closed before handshake'),
+        startupStderrLines: [],
+      }),
+    ).toBeNull();
+  });
+
+  it('waits until the embedded deadline plus grace', () => {
+    // 90.095s before the lease expires.
+    const now = Date.parse('2026-08-24T06:25:07.000Z');
+    expect(
+      getStartupMigrationLockWaitDelayMs({
+        startupError: LOCK_ERROR,
+        startupStderrLines: LOCK_LINES,
+        nowMs: now,
+      }),
+    ).toBe(90_095 + 1_500);
+  });
+
+  it('caps the wait at one lease cycle so a live migrator re-probes', () => {
+    // Embedded deadline claims ~7min remaining (only possible via client/server
+    // clock skew); the wait must still be bounded by one TTL cycle.
+    const now = Date.parse('2026-08-24T06:19:30.000Z');
+    expect(
+      getStartupMigrationLockWaitDelayMs({
+        startupError: LOCK_ERROR,
+        startupStderrLines: LOCK_LINES,
+        nowMs: now,
+      }),
+    ).toBe(STARTUP_MIGRATION_LOCK_MAX_WAIT_MS);
+  });
+
+  it('nudges quickly when the parsed deadline already passed', () => {
+    const now = Date.parse('2026-08-24T06:27:00.000Z'); // deadline passed
+    expect(
+      getStartupMigrationLockWaitDelayMs({
+        startupError: LOCK_ERROR,
+        startupStderrLines: LOCK_LINES,
+        nowMs: now,
+      }),
+    ).toBe(5_000);
+  });
+
+  it('falls back to a bounded probe interval when no deadline is present', () => {
+    expect(
+      getStartupMigrationLockWaitDelayMs({
+        startupError: new Error(
+          'OpenClaw startup migrations are already running for this state directory',
+        ),
+        startupStderrLines: [],
+        nowMs: Date.parse('2026-08-24T06:25:00.000Z'),
+      }),
+    ).toBe(60_000);
   });
 });
 
