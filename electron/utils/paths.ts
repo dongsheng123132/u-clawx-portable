@@ -80,6 +80,12 @@ export function getOpenClawPortableEnv(): Record<string, string> {
   const compileCache = ensurePortableNodeCompileCache(process.platform, process.env, getPortableDataDir());
   if (compileCache) {
     env.NODE_COMPILE_CACHE = compileCache;
+    // 🔴 必须与 NODE_COMPILE_CACHE 同时注入：openclaw 打包版启动器发现编译缓存
+    // 目录与其期望子目录不一致时会 respawn 自己；utilityProcess 里 execPath 是
+    // U-Claw.exe 且无 ELECTRON_RUN_AS_NODE，spawn 出来的是完整 GUI 第二实例 →
+    // 抢单实例锁失败 exit(0) → 网关被判定异常退出 → 无限重启循环。此标记让
+    // 内核跳过 respawn、在进程内直接启用编译缓存（build/openclaw/openclaw.mjs:253）。
+    env.OPENCLAW_PACKAGED_COMPILE_CACHE_RESPAWNED = '1';
   }
   return env;
 }
