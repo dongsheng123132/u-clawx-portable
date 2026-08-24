@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'path';
 import { homedir } from 'os';
 import { existsSync, mkdirSync, readFileSync, realpathSync } from 'fs';
+import { ensurePortableNodeCompileCache } from './portable-compile-cache';
 
 const require = createRequire(import.meta.url);
 
@@ -22,9 +23,14 @@ export {
 // ── 便携模式 ─────────────────────────────────────────────────────
 //
 // U-Claw 薄壳的唯一目的：让 ClawX 从 U 盘 / 移动硬盘 / 任意目录绿色运行，
-// **不往宿主机写任何东西**。整个便携层就是这里的三个探测函数 +
+// **业务数据与凭证不落宿主机**。整个便携层就是这里的三个探测函数 +
 // 下面几个路径解析器里的分支；其余代码一律走这些 helper，不要自己拼
 // `homedir()`（上游没有便携约束，它那样写对它是对的，对我们不是）。
+//
+// 例外（有意取舍，2026-08-24）：可丢弃的本机性能缓存——Chromium sessionData、
+// NODE_COMPILE_CACHE——刻意写到宿主机缓存根（%LOCALAPPDATA%\U-Claw\ 等）。
+// 它们不含任何用户数据，换盘用 UUID 隔离，见 portable-session-data.ts /
+// portable-compile-cache.ts。
 
 let _portableMode: boolean | undefined;
 let _appRoot: string | undefined;
@@ -58,15 +64,24 @@ export function getPortableDataDir(): string {
 /**
  * 注入给内置 OpenClaw runtime 的环境变量，让它把 `~/.openclaw`
  * 解析到便携数据根里。启动 Gateway / CLI 子进程时必须带上。
+ *
+ * NODE_COMPILE_CACHE（Node ≥22.1）：V8 编译缓存落本机 SSD，内核二次冷启动不再
+ * 全量重新解析。目录按 portable-session-data 同款 UUID 盘符隔离；拿不到本机
+ * 缓存路径就不设该变量，行为与旧版完全一致。
  */
 export function getOpenClawPortableEnv(): Record<string, string> {
   if (!isPortableMode()) return {};
   const stateDir = getOpenClawConfigDir();
-  return {
+  const env: Record<string, string> = {
     OPENCLAW_HOME: getPortableDataDir(),
     OPENCLAW_STATE_DIR: stateDir,
     OPENCLAW_CONFIG_PATH: join(stateDir, 'openclaw.json'),
   };
+  const compileCache = ensurePortableNodeCompileCache(process.platform, process.env, getPortableDataDir());
+  if (compileCache) {
+    env.NODE_COMPILE_CACHE = compileCache;
+  }
+  return env;
 }
 
 function getElectronApp() {

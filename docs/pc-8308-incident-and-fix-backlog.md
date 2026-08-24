@@ -45,7 +45,22 @@
 
 - 以上两个修复只在开发分支 `publish/exfat-wallet-fixes`，**客户的 U 盘还是旧 0.5.5**——需要打下一版（建议 0.5.6）并重新分发才能生效
 - 客户现有数据（U 盘 data/ 目录）与新版本兼容，无需迁移；升级方式＝新版解包覆盖程序文件、保留 data/
-- 发版前 checklist：OSS latest.yml 同步 ✅｜迁移锁测试 ✅｜便携更新闸测试 ✅
+- 发版前 checklist：OSS latest.yml 同步 ✅｜迁移锁测试 ✅｜便携更新闸测试 ✅｜启动提速三项实测 ⬇️
+
+### 0.5.6 追加：启动反馈与提速三项（2026-08-24 晚）
+
+「还是打不开」工单的另一半根因是**冷启动 40~60 秒且前 20 秒零反馈**。三项改动（同分支）：
+
+| 改动 | 文件 | 说明 |
+|---|---|---|
+| ① 启动首屏 | `electron/utils/splash-window.ts` | 便携模式双击即见「正在启动」窗；主窗 ready-to-show 自动关；120s 保险丝防孤儿窗；E2E 不启用；initialize 失败弹错误框后退出（不再静默变砖） |
+| ② 编译缓存落本机 | `electron/utils/portable-compile-cache.ts` + paths 注入 | `NODE_COMPILE_CACHE` → `%LOCALAPPDATA%\U-Claw\node-compile-cache\<hash>`；UUID 盘符隔离；身份不可用时禁用（不共享固定身份）；解析结果 memo 化 |
+| ③ 网关模型预热 | `electron/utils/prewarm.ts` | running 后进程级去重打一轮 `/v1/models`，焐热模型子系统；8s 超时、fire-and-forget |
+
+- 审查记录：fable 把关时序（z-order 无竞争、第二实例不会闪 splash、utilityProcess 支持 NODE_COMPILE_CACHE 且绕开 NODE_OPTIONS 封杀）；pi 代码审查 4 条已全部修复（身份契约/loadURL rejection/预热去重/E2E 守卫）
+- **发版前必测两个数字**（fable 要求）：打包版在真 U 盘连启两次——① `%LOCALAPPDATA%\U-Claw\node-compile-cache\` 下长出缓存文件 ② 第二次网关就绪时间下降。没长文件 = ESM 未命中缓存，需排查
+- 已知边界：splash 只盖住前 ~20s 死区；主窗出现后等网关的 ~40s 由渲染层 gateway:status-changed 表达，真机验证时确认这个等待态不是空白
+- 测试：`pnpm vitest run tests/unit/portable-compile-cache.test.ts tests/unit/portable-paths.test.ts tests/unit/startup-feedback-wiring.test.ts`
 
 ## 四、复现与验证入口
 

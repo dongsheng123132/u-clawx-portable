@@ -2,7 +2,7 @@
  * Electron Main Process Entry
  * Manages window creation, system tray, and IPC handlers
  */
-import { app, BrowserWindow, nativeImage, session, shell, type Session } from 'electron';
+import { app, BrowserWindow, dialog, nativeImage, session, shell, type Session } from 'electron';
 import { join } from 'path';
 import { GatewayManager } from '../gateway/manager';
 import { registerOpenClawConfigCoordinator } from '../gateway/config-delivery';
@@ -56,6 +56,8 @@ import {
 import { createSignalQuitHandler } from './signal-quit';
 import { acquireProcessInstanceFileLock } from './process-instance-lock';
 import { ensureBuiltinSkillsInstalled, ensurePreinstalledSkillsInstalled, trimBundledOpenClawSkillsAndConfigs } from '../utils/skill-config';
+import { closeSplashWindow, showSplashWindow } from '../utils/splash-window';
+import { prewarmGatewayModels } from '../utils/prewarm';
 
 import { deviceOAuthManager } from '../utils/device-oauth';
 import { browserOAuthManager } from '../utils/browser-oauth';
@@ -308,10 +310,12 @@ function createMainWindow(): BrowserWindow {
     const action = consumeMainWindowReady(mainWindowFocusState);
     if (action === 'focus') {
       focusWindow(win);
+      closeSplashWindow();
       return;
     }
 
     win.show();
+    closeSplashWindow();
   });
 
   win.on('close', (event) => {
@@ -494,6 +498,9 @@ async function initialize(): Promise<void> {
   gatewayManager.on('status', (status: { state: string }) => {
     sendMainWindowEvent('gateway:status-changed', status);
     if (status.state === 'running' && !isE2EMode) {
+      // 模型子系统预热线程：网关「就绪」≠「模型可用」，后台提前焐热，
+      // 用户点第一条消息不再等 U 盘冷加载。fire-and-forget，失败静默。
+      prewarmGatewayModels(gatewayManager);
       void ensureClawXContext().catch((error) => {
         logger.warn('Failed to re-merge ClawX context after gateway reconnect:', error);
       });
@@ -659,10 +666,26 @@ if (gotTheLock) {
 
   // Application lifecycle
   app.whenReady().then(async () => {
+    // 启动首屏：便携模式下双击后立刻给出可见反馈（主窗要等初始化+网关预热，
+    // U 盘冷启动全程 40~60 秒，没有首屏用户会以为没点上）。非便携/E2E 不启用。
+    showSplashWindow();
     try {
       await initialize();
     } catch (error) {
       logger.error('Application initialization failed:', error);
+      closeSplashWindow();
+      // 失败路径不许「静默变砖」：splash 没了、主窗没建、进程还挂着——
+      // 用户面前什么都没有，正是首屏要消灭的那种困惑。弹框明示后退出。
+      try {
+        dialog.showErrorBox(
+          'U-Claw 启动失败',
+          '应用初始化失败，请拔出 U 盘重新插入后再试。\n\n'
+          + `错误信息：${error instanceof Error ? error.message : String(error)}`,
+        );
+      } catch {
+        // 连弹框都失败（极端环境）时至少留一条日志已在上面的 logger.error。
+      }
+      app.exit(1);
       return;
     }
 

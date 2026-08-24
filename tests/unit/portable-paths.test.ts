@@ -76,11 +76,13 @@ describe('portable path resolution', () => {
     expect(paths.getClawXConfigDir()).toBe(join(appRoot, 'data', '.clawx'));
     expect(paths.getDataDir()).toBe(join(appRoot, 'data', 'clawx-state'));
     expect(paths.expandPath('~/.openclaw/workspace')).toBe(join(appRoot, 'data', '.openclaw', 'workspace'));
-    expect(paths.getOpenClawPortableEnv()).toEqual({
-      OPENCLAW_HOME: join(appRoot, 'data'),
-      OPENCLAW_STATE_DIR: join(appRoot, 'data', '.openclaw'),
-      OPENCLAW_CONFIG_PATH: join(appRoot, 'data', '.openclaw', 'openclaw.json'),
-    });
+    // 本机编译缓存目录随宿主机 LOCALAPPDATA 而变，这里只断言键存在与形态；
+    // 目录解析/盘符隔离的细节由 portable-compile-cache.test.ts 负责。
+    const portableEnv = paths.getOpenClawPortableEnv();
+    expect(portableEnv.OPENCLAW_HOME).toBe(join(appRoot, 'data'));
+    expect(portableEnv.OPENCLAW_STATE_DIR).toBe(join(appRoot, 'data', '.openclaw'));
+    expect(portableEnv.OPENCLAW_CONFIG_PATH).toBe(join(appRoot, 'data', '.openclaw', 'openclaw.json'));
+    expect(portableEnv.NODE_COMPILE_CACHE).toContain(join('U-Claw', 'node-compile-cache'));
   });
 
   it('ignores host OpenClaw env overrides in portable mode', async () => {
