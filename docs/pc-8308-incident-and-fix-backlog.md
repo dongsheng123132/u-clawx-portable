@@ -1,0 +1,50 @@
+# pc-8308 客户机事故复盘 与 修复/需求台账
+
+> 日期：2026-08-24 · 排查人：ox-alpha（Hermes）· 复现机：pc-8308（DESKTOP-PFDJHG7，Windows x64）
+> 涉事介质：USB 便携版 `F:\U-Claw`（ClawX/U-Claw 壳 v0.5.5 + 内置 OpenClaw 2026.7.1）
+
+## 一、事件时间线（来自 U 盘日志 clawx-2026-08-24.log）
+
+| 本地时间 | 事件 |
+|---|---|
+| 14:21 | 客户首次启动。壳检测到捆绑内核需升级到 openclaw 2026.7.1，做 pre-migration 快照后开始状态目录迁移 |
+| 14:21:37 | 图片插件装完触发 gateway-refresh，**把正在跑迁移的网关杀了** → SQLite `state_leases` 租约（TTL 5 分钟）变孤儿 |
+| 14:21–14:34 | 之后每次重启网关都被拒："startup migrations are already running"；壳层恢复策略把该信号判为不可重试直接放弃 → 窗口躺死。客户反复双击无效（Second instance detected），期间 14:28 一次抢到锁又崩（退出码 4294930435），租约再续 5 分钟 |
+| 14:34 | 租约过期后首次尝试跑完迁移 → 就绪。**从首次双击到能用 ≈13 分钟** |
+| 15:30 | 客户重启 App 并换入新虾盘云 Key（尾号 f5ed）。本轮启动 50 秒就绪，未再踩锁 |
+| 16:04 | 远程实测干净启动：41 秒就绪，窗口正常，网关 18789 监听 |
+
+## 二、问题归主与状态
+
+### ✅ Bug #1：首启迁移锁卡死 13 分钟 —— 归壳层（本仓库），已修
+- 根因：① gateway-refresh 在首次迁移未完成时重启网关，留下孤儿租约；② 恢复策略把「迁移锁」当致命错误直接 fail，不重试
+- 修复：`electron/gateway/startup-recovery.ts` 新增解析报错内嵌 retry-after 截止时间 + 有界等待计算；`startup-orchestrator.ts` 等锁到期自动重试（上限一个租约周期 6min × 最多 3 轮）
+- 提交：`5210f61b`（含 pc-8308 实录 stderr 的回归测试）
+- ⚠️ 遗留（根因侧另一半）：**迁移进行中应挂起 gateway-refresh**（单飞逻辑），本次未动，列入下版
+
+### ✅ 需求①：便携版不要弹更新提示 —— 归壳层（本仓库），已修
+- 背景：0.5.5 便携版反复弹「发现新版本 0.5.4」——OSS feed 的 latest.yml 停在旧版本；且便携副本无法走 NSIS 就地更新
+- 修复：AppUpdater 四入口硬闸（构造跳过全部 electron-updater 接线；check/download/install 短路）；新增 `disabled` 状态贯通 contract 与渲染层；四语言 i18n 补文案
+- 提交：`47ff0e72`（经 fable 两轮审查定稿）
+
+### ❌ 运维侧：OSS 发版管线的 latest.yml 未随 0.5.5 发布更新 —— 待处理
+- 即使有上面的硬闸，**installed 版**用户仍会被旧 feed 干扰；需把 `https://oss.intelli-spectrum.com/latest/latest.yml` 刷到当前版本，并把「发版必须同步 OSS feed」写进 release 流程检查单
+
+### ❌ 客户侧：虾盘云设备钱包余额耗尽 —— 已由用户换 Key 解决
+- 原钱包 `wal_8c59fc09eeb72156`（Key 尾 aa31）余额 ¥0.000002，所有模型调用 403
+- 用户已远程给客户配置新 Key（尾 f5ed），API 实测补全通过
+- 📌 产品改进项（归壳层+云侧）：403 quota 报错应在 UI 明确显示「余额不足，去充值」，而不是笼统的 auth failed / "Couldn't sign in"
+
+### ❌ 需求②：启动图标蓝龙虾 → 红龙虾 —— 待做（资源替换）
+- 归壳层打包资源；注意便携版 exe 图标 + 安装版 + 托盘图标多处同步
+
+## 三、发布注意
+
+- 以上两个修复只在开发分支 `publish/exfat-wallet-fixes`，**客户的 U 盘还是旧 0.5.5**——需要打下一版（建议 0.5.6）并重新分发才能生效
+- 客户现有数据（U 盘 data/ 目录）与新版本兼容，无需迁移；升级方式＝新版解包覆盖程序文件、保留 data/
+- 发版前 checklist：OSS latest.yml 同步 ✅｜迁移锁测试 ✅｜便携更新闸测试 ✅
+
+## 四、复现与验证入口
+
+- 单测：`pnpm vitest run tests/unit/gateway-startup-recovery.test.ts tests/unit/gateway-startup-orchestrator.test.ts tests/unit/updater-portable-gate.test.ts`
+- 迁移锁机制：openclaw dist/startup-migration-checkpoint-*.js，SQLite 表 `state_leases`，TTL=5min，报错文案内嵌 ISO 截止时间可解析
