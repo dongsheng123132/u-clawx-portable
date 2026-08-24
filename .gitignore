@@ -89,3 +89,7 @@ resources/openclaw-plugins/skillshub/
 .opencode
 .superpowers
 .playwright-mcp
+
+# 内部发行工具配置与本地构建日志（分支镜像到公开仓，不得入库）
+.shadowfork/
+tmp/
