@@ -19,6 +19,7 @@
 import 'zx/globals';
 import { ELECTRON_MAIN_RUNTIME_PACKAGES, EXTRA_BUNDLED_PACKAGES } from './openclaw-bundle-config.mjs';
 import { patchExtensionOpenClawSelfImports } from './openclaw-self-import-patch.mjs';
+import { copyDirSafe } from './copy-dir-safe.mjs';
 
 const ROOT = path.resolve(__dirname, '..');
 const OUTPUT = path.join(ROOT, 'build', 'openclaw');
@@ -109,11 +110,7 @@ fs.mkdirSync(OUTPUT, { recursive: true });
 
 // 3. Copy openclaw package itself to OUTPUT root
 echo`   Copying openclaw package...`;
-fs.cpSync(openclawReal, OUTPUT, {
-  recursive: true,
-  dereference: true,
-  filter: shouldCopyOpenClawPackageEntry,
-});
+copyDirSafe(openclawReal, OUTPUT, true, shouldCopyOpenClawPackageEntry);
 
 const bundledSkillsTrim = trimBundledOpenClawSkills(path.join(OUTPUT, 'skills'));
 if (bundledSkillsTrim.removed > 0) {
@@ -352,7 +349,7 @@ for (const [realPath, pkgName] of collectedEntries) {
 
   try {
     fs.mkdirSync(normWin(path.dirname(dest)), { recursive: true });
-    fs.cpSync(normWin(realPath), normWin(dest), { recursive: true, dereference: true });
+    copyDirSafe(realPath, dest, true);
     copiedCount++;
   } catch (err) {
     echo`   ⚠️  Skipped ${pkgName}: ${err.message}`;
@@ -413,7 +410,7 @@ if (fs.existsSync(extensionsDir)) {
             const destScoped = path.join(outputNodeModules, pkgEntry.name, scopeEntry.name);
             try {
               fs.mkdirSync(normWin(path.dirname(destScoped)), { recursive: true });
-              fs.cpSync(normWin(srcScoped), normWin(destScoped), { recursive: true, dereference: true });
+              copyDirSafe(srcScoped, destScoped, true);
               copiedNames.add(scopedName);
               mergedExtCount++;
             } catch { /* skip on copy error */ }
@@ -422,7 +419,8 @@ if (fs.existsSync(extensionsDir)) {
           if (copiedNames.has(pkgEntry.name)) continue;
           const destPkg = path.join(outputNodeModules, pkgEntry.name);
           try {
-            fs.cpSync(normWin(srcPkg), normWin(destPkg), { recursive: true, dereference: true });
+            fs.mkdirSync(normWin(path.dirname(destPkg)), { recursive: true });
+            copyDirSafe(srcPkg, destPkg, true);
             copiedNames.add(pkgEntry.name);
             mergedExtCount++;
           } catch { /* skip on copy error */ }
@@ -437,7 +435,7 @@ if (fs.existsSync(extensionsDir)) {
       if (!fs.existsSync(srcPkg) || fs.existsSync(destPkg)) continue;
       try {
         fs.mkdirSync(normWin(path.dirname(destPkg)), { recursive: true });
-        fs.cpSync(normWin(srcPkg), normWin(destPkg), { recursive: true, dereference: true });
+        copyDirSafe(srcPkg, destPkg, true);
         mirroredExtRuntimeDeps++;
       } catch { /* skip on copy error */ }
     }

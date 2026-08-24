@@ -1,5 +1,6 @@
-import { existsSync, readdirSync, cpSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { copyFile, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { copyDirSafe } from './copy-dir-safe.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -130,7 +131,8 @@ export async function finalizeTargetDir(sourceDir, desiredTargetDir) {
   try {
     await rename(normalizedSource, normalizedTarget);
   } catch {
-    cpSync(normalizedSource, normalizedTarget, { recursive: true });
+    // Node 22.20 cpSync 目录模式在非 ASCII 路径下进程级 abort，用手动递归兜底
+    copyDirSafe(normalizedSource, normalizedTarget, false);
     await rm(normalizedSource, { recursive: true, force: true });
   }
   return normalizedTarget;

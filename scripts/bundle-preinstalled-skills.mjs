@@ -2,7 +2,8 @@
 
 import 'zx/globals';
 import { execFile } from 'node:child_process';
-import { copyFileSync, readFileSync, existsSync, mkdirSync, rmSync, cpSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, readFileSync, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { copyDirSafe } from './copy-dir-safe.mjs';
 import { join, dirname, basename } from 'node:path';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
@@ -251,7 +252,7 @@ for (const group of groups) {
     }
 
     rmSync(targetDir, { recursive: true, force: true });
-    cpSync(sourceDir, targetDir, { recursive: true, dereference: true, filter: shouldCopySkillFile });
+    copyDirSafe(sourceDir, targetDir, true, shouldCopySkillFile);
 
     const skillManifest = join(targetDir, 'SKILL.md');
     if (!existsSync(skillManifest)) {
