@@ -18,6 +18,8 @@ const revealWorkspaceFileMock = vi.hoisted(() => vi.fn());
 const thumbnailsMock = vi.hoisted(() => vi.fn());
 const openHtmlExternalMock = vi.hoisted(() => vi.fn());
 const toastErrorMock = vi.hoisted(() => vi.fn());
+const rechargeUrlMock = vi.hoisted(() => vi.fn());
+const shellOpenExternalMock = vi.hoisted(() => vi.fn());
 const i18nLanguage = vi.hoisted(() => ({ value: 'en' }));
 
 vi.mock('@/lib/host-api', () => ({
@@ -33,6 +35,12 @@ vi.mock('@/lib/host-api', () => ({
     },
     media: {
       thumbnails: thumbnailsMock,
+    },
+    uclaw: {
+      rechargeUrl: rechargeUrlMock,
+    },
+    shell: {
+      openExternal: shellOpenExternalMock,
     },
     webBrowser: {
       openExternal: openHtmlExternalMock,
@@ -68,6 +76,9 @@ vi.mock('react-i18next', () => ({
         'acp.cancelled': 'Cancelled',
         'acp.loadFailed': 'Load failed',
         'acp.promptFailed': 'Prompt failed',
+        'acp.quotaTitle': 'Insufficient balance',
+        'acp.quotaHint': "Your XiaPan Cloud balance can't cover this conversation. Top up to continue.",
+        'acp.recharge': 'Top up',
         'acp.unsupportedContent': 'Unsupported content',
         'acp.turnDuration': 'Took {{duration}}',
         'acp.turnElapsed': '{{duration}} elapsed',
@@ -2003,5 +2014,30 @@ describe('ACP chat timeline components', () => {
     expect(screen.getByTestId('acp-error-banner')).toHaveTextContent('Connection lost');
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
     expect(onDismissError).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a friendly quota title and a top-up button instead of the raw balance error', async () => {
+    rechargeUrlMock.mockResolvedValue({ url: 'https://pay.example/recharge?key=sk-x' });
+    shellOpenExternalMock.mockResolvedValue(undefined);
+    const rawQuotaError =
+      'Error: 403 - "403 token quota is not enough, please check your token quota or contact the administrator"';
+
+    render(<AcpTimeline snapshot={snapshot({})} error={rawQuotaError} />);
+
+    expect(screen.getByTestId('acp-error-banner')).toHaveTextContent('Insufficient balance');
+    expect(screen.queryByText(/token quota is not enough/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('acp-error-recharge'));
+    await waitFor(() => {
+      expect(rechargeUrlMock).toHaveBeenCalledOnce();
+      expect(shellOpenExternalMock).toHaveBeenCalledWith('https://pay.example/recharge?key=sk-x');
+    });
+  });
+
+  it('keeps non-quota errors rendering the raw message without any top-up button', () => {
+    render(<AcpTimeline snapshot={snapshot({})} error="Connection lost" onDismissError={vi.fn()} />);
+
+    expect(screen.getByTestId('acp-error-banner')).toHaveTextContent('Connection lost');
+    expect(screen.queryByTestId('acp-error-recharge')).not.toBeInTheDocument();
   });
 });

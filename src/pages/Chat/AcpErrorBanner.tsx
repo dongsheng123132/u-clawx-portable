@@ -1,6 +1,9 @@
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, ExternalLink, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { hostApi } from '@/lib/host-api';
+import { isQuotaRunError } from './quota-error';
 
 export function AcpErrorBanner({
   message,
@@ -12,7 +15,20 @@ export function AcpErrorBanner({
   onDismiss?: () => void;
 }) {
   const { t } = useTranslation('chat');
-  const title = kind === 'prompt' ? t('acp.promptFailed') : t('acp.loadFailed');
+  const quota = isQuotaRunError(message);
+  const title = quota
+    ? t('acp.quotaTitle')
+    : kind === 'prompt'
+      ? t('acp.promptFailed')
+      : t('acp.loadFailed');
+
+  async function openRechargePage() {
+    try {
+      await hostApi.shell.openExternal((await hostApi.uclaw.rechargeUrl()).url);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
+    }
+  }
 
   return (
     <div
@@ -22,7 +38,22 @@ export function AcpErrorBanner({
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">{title}</p>
-        <p className="mt-1 break-words text-sm opacity-80">{message}</p>
+        {quota ? (
+          <div className="mt-1 flex items-center justify-between gap-3">
+            <p className="break-words text-sm opacity-80">{t('acp.quotaHint')}</p>
+            <Button
+              type="button"
+              data-testid="acp-error-recharge"
+              className="h-8 shrink-0 rounded-lg bg-red-700 px-3 text-xs font-medium text-white hover:bg-red-800 dark:bg-red-500 dark:text-white dark:hover:bg-red-400"
+              onClick={() => void openRechargePage()}
+            >
+              <ExternalLink className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+              {t('acp.recharge')}
+            </Button>
+          </div>
+        ) : (
+          <p className="mt-1 break-words text-sm opacity-80">{message}</p>
+        )}
       </div>
       {onDismiss && (
         <Button
