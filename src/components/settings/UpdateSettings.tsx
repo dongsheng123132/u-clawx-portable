@@ -78,6 +78,8 @@ export function UpdateSettings() {
         return error || t('updates.status.failed');
       case 'not-available':
         return t('updates.status.latest');
+      case 'disabled':
+        return t('updates.status.disabled');
       default:
         return t('updates.status.check');
     }
@@ -128,6 +130,9 @@ export function UpdateSettings() {
             {t('updates.action.retry')}
           </Button>
         );
+      case 'disabled':
+        // Portable build: updates ship as a new USB release; nothing to do here.
+        return null;
       default:
         return (
           <Button onClick={handleCheckForUpdates} variant="outline" size="sm">

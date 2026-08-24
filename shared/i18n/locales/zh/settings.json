@@ -172,6 +172,7 @@
       "autoInstalling": "将在 {{seconds}} 秒后重启并安装更新...",
       "failed": "检查更新失败",
       "latest": "您已拥有最新版本",
+      "disabled": "便携版不提供在线更新，升级请换用新版 U 盘包",
       "check": "检查更新以获取最新功能"
     },
     "action": {

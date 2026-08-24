@@ -95,7 +95,16 @@ export type UpdateProgressSnapshot = {
   bytesPerSecond: number;
 };
 export type UpdateStatusSnapshot = {
-  status: 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
+  status:
+    | 'idle'
+    | 'checking'
+    | 'available'
+    | 'not-available'
+    | 'downloading'
+    | 'downloaded'
+    | 'error'
+    /** Portable build: update system disabled entirely. */
+    | 'disabled';
   info?: UpdateInfoSnapshot;
   progress?: UpdateProgressSnapshot;
   error?: string;

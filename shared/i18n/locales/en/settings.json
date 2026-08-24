@@ -172,6 +172,7 @@
       "autoInstalling": "Restarting to install update in {{seconds}}s...",
       "failed": "Update check failed",
       "latest": "You have the latest version",
+      "disabled": "Updates disabled (portable version)",
       "check": "Check for updates to get the latest features"
     },
     "action": {

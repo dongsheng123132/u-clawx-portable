@@ -9,6 +9,7 @@
 import { autoUpdater, UpdateInfo, ProgressInfo, UpdateDownloadedEvent } from 'electron-updater';
 import { BrowserWindow, app, ipcMain } from 'electron';
 import { logger } from '../utils/logger';
+import { isPortableMode } from '../utils/paths';
 import { EventEmitter } from 'events';
 import { setQuitting } from './app-state';
 
@@ -16,7 +17,16 @@ import { setQuitting } from './app-state';
 const OSS_BASE_URL = 'https://oss.intelli-spectrum.com';
 
 export interface UpdateStatus {
-  status: 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
+  status:
+    | 'idle'
+    | 'checking'
+    | 'available'
+    | 'not-available'
+    | 'downloading'
+    | 'downloaded'
+    | 'error'
+    /** Portable build: update system disabled entirely. */
+    | 'disabled';
   info?: UpdateInfo;
   progress?: ProgressInfo;
   error?: string;
@@ -61,6 +71,23 @@ export class AppUpdater extends EventEmitter {
     
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
+
+    // Portable builds (USB) never auto-update:
+    // - electron-updater compares against the OSS feed's latest.yml; a stale
+    //   feed made a 0.5.5 portable build nag "update 0.5.4" forever
+    //   (pc-8308 customer incident, 2026-08-24).
+    // - an NSIS update cannot apply cleanly to an uninstalled USB copy anyway;
+    //   portable updates ship as a new extracted folder / new USB release.
+    // The gate lives in checkForUpdates()/downloadUpdate()/quitAndInstall()
+    // so every entry point (startup auto-check, settings button, host API)
+    // short-circuits before electron-updater runs.
+    if (isPortableMode()) {
+      this.updateStatus({ status: 'disabled' });
+      logger.info('[Updater] Portable mode: automatic updates disabled');
+      // Skip electron-updater wiring entirely (no feed URL, no listeners):
+      // nothing in a portable install may reach the update infrastructure.
+      return;
+    }
     
     autoUpdater.logger = {
       info: (msg: string) => logger.info('[Updater]', msg),
@@ -170,6 +197,13 @@ export class AppUpdater extends EventEmitter {
    * final status so the UI never gets stuck in 'checking'.
    */
   async checkForUpdates(): Promise<UpdateInfo | null> {
+    // Portable builds never update in place — short-circuit before
+    // electron-updater runs (see constructor comment). Status stays 'disabled'
+    // so the renderer can hide update UI entirely.
+    if (isPortableMode()) {
+      this.updateStatus({ status: 'disabled' });
+      return null;
+    }
     try {
       const result = await autoUpdater.checkForUpdates();
 
@@ -201,6 +235,10 @@ export class AppUpdater extends EventEmitter {
    * Download available update
    */
   async downloadUpdate(): Promise<void> {
+    if (isPortableMode()) {
+      logger.warn('[Updater] Portable mode: update download suppressed');
+      return;
+    }
     try {
       await autoUpdater.downloadUpdate();
     } catch (error) {
@@ -221,6 +259,10 @@ export class AppUpdater extends EventEmitter {
    * the window cleanly while ShipIt runs independently to replace the app.
    */
   quitAndInstall(): void {
+    if (isPortableMode()) {
+      logger.warn('[Updater] Portable mode: quitAndInstall suppressed');
+      return;
+    }
     logger.info('[Updater] quitAndInstall called');
     setQuitting();
     autoUpdater.quitAndInstall();
