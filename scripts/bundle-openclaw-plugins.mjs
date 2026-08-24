@@ -37,6 +37,32 @@ function normWin(p) {
   return '\\\\?\\' + p.replace(/\//g, '\\');
 }
 
+// Node 22.20 的 fs.cpSync 目录模式在源路径含非 ASCII 字符（如中文「版本」）时
+// 直接 crash（exit code 3221226505 / c0000409，进程级 abort 无异常抛出）。
+// 本仓库目录名带「--4.0版本」，必然踩中。手动递归 copyFileSync 不受影响。
+// 等 Node 升级修复后可换回 cpSync（保留 dereference 语义：跳过 symlink）。
+function copyDirSafe(src, dest, dereference = true) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src)) {
+    const sp = path.join(src, entry);
+    const dp = path.join(dest, entry);
+    let st;
+    try { st = fs.lstatSync(sp); } catch { continue; }
+    if (dereference && st.isSymbolicLink()) {
+      // cpSync dereference 语义：符号链接拷成真实目标；断链跳过
+      try {
+        const real = fs.statSync(sp);
+        if (real.isDirectory()) copyDirSafe(fs.realpathSync(sp), dp);
+        else fs.copyFileSync(fs.realpathSync(sp), dp);
+      } catch { /* broken link: skip */ }
+    } else if (st.isDirectory()) {
+      copyDirSafe(sp, dp, dereference);
+    } else if (st.isFile()) {
+      fs.copyFileSync(sp, dp);
+    }
+  }
+}
+
 const PLUGINS = [
   { npmName: '@soimy/dingtalk', pluginId: 'dingtalk' },
   { npmName: '@wecom/wecom-openclaw-plugin', pluginId: 'wecom' },
@@ -108,7 +134,7 @@ function bundleOnePlugin({ npmName, pluginId }) {
   fs.mkdirSync(outputDir, { recursive: true });
 
   // 1) Copy plugin package itself
-  fs.cpSync(realPluginPath, outputDir, { recursive: true, dereference: true });
+  copyDirSafe(realPluginPath, outputDir, true);
 
   // 2) Collect transitive deps from pnpm virtual store
   const collected = new Map();
@@ -169,7 +195,7 @@ function bundleOnePlugin({ npmName, pluginId }) {
     const dest = path.join(outputNodeModules, pkgName);
     try {
       fs.mkdirSync(normWin(path.dirname(dest)), { recursive: true });
-      fs.cpSync(normWin(realPath), normWin(dest), { recursive: true, dereference: true });
+      copyDirSafe(realPath, dest, true);
       copiedCount++;
     } catch (err) {
       echo`   ⚠️  Skipped ${pkgName}: ${err.message}`;
