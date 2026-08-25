@@ -79,7 +79,7 @@ async function keepAcpPromptPending(app: ElectronApplication) {
   });
 }
 
-test.describe('ClawX chat scroll pin-to-bottom during runs', () => {
+test.describe('U-ClawX chat scroll pin-to-bottom during runs', () => {
   test('keeps the scrollbar pinned to the bottom through oscillating tool-heavy streaming, and yields to manual scroll-up', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 

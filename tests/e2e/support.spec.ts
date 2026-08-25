@@ -39,7 +39,7 @@ test.describe('Manual technical support', () => {
       ));
       expect(mailto).toMatch(/^mailto:hefangsheng@gmail\.com\?/);
       expect(decodeURIComponent(mailto ?? '')).toContain('The wallet page should explain a failed connection.');
-      expect(decodeURIComponent(mailto ?? '')).toContain('U-Claw');
+      expect(decodeURIComponent(mailto ?? '')).toContain('U-ClawX');
       expect(mailto).not.toContain('sk-');
 
       await page.getByTestId('sidebar-nav-settings').click();

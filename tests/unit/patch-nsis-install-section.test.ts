@@ -35,7 +35,7 @@ describe('patchNsisInstallSectionTemplate', () => {
     expect(patchNsisInstallSectionTemplate(target)).toBe(true);
 
     const result = readFileSync(target, 'utf8');
-    expect(result).toContain('ClawX-patched-v2: run app-running guard in assisted UAC inner instance');
+    expect(result).toContain('U-ClawX-patched-v2: run app-running guard in assisted UAC inner instance');
     expect(result).toContain('!insertmacro CHECK_APP_RUNNING');
     expect(result).not.toContain('${ifNot} ${UAC_IsInnerInstance}\n    !insertmacro CHECK_APP_RUNNING');
     expect(patchNsisInstallSectionTemplate(target)).toBe(true);

@@ -209,13 +209,13 @@ test.describe('real Office document previews', () => {
         };
       })).toMatchObject({ pageCount: 2, tableCount: 1 });
       const renderedDocxText = await docxHost.evaluate((host) => host.shadowRoot?.textContent ?? '');
-      expect(renderedDocxText).toContain('ClawX Office Preview Header');
+      expect(renderedDocxText).toContain('U-ClawX Office Preview Header');
       expect(renderedDocxText).toContain('Quarterly Office Preview');
       expect(renderedDocxText).toContain('This deterministic document verifies real DOCX rendering in Electron.');
       expect(renderedDocxText).toContain('North');
       expect(renderedDocxText).toContain('Ready');
       expect(renderedDocxText).toContain('Second Preview Page');
-      expect(renderedDocxText).toContain('ClawX Office Preview Footer');
+      expect(renderedDocxText).toContain('U-ClawX Office Preview Footer');
 
       await workspaceTree.getByTitle('slides-a.pptx', { exact: true }).click();
       const canvas = page.getByTestId('pptx-canvas');

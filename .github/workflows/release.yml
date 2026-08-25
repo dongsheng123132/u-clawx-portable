@@ -1,4 +1,4 @@
-# ClawX Release Workflow
+# U-ClawX Release Workflow
 # Builds and publishes releases for macOS, Windows, and Linux
 
 name: Release
@@ -252,10 +252,10 @@ jobs:
       #
       # Actual latest.yml structure (from electron-builder NSIS):
       #   files:
-      #     - url: ClawX-0.2.4-win-x64.exe    ← files[] entries have url/sha512/size
+      #     - url: U-ClawX-0.2.4-win-x64.exe    ← files[] entries have url/sha512/size
       #       sha512: <base64>
       #       size: 430775882
-      #   path: ClawX-0.2.4-win-arm64.exe      ← top-level has path/sha512 (no size!)
+      #   path: U-ClawX-0.2.4-win-arm64.exe      ← top-level has path/sha512 (no size!)
       #   sha512: <base64>
       #   releaseDate: '...'
       - name: Update latest.yml sha512 after code signing
@@ -359,6 +359,23 @@ jobs:
           echo "Removing builder-debug.yml files to avoid duplicate asset upload conflicts..."
           find release-artifacts/ -name "builder-debug.yml" -delete -print || true
 
+      # 重发同版本（tag 挪动后重跑）时旧 Release 对象还在，softprops 最后
+      # finalizing 会撞 already_exists，把已传好的资产卡死在草稿里。
+      # 先删同名旧对象再发布，资产由本步重新上传。
+      - name: Remove stale release with same tag
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          RELEASE_ID=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG" --jq '.id' 2>/dev/null || true)
+          if [ -n "$RELEASE_ID" ] && [ "$RELEASE_ID" != "null" ]; then
+            echo "Deleting stale release $RELEASE_ID for tag $TAG (assets will be re-uploaded)"
+            gh api -X DELETE "repos/${{ github.repository }}/releases/$RELEASE_ID"
+          else
+            echo "No existing release object for $TAG — clean publish"
+          fi
+
       - name: Create GitHub Release (as pre-release)
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
@@ -376,28 +393,28 @@ jobs:
           make_latest: false
           generate_release_notes: true
           body: |
-            ## 🚀 ClawX ${{ github.ref_name }}
+            ## 🚀 U-ClawX ${{ github.ref_name }}
             
-            ClawX - Graphical AI Assistant based on OpenClaw
+            U-ClawX - Graphical AI Assistant based on OpenClaw
             
             ### 📦 Downloads
             
             Please select the appropriate installer for your operating system and architecture:
             
             #### macOS
-            - **Apple Silicon (M1/M2/M3/M4)**: `ClawX-*-mac-arm64.dmg`
-            - **Intel (x64)**: `ClawX-*-mac-x64.dmg`
+            - **Apple Silicon (M1/M2/M3/M4)**: `U-ClawX-*-mac-arm64.dmg`
+            - **Intel (x64)**: `U-ClawX-*-mac-x64.dmg`
             
             #### Windows
-            - **Installer (x64)**: `ClawX-*-win-x64.exe`
-            - **Installer (ARM64)**: `ClawX-*-win-arm64.exe`
+            - **Installer (x64)**: `U-ClawX-*-win-x64.exe`
+            - **Installer (ARM64)**: `U-ClawX-*-win-arm64.exe`
             
             #### Linux
-            - **AppImage (x64)**: `ClawX-*-linux-x86_64.AppImage` (Universal format, recommended)
-            - **AppImage (ARM64)**: `ClawX-*-linux-arm64.AppImage`
-            - **Debian/Ubuntu (x64)**: `ClawX-*-linux-amd64.deb`
-            - **Debian/Ubuntu (ARM64)**: `ClawX-*-linux-arm64.deb`
-            - **RPM (x64)**: `ClawX-*-linux-x86_64.rpm`
+            - **AppImage (x64)**: `U-ClawX-*-linux-x86_64.AppImage` (Universal format, recommended)
+            - **AppImage (ARM64)**: `U-ClawX-*-linux-arm64.AppImage`
+            - **Debian/Ubuntu (x64)**: `U-ClawX-*-linux-amd64.deb`
+            - **Debian/Ubuntu (ARM64)**: `U-ClawX-*-linux-arm64.deb`
+            - **RPM (x64)**: `U-ClawX-*-linux-x86_64.rpm`
             
             ### 📝 Release Notes
             
@@ -407,7 +424,7 @@ jobs:
             
             - **macOS**: On first launch, you may see "cannot verify developer". Go to System Preferences → Security & Privacy to allow the app to run
             - **Windows**: SmartScreen may block the app. Click "More info" → "Run anyway" to proceed
-            - **Linux AppImage**: First run `chmod +x ClawX-*.AppImage` to add execute permission. On Ubuntu 22.04 you may also need `sudo apt install libfuse2`; on Ubuntu 24.04 use `sudo apt install libfuse2t64`
+            - **Linux AppImage**: First run `chmod +x U-ClawX-*.AppImage` to add execute permission. On Ubuntu 22.04 you may also need `sudo apt install libfuse2`; on Ubuntu 24.04 use `sudo apt install libfuse2t64`
             - **Linux .deb (Ubuntu 24.04)**: If installation fails due to missing dependencies, use `sudo apt install libgtk-3-0t64 libnotify4t64 libxss1t64` before installing
             
             ---
@@ -511,19 +528,19 @@ jobs:
               releaseDate: $date,
               downloads: {
                 mac: {
-                  x64: ($base + "/ClawX-" + $version + "-mac-x64.dmg"),
-                  arm64: ($base + "/ClawX-" + $version + "-mac-arm64.dmg")
+                  x64: ($base + "/U-ClawX-" + $version + "-mac-x64.dmg"),
+                  arm64: ($base + "/U-ClawX-" + $version + "-mac-arm64.dmg")
                 },
                 win: {
-                  x64: ($base + "/ClawX-" + $version + "-win-x64.exe"),
-                  arm64: ($base + "/ClawX-" + $version + "-win-arm64.exe")
+                  x64: ($base + "/U-ClawX-" + $version + "-win-x64.exe"),
+                  arm64: ($base + "/U-ClawX-" + $version + "-win-arm64.exe")
                 },
                 linux: {
-                  deb_amd64: ($base + "/ClawX-" + $version + "-linux-amd64.deb"),
-                  deb_arm64: ($base + "/ClawX-" + $version + "-linux-arm64.deb"),
-                  appimage_x64: ($base + "/ClawX-" + $version + "-linux-x86_64.AppImage"),
-                  appimage_arm64: ($base + "/ClawX-" + $version + "-linux-arm64.AppImage"),
-                  rpm_x64: ($base + "/ClawX-" + $version + "-linux-x86_64.rpm")
+                  deb_amd64: ($base + "/U-ClawX-" + $version + "-linux-amd64.deb"),
+                  deb_arm64: ($base + "/U-ClawX-" + $version + "-linux-arm64.deb"),
+                  appimage_x64: ($base + "/U-ClawX-" + $version + "-linux-x86_64.AppImage"),
+                  appimage_arm64: ($base + "/U-ClawX-" + $version + "-linux-arm64.AppImage"),
+                  rpm_x64: ($base + "/U-ClawX-" + $version + "-linux-x86_64.rpm")
                 }
               },
               changelog: $changelog
@@ -532,7 +549,24 @@ jobs:
           echo "=== release-info.json ==="
           cat staging/${CHANNEL}/release-info.json
 
+      # 公开仓没配 OSS 密钥时跳过上传（与 SignPath 门控同理），
+      # 不再让整个发版链红着收场。
+      - name: Detect OSS credentials
+        id: oss-gate
+        env:
+          UCLAWX_HAS_OSS_KEY: ${{ secrets.OSS_ACCESS_KEY_ID != '' }}
+          UCLAWX_HAS_OSS_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET != '' }}
+        run: |
+          if [ "$UCLAWX_HAS_OSS_KEY" = "true" ] && [ "$UCLAWX_HAS_OSS_SECRET" = "true" ]; then
+            echo "has_oss=true" >> $GITHUB_OUTPUT
+            echo "OSS credentials configured — will upload"
+          else
+            echo "has_oss=false" >> $GITHUB_OUTPUT
+            echo "OSS credentials missing — skipping update-channel upload"
+          fi
+
       - name: Install and configure ossutil
+        if: steps.oss-gate.outputs.has_oss == 'true'
         env:
           OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
           OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
@@ -551,6 +585,7 @@ jobs:
           ossutil --version
 
       - name: "Upload to OSS: {channel}/ (overwrite)"
+        if: steps.oss-gate.outputs.has_oss == 'true'
         run: |
           CHANNEL="${{ steps.version.outputs.channel }}"
 
@@ -566,6 +601,7 @@ jobs:
           echo "Uploaded to ${CHANNEL}/"
 
       - name: "Upload to OSS: releases/vX.Y.Z/ (archive)"
+        if: steps.oss-gate.outputs.has_oss == 'true'
         run: |
           TAG="${{ steps.version.outputs.tag }}"
 
@@ -578,6 +614,7 @@ jobs:
           echo "Uploaded to releases/${TAG}/"
 
       - name: Verify OSS upload
+        if: steps.oss-gate.outputs.has_oss == 'true'
         run: |
           TAG="${{ steps.version.outputs.tag }}"
           CHANNEL="${{ steps.version.outputs.channel }}"

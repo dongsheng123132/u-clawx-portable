@@ -108,7 +108,7 @@ async function mutateRunningConfig(
       if (attempt === 0 && isBaseHashConflict(error)) continue;
 
       // config.set may durably replace the file and then close the socket with
-      // code 1012 before its RPC response reaches ClawX. Reconnect can restore
+      // code 1012 before its RPC response reaches U-ClawX. Reconnect can restore
       // running state before the RPC timeout fires, so verify the persisted
       // snapshot whenever the response was lost instead of only while stopped.
       if (manager.getStatus().state !== 'running' || isConfigSetResponseLost(error)) {

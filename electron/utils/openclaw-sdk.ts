@@ -18,7 +18,7 @@
  * in the extension bundles (dist/extensions/<channel>/api.js) which pull in
  * heavy optional dependencies (grammy, @buape/carbon, @slack/web-api …).
  *
- * Since ClawX only uses the lightweight normalize / directory helpers, we load
+ * Since U-ClawX only uses the lightweight normalize / directory helpers, we load
  * these from the extension API files directly.  If the optional dependency is
  * missing (common in dev without full install), we fall back to no-op stubs so
  * the app can still start — the target picker will simply be empty for that

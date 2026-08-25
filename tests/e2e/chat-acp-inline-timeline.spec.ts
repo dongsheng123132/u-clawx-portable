@@ -390,7 +390,7 @@ async function openChat(app: ElectronApplication) {
   return page;
 }
 
-test.describe('ClawX ACP inline timeline', () => {
+test.describe('U-ClawX ACP inline timeline', () => {
   test('does not use legacy history on startup or current-session clicks', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 
@@ -1119,7 +1119,7 @@ test.describe('ClawX ACP inline timeline', () => {
     }
   });
 
-  test('starts on a new empty chat instead of selecting a heartbeat-only ClawX session', async ({ launchElectronApp }) => {
+  test('starts on a new empty chat instead of selecting a heartbeat-only U-ClawX session', async ({ launchElectronApp }) => {
     const now = 1711111111111;
     const app = await launchElectronApp({ skipSetup: true });
 
@@ -1132,7 +1132,7 @@ test.describe('ClawX ACP inline timeline', () => {
             result: {
               sessions: [{
                 key: MAIN_SESSION_KEY,
-                displayName: 'ClawX',
+                displayName: 'U-ClawX',
                 workspacePath: MAIN_WORKSPACE,
                 lastMessagePreview: '[OpenClaw heartbeat poll]',
                 updatedAt: new Date(now).toISOString(),
@@ -1381,7 +1381,7 @@ test.describe('ClawX ACP inline timeline', () => {
     }
   });
 
-  test('hides heartbeat-only ClawX sessions from the sidebar without hiding normal sessions', async ({ launchElectronApp }) => {
+  test('hides heartbeat-only U-ClawX sessions from the sidebar without hiding normal sessions', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
     const updatedAt = new Date().toISOString();
 
@@ -1395,14 +1395,14 @@ test.describe('ClawX ACP inline timeline', () => {
               sessions: [
                 {
                   key: 'agent:main:heartbeat',
-                  displayName: 'ClawX',
+                  displayName: 'U-ClawX',
                   lastMessagePreview: '[OpenClaw heartbeat poll]',
                   updatedAt,
                 },
                 {
                   key: 'agent:main:session-1710000000000',
-                  displayName: 'ClawX',
-                  derivedTitle: 'ClawX',
+                  displayName: 'U-ClawX',
+                  derivedTitle: 'U-ClawX',
                   lastMessagePreview: 'Summarize the repository structure',
                   updatedAt,
                 },

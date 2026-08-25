@@ -98,7 +98,7 @@ describe('ensureDeviceKey', () => {
     expect(bindCalls).toBe(1);
   });
 
-  it('网络不通时**不抛异常** —— 一个联网抖动不该让 ClawX 起不来', async () => {
+  it('网络不通时**不抛异常** —— 一个联网抖动不该让 U-ClawX 起不来', async () => {
     const store = createMemoryDeviceWalletStore();
 
     const r = await ensureDeviceKey({ store, fetch: unreachable, verifyKey: alwaysValid });
@@ -192,7 +192,7 @@ describe('ensureDeviceKey', () => {
 });
 
 describe('旧钱包文件的判定', () => {
-  // 跑过一次非便携版 ClawX 的电脑上，%APPDATA%/clawx/uclaw-device.json 里只有一个
+  // 跑过一次非便携版 U-ClawX 的电脑上，%APPDATA%/clawx/uclaw-device.json 里只有一个
   // 没有 key 的 device 空壳。把它算作“发现旧钱包”，便携版就永远停在等用户确认 ——
   // 既不绑新钱包，又没有任何东西可导入，用户看到的是“密钥用不了”。
   it('空壳旧文件（没有凭证）不算发现旧钱包', () => {

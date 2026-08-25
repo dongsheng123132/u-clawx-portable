@@ -2,7 +2,7 @@
     "gatewayNotRunning": "Gateway Not Running",
     "gatewayRequired": "The OpenClaw Gateway needs to be running to use chat. It will start automatically, or you can start it from Settings.",
     "welcome": {
-        "title": "ClawX Chat",
+        "title": "U-ClawX Chat",
         "subtitle": "What can I do for you?",
         "askQuestions": "Handle Tasks",
         "askQuestionsDesc": "Work on task-oriented requests",
@@ -32,7 +32,7 @@
     "fileCard": {
         "openWith": "Open with",
         "openWithFile": "Open {{name}} with",
-        "openInBuiltInBrowser": "Open in ClawX Preview",
+        "openInBuiltInBrowser": "Open in U-ClawX Preview",
         "openInSystemBrowser": "Open in system browser",
         "searchingApplications": "Searching for applications",
         "showInFinder": "Show in Finder",
@@ -129,7 +129,7 @@
         "errors": {
             "outsideSandbox": "Path outside sandbox — access denied",
             "outsideSandboxTitle": "Could not read this file",
-            "outsideSandboxHint": "ClawX could not read this path. The file may have been moved or deleted, or the current account may not have permission. You can still reveal it in the file manager.",
+            "outsideSandboxHint": "U-ClawX could not read this path. The file may have been moved or deleted, or the current account may not have permission. You can still reveal it in the file manager.",
             "readOnlyRoot": "File lives in a read-only location (e.g. bundled skill) and cannot be modified",
             "tooLarge": "File too large ({{size}}); preview disabled",
             "binary": "Binary file — text preview unavailable",
@@ -139,7 +139,7 @@
             "unsupportedFormatTitle": "This file format is not supported for built-in preview",
             "unsupportedFormatHint": "Built-in preview currently supports directly readable text/Markdown-style files only. Open the file in the file manager instead.",
             "largeBinaryOpenTitle": "This file is too large for built-in preview",
-            "largeBinaryOpenHint": "This file is {{size}}. ClawX cannot preview it inline, but you can confirm and open it with the system default app.",
+            "largeBinaryOpenHint": "This file is {{size}}. U-ClawX cannot preview it inline, but you can confirm and open it with the system default app.",
             "openInFinderFailed": "Could not reveal file",
             "openFailed": "Open failed: {{error}}",
             "htmlLoadFailed": "Could not load HTML preview",

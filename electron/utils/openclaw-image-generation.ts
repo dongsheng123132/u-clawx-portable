@@ -232,9 +232,9 @@ export async function setImageGenerationConfig(
     } else {
       delete defaults.imageGenerationModel;
     }
-    // ClawX image generation is configured as one explicit custom endpoint.
+    // U-ClawX image generation is configured as one explicit custom endpoint.
     // Keep OpenClaw from appending other authenticated image providers such as
-    // minimax-portal/image-01 after the configured ClawX image provider.
+    // minimax-portal/image-01 after the configured U-ClawX image provider.
     defaults.mediaGenerationAutoProviderFallback = false;
 
     agents.defaults = defaults;
@@ -355,7 +355,7 @@ export async function applyOpenAiImageRelaySettings(params: {
   if (params.enabled) {
     const plugin = await ensureClawXOpenAiImagePluginInstalled();
     if (!plugin.installed) {
-      throw new Error(plugin.warning || 'Failed to install ClawX OpenAI Image plugin');
+      throw new Error(plugin.warning || 'Failed to install U-ClawX OpenAI Image plugin');
     }
   }
   const imageModelIds: string[] = [];

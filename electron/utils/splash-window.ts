@@ -25,7 +25,7 @@ const SPLASH_HEIGHT = 260;
 function buildSplashHtml(): string {
   // 窗口图标由 getSplashIcon() 提供；页内 logo 用文字版式，避免 file:// 资源
   // 在 data: URL 页面里被 CSP/加载时序卡住——首屏要的是绝对不失败的渲染。
-  const iconTag = `<div class="logo logo-text">U-Claw</div>`;
+  const iconTag = `<div class="logo logo-text">U-ClawX</div>`;
 
   return `<!doctype html>
 <html>
@@ -51,7 +51,7 @@ function buildSplashHtml(): string {
 <body>
 <div class="wrap">
   ${iconTag}
-  <h1>U-Claw 正在启动…</h1>
+  <h1>U-ClawX 正在启动…</h1>
   <div class="bar"></div>
   <p>从 U 盘首次启动需要约一分钟，请稍候</p>
 </div>
@@ -105,7 +105,7 @@ export function showSplashWindow(): void {
       skipTaskbar: false,
       frame: false,
       show: false,
-      title: 'U-Claw',
+      title: 'U-ClawX',
       icon: getSplashIcon(),
       webPreferences: {
         nodeIntegration: false,

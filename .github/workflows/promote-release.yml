@@ -95,7 +95,7 @@ jobs:
           gh release create "$TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$TARGET_SHA" \
-            --title "U-Claw Portable ${TAG}" \
+            --title "U-ClawX Portable ${TAG}" \
             --notes "Promoted from successful GitHub Actions run ${RUN_ID}." \
             "${FLAGS[@]}"
 

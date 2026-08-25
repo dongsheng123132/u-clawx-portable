@@ -281,7 +281,7 @@ export function extractOpenClawMediaTurns(
 }
 
 function userPromptText(item: MessageSegmentItem): string {
-  // OpenClaw ACP does not project assistant MEDIA attachments, so ClawX reads a
+  // OpenClaw ACP does not project assistant MEDIA attachments, so U-ClawX reads a
   // bounded transcript supplement. Use the prompt text OpenClaw flattened from
   // structured ACP blocks to align that evidence without parsing user prose.
   if (item.userPromptTextBlocks) return item.userPromptTextBlocks.join('\n');

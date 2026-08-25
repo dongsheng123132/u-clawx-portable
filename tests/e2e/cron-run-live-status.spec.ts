@@ -70,7 +70,7 @@ async function emitAcpSessionUpdates(
   );
 }
 
-test.describe('ClawX cron run live status', () => {
+test.describe('U-ClawX cron run live status', () => {
   test('renders ACP live status for a cron run without switching sessions', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 

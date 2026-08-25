@@ -19,8 +19,8 @@ function quoteTomlString(value: string): string {
 
 function buildClawXUvConfigToml(): string {
   return [
-    '# This file is managed by ClawX.',
-    '# It lets uv use ClawX-selected mirrors even when host exec filters UV_INDEX_URL.',
+    '# This file is managed by U-ClawX.',
+    '# It lets uv use U-ClawX-selected mirrors even when host exec filters UV_INDEX_URL.',
     `index-url = ${quoteTomlString(UV_INDEX_URL)}`,
     `python-install-mirror = ${quoteTomlString(UV_PYTHON_INSTALL_MIRROR_URL)}`,
     '',
@@ -42,7 +42,7 @@ function ensureClawXUvConfigFile(): string | null {
     }
     return filePath;
   } catch (err) {
-    logger.warn('Failed to write ClawX uv config file:', err);
+    logger.warn('Failed to write U-ClawX uv config file:', err);
     return null;
   }
 }

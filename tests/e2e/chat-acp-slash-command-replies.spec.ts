@@ -60,7 +60,7 @@ async function installSlashCommandReplyMock(app: ElectronApplication) {
   }, SESSION_KEY);
 }
 
-test.describe('ClawX ACP slash-command replies', () => {
+test.describe('U-ClawX ACP slash-command replies', () => {
   test('shows replies for /status and /compact in the chat timeline', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 

@@ -115,7 +115,7 @@ export const hostApi = {
     getSkillsDir: () => invokeHost('openclaw', 'getSkillsDir'),
     getCliCommand: () => invokeHost('openclaw', 'getCliCommand'),
   },
-  // U-Claw 薄壳：虾粮中心 / 一键充值 / 设备钱包
+  // U-ClawX 薄壳：虾粮中心 / 一键充值 / 设备钱包
   uclaw: {
     wallet: () => invokeHost('uclaw', 'wallet'),
     balance: () => invokeHost('uclaw', 'balance'),

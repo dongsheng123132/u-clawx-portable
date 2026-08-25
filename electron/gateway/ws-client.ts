@@ -156,7 +156,7 @@ export function buildGatewayConnectFrame(options: {
         maxProtocol: GATEWAY_PROTOCOL_VERSION,
         client: {
           id: clientId,
-          displayName: 'ClawX',
+          displayName: 'U-ClawX',
           version: '0.1.0',
           platform: options.platform,
           mode: clientMode,

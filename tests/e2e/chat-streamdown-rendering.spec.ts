@@ -79,7 +79,7 @@ async function resolveAcpPrompt(app: ElectronApplication) {
   });
 }
 
-test.describe('ClawX streaming Markdown rendering', { tag: E2E_EXCLUSIVE_TAG }, () => {
+test.describe('U-ClawX streaming Markdown rendering', { tag: E2E_EXCLUSIVE_TAG }, () => {
   test('repairs and animates only the pending assistant response, then clears animation markers', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 

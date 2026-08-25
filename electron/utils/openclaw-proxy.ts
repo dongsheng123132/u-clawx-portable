@@ -6,13 +6,13 @@ import { logger } from './logger';
 interface SyncProxyOptions {
   /**
    * When true, keep an existing channels.telegram.proxy value if proxy is
-   * currently disabled in ClawX settings.
+   * currently disabled in U-ClawX settings.
    */
   preserveExistingWhenDisabled?: boolean;
 }
 
 /**
- * Sync ClawX global proxy settings into OpenClaw channel config where the
+ * Sync U-ClawX global proxy settings into OpenClaw channel config where the
  * upstream runtime expects an explicit per-channel proxy knob.
  */
 export async function syncProxyConfigToOpenClaw(
@@ -64,7 +64,7 @@ export async function syncProxyConfigToOpenClaw(
   });
 
   if (syncState.result === 'preserved') {
-    logger.info('Skipped Telegram proxy sync because ClawX proxy is disabled and preserve mode is enabled');
+    logger.info('Skipped Telegram proxy sync because U-ClawX proxy is disabled and preserve mode is enabled');
   } else if (syncState.result === 'updated') {
     logger.info(`Synced Telegram proxy to OpenClaw config (${nextProxy || 'disabled'})`);
   }

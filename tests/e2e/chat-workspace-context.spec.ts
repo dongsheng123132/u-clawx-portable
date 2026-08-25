@@ -9,8 +9,8 @@ import {
 } from './fixtures/electron';
 
 const SESSION_KEY = 'agent:main:session-a';
-const SESSION_WORKSPACE = '/Users/e2e/workspace/ClawX';
-const SESSION_WORKSPACE_LABEL = 'ClawX';
+const SESSION_WORKSPACE = '/Users/e2e/workspace/U-ClawX';
+const SESSION_WORKSPACE_LABEL = 'U-ClawX';
 const GLOBAL_WORKSPACE = '/Users/e2e/workspace/GlobalProject';
 const DEFAULT_WORKSPACE = '~/.openclaw/workspace';
 const AUTO_TITLE_WITH_CWD = `[Working directory: ${DEFAULT_WORKSPACE}]\n\nWorkspace chat`;
@@ -62,7 +62,7 @@ async function installWorkspaceTreeMock(app: ElectronApplication) {
       return {
         ok: true,
         root: {
-          name: 'ClawX',
+          name: 'U-ClawX',
           relPath: '',
           absPath: workspacePath,
           isDir: true,
@@ -221,7 +221,7 @@ async function installWorkspaceMocks(app: ElectronApplication, options: Workspac
   await installWorkspaceTreeMock(app);
 }
 
-test.describe('ClawX chat workspace context', () => {
+test.describe('U-ClawX chat workspace context', () => {
   test('bound session shows read-only workspace and workspace tree uses the same cwd', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 
@@ -244,7 +244,7 @@ test.describe('ClawX chat workspace context', () => {
 
       const workspaceSelector = page.getByTestId('chat-workspace-selector');
       await expect(workspaceSelector).toBeVisible({ timeout: 30_000 });
-      await expect(workspaceSelector).toContainText('ClawX');
+      await expect(workspaceSelector).toContainText('U-ClawX');
       await expect(workspaceSelector).toHaveText(SESSION_WORKSPACE_LABEL);
       await expect(workspaceSelector).toHaveAttribute('title', SESSION_WORKSPACE);
       await expect(workspaceSelector).toHaveAttribute('aria-disabled', 'true');

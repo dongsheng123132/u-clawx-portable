@@ -19,7 +19,7 @@ async function seedTestProvider(page: Parameters<typeof completeSetup>[0]): Prom
   }, { providerId: TEST_PROVIDER_ID, providerLabel: TEST_PROVIDER_LABEL });
 }
 
-test.describe('ClawX provider lifecycle', () => {
+test.describe('U-ClawX provider lifecycle', () => {
   test('promotes a remaining provider after deleting the default provider', async ({ page }) => {
     await completeSetup(page);
 

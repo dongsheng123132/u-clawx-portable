@@ -22,7 +22,7 @@ export const PROVIDER_TYPES = [
   'zai-global',
   'modelstudio',
   'ollama',
-  // U-Claw 薄壳：内置虾盘云 provider（渲染端这份 PROVIDER_TYPES 和
+  // U-ClawX 薄壳：内置虾盘云 provider（渲染端这份 PROVIDER_TYPES 和
   // electron/shared/providers/types.ts 那份是两套，必须同时改）。
   'uclaw-cloud',
   'custom',

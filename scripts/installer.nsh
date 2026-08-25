@@ -1,7 +1,11 @@
-; ClawX Custom NSIS Installer/Uninstaller Script
+; U-ClawX Custom NSIS Installer/Uninstaller Script
 ;
 ; Install: enables long paths, adds resources\cli to user PATH for openclaw CLI.
 ; Uninstall: removes the PATH entry and optionally deletes user data.
+;
+; NOTE on legacy naming: versions before 0.5.8 shipped as "U-Claw.exe".
+; Every kill list below targets BOTH ${APP_EXECUTABLE_FILENAME} and the
+; legacy "U-Claw.exe" so upgrades from old packages never hit file locks.
 
 !include "LogicLib.nsh"
 
@@ -29,7 +33,7 @@ Function ClawXMoveLegacyInstallDir
   ${endIf}
 
   IfFileExists "$R6\" 0 _clawx_legacy_move_done
-    DetailPrint "Moving previous ClawX installation at $R6 out of the way..."
+    DetailPrint "Moving previous U-ClawX installation at $R6 out of the way..."
     SetOutPath $TEMP
     nsExec::ExecToStack `"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "Get-CimInstance -ClassName Win32_Process | Where-Object { $$_.ExecutablePath -and $$_.ExecutablePath.StartsWith('$R6', [System.StringComparison]::OrdinalIgnoreCase) } | ForEach-Object { Stop-Process -Id $$_.ProcessId -Force -ErrorAction SilentlyContinue }"`
     Pop $0
@@ -54,7 +58,7 @@ Function ClawXMoveLegacyInstallDir
       ClearErrors
       Rename "$R6" "$R6._stale_$R8"
       IfErrors 0 _clawx_legacy_stale_moved
-      DetailPrint "Removing previous ClawX installation at $R6..."
+      DetailPrint "Removing previous U-ClawX installation at $R6..."
       nsExec::ExecToStack 'cmd.exe /c rd /s /q "$R6"'
       Pop $0
       Pop $1
@@ -79,7 +83,7 @@ FunctionEnd
   ; Make stage logs visible on assisted installers (defaults to hidden).
   SetDetailsPrint both
   DetailPrint "Preparing installation..."
-  DetailPrint "Extracting ClawX runtime files. This can take a few minutes on slower disks or while antivirus scanning is active."
+  DetailPrint "Extracting U-ClawX runtime files. This can take a few minutes on slower disks or while antivirus scanning is active."
 
   ${nsProcess::FindProcess} "${APP_EXECUTABLE_FILENAME}" $R0
 
@@ -98,6 +102,7 @@ FunctionEnd
         nsExec::ExecToStack 'taskkill /F /IM openclaw-gateway.exe'
         Pop $0
         Pop $1
+        nsExec::ExecToStack 'taskkill /F /IM "U-Claw.exe"'  ; legacy pre-0.5.8 name
         Goto done_killing
       ${endIf}
       # App didn't exit in time; fall through to force-kill
@@ -107,7 +112,7 @@ FunctionEnd
     DetailPrint `Closing running "${PRODUCT_NAME}"...`
 
     # Kill ALL processes whose executable lives inside $INSTDIR.
-    # This covers ClawX.exe (multiple Electron processes), openclaw-gateway.exe,
+    # This covers U-ClawX.exe / legacy U-Claw.exe (multiple Electron processes), openclaw-gateway.exe,
     # python.exe (skills runtime), uv.exe (package manager), and any other
     # child process that might hold file locks in the installation directory.
     #
@@ -123,6 +128,7 @@ FunctionEnd
       nsExec::ExecToStack 'taskkill /F /T /IM "${APP_EXECUTABLE_FILENAME}"'
       Pop $0
       Pop $1
+      nsExec::ExecToStack 'taskkill /F /T /IM "U-Claw.exe"'  ; legacy pre-0.5.8 name
     ${endIf}
 
     # Also kill well-known child processes that may have detached from the
@@ -130,6 +136,7 @@ FunctionEnd
     nsExec::ExecToStack 'taskkill /F /IM openclaw-gateway.exe'
     Pop $0
     Pop $1
+    nsExec::ExecToStack 'taskkill /F /IM "U-Claw.exe"'  ; legacy pre-0.5.8 name
 
     # Wait for Windows to fully release file handles after process termination.
     # 5 seconds accommodates slow antivirus scanners and filesystem flush delays.
@@ -149,15 +156,17 @@ FunctionEnd
   Pop $1
 
   ; Always kill known process names as a belt-and-suspenders approach.
-  ; PowerShell path-based kill may miss processes if the old ClawX was installed
+  ; PowerShell path-based kill may miss processes if the old U-ClawX was installed
   ; in a different directory than $INSTDIR (e.g., per-machine -> per-user migration).
   ; taskkill is name-based and catches processes regardless of their install location.
   nsExec::ExecToStack 'taskkill /F /T /IM "${APP_EXECUTABLE_FILENAME}"'
   Pop $0
   Pop $1
+  nsExec::ExecToStack 'taskkill /F /T /IM "U-Claw.exe"'  ; legacy pre-0.5.8 name
   nsExec::ExecToStack 'taskkill /F /IM openclaw-gateway.exe'
   Pop $0
   Pop $1
+  nsExec::ExecToStack 'taskkill /F /IM "U-Claw.exe"'  ; legacy pre-0.5.8 name
   ; Note: we intentionally do NOT kill uv.exe globally — it is a popular
   ; Python package manager and other users/CI jobs may have uv running.
   ; The PowerShell path-based kill above already handles uv inside $INSTDIR.
@@ -168,7 +177,7 @@ FunctionEnd
   ; Do not continue while the old UI process is still alive. Continuing in that
   ; state can leave the running old process/window in place, making the user see
   ; the old version after an otherwise successful extract.  Use process-list
-  ; commands instead of nsProcess here: field diagnostics showed ClawX.exe can
+  ; commands instead of nsProcess here: field diagnostics showed the old U-Claw.exe can
   ; remain alive while the old installer still reports success; this check must
   ; fail closed even when taskkill or the nsProcess plugin misses/elevates poorly.
   StrCpy $R7 0
@@ -180,6 +189,11 @@ FunctionEnd
       nsExec::ExecToStack 'cmd.exe /c tasklist /FI "IMAGENAME eq ${APP_EXECUTABLE_FILENAME}" | find /I "${APP_EXECUTABLE_FILENAME}" >nul'
       Pop $R0
       Pop $R1
+      ${if} $R0 != 0
+        nsExec::ExecToStack 'cmd.exe /c tasklist /FI "IMAGENAME eq U-Claw.exe" | find /I "U-Claw.exe" >nul'
+        Pop $R0
+        Pop $R1
+      ${endIf}
     ${endIf}
     ${if} $R0 == 0
       IntOp $R7 $R7 + 1
@@ -187,14 +201,18 @@ FunctionEnd
       nsExec::ExecToStack 'taskkill /F /T /IM "${APP_EXECUTABLE_FILENAME}"'
       Pop $0
       Pop $1
+      nsExec::ExecToStack 'taskkill /F /T /IM "U-Claw.exe"'  ; legacy pre-0.5.8 name
       nsExec::ExecToStack `cmd.exe /c wmic process where "name='${APP_EXECUTABLE_FILENAME}'" call terminate`
+      Pop $0
+      Pop $1
+      nsExec::ExecToStack 'taskkill /F /T /IM "U-Claw.exe"'  ; legacy pre-0.5.8 name
       Pop $0
       Pop $1
       Sleep 2000
       ${if} $R7 < 5
         Goto _clawx_verify_closed
       ${endIf}
-      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "ClawX is still running and cannot be replaced safely. Please close ClawX and retry installation." /SD IDCANCEL IDRETRY _clawx_verify_closed
+      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "U-ClawX is still running and cannot be replaced safely. Please close U-ClawX and retry installation." /SD IDCANCEL IDRETRY _clawx_verify_closed
       SetErrorLevel 2
       Quit
     ${endIf}
@@ -218,7 +236,7 @@ FunctionEnd
   ; locked files.  electron-builder's extractUsing7za macro extracts to a
   ; temp folder first, then uses `CopyFiles /SILENT` to copy into $INSTDIR.
   ; If ANY file in $INSTDIR is still locked, CopyFiles fails and triggers a
-  ; "Can't modify ClawX's files" retry loop -> "ClawX 无法关闭" dialog.
+  ; "Can't modify U-ClawX's files" retry loop -> "U-ClawX 无法关闭" dialog.
   ;
   ; Strategy: rename (move) the old $INSTDIR out of the way.  Rename works
   ; even when AV/indexer have files open for reading (they use
@@ -249,9 +267,11 @@ FunctionEnd
       nsExec::ExecToStack 'taskkill /F /T /IM "${APP_EXECUTABLE_FILENAME}"'
       Pop $0
       Pop $1
+      nsExec::ExecToStack 'taskkill /F /T /IM "U-Claw.exe"'  ; legacy pre-0.5.8 name
       nsExec::ExecToStack 'taskkill /F /IM openclaw-gateway.exe'
       Pop $0
       Pop $1
+      nsExec::ExecToStack 'taskkill /F /IM "U-Claw.exe"'  ; legacy pre-0.5.8 name
       Sleep 3000
       nsExec::ExecToStack 'cmd.exe /c rd /s /q "$INSTDIR"'
       Pop $0
@@ -260,7 +280,7 @@ FunctionEnd
       RMDir "$INSTDIR"
       IfFileExists "$INSTDIR\" 0 _recreate_clean_instdir
         DetailPrint "Failed to remove previous installation directory; aborting to avoid leaving the old version installed."
-        MessageBox MB_OK|MB_ICONEXCLAMATION "Unable to replace the previous ClawX installation because files are still locked. Please close ClawX and retry installation." /SD IDOK
+        MessageBox MB_OK|MB_ICONEXCLAMATION "Unable to replace the previous U-ClawX installation because files are still locked. Please close U-ClawX and retry installation." /SD IDOK
         SetErrorLevel 2
         Quit
       _recreate_clean_instdir:
@@ -326,7 +346,7 @@ FunctionEnd
   ; Now that the new files and current-hive registry entries have been written,
   ; remove stale entries from the opposite hive so Windows Apps & Features does
   ; not continue showing the old version after cross-hive upgrades.
-  DetailPrint "Clearing stale ClawX registry entries from the opposite install scope..."
+  DetailPrint "Clearing stale U-ClawX registry entries from the opposite install scope..."
   ${if} $installMode == "all"
     DeleteRegKey HKCU "${UNINSTALL_REGISTRY_KEY}"
     DeleteRegKey HKCU "${INSTALL_REGISTRY_KEY}"
@@ -343,7 +363,7 @@ FunctionEnd
   ClearErrors
 
   ; Async cleanup of old dirs left by the rename loop in customCheckAppRunning.
-  ; Wait 60s before starting deletion to avoid I/O contention with ClawX's
+  ; Wait 60s before starting deletion to avoid I/O contention with U-ClawX's
   ; first launch (Windows Defender scan, ASAR mapping, etc.).
   ; ExecShell SW_HIDE is completely detached from NSIS and avoids pipe blocking.
   IfFileExists "$INSTDIR._stale_0\" 0 _ci_stale_cleaned
@@ -416,7 +436,7 @@ FunctionEnd
 
   ; Ask user if they want to remove AppData (preserves .openclaw)
   MessageBox MB_YESNO|MB_ICONQUESTION \
-    "Do you want to remove ClawX application data?$\r$\n$\r$\nThis will delete:$\r$\n  • AppData\Local\clawx (local app data)$\r$\n  • AppData\Roaming\clawx (roaming app data)$\r$\n$\r$\nYour .openclaw folder (configuration & skills) will be preserved.$\r$\nSelect 'No' to keep all data for future reinstallation." \
+    "Do you want to remove U-ClawX application data?$\r$\n$\r$\nThis will delete:$\r$\n  • AppData\Local\clawx (local app data)$\r$\n  • AppData\Roaming\clawx (roaming app data)$\r$\n$\r$\nYour .openclaw folder (configuration & skills) will be preserved.$\r$\nSelect 'No' to keep all data for future reinstallation." \
     /SD IDNO IDYES _cu_removeData IDNO _cu_skipRemove
 
   _cu_removeData:
@@ -425,6 +445,13 @@ FunctionEnd
     ${nsProcess::FindProcess} "${APP_EXECUTABLE_FILENAME}" $R0
     ${if} $R0 == 0
       nsExec::ExecToStack 'taskkill /F /T /IM "${APP_EXECUTABLE_FILENAME}"'
+      Pop $0
+      Pop $1
+      nsExec::ExecToStack 'taskkill /F /T /IM "U-Claw.exe"'  ; legacy pre-0.5.8 name
+    ${endIf}
+    ${nsProcess::FindProcess} "U-Claw.exe" $R0  ; legacy pre-0.5.8 name
+    ${if} $R0 == 0
+      nsExec::ExecToStack 'taskkill /F /T /IM "U-Claw.exe"'
       Pop $0
       Pop $1
     ${endIf}

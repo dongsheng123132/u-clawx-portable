@@ -1,6 +1,6 @@
 appId: org.uclaw.desktop
-productName: U-Claw
-copyright: Copyright © 2026 ClawX
+productName: U-ClawX
+copyright: Copyright © 2026 U-ClawX
 compression: maximum
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 
@@ -59,7 +59,7 @@ publish:
     useMultipleRangeRequest: false
   - provider: github
     owner: ValueCell-ai
-    repo: ClawX
+    repo: u-clawx-portable
 
 # macOS Configuration
 mac:
@@ -86,8 +86,8 @@ mac:
   entitlementsInherit: entitlements.mac.plist
   notarize: true
   extendInfo:
-    NSMicrophoneUsageDescription: ClawX requires microphone access for voice features
-    NSCameraUsageDescription: ClawX requires camera access for video features
+    NSMicrophoneUsageDescription: U-ClawX requires microphone access for voice features
+    NSCameraUsageDescription: U-ClawX requires camera access for video features
 
 dmg:
   # Explicit volume size prevents dmg-builder@1.2.0 auto-calculation from
@@ -133,8 +133,8 @@ nsis:
   differentialPackage: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: ClawX
-  uninstallDisplayName: ClawX
+  shortcutName: U-ClawX
+  uninstallDisplayName: U-ClawX
   license: LICENSE
   include: scripts/installer.nsh
   installerIcon: resources/icons/icon.ico

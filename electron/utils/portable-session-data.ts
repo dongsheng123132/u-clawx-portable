@@ -76,7 +76,7 @@ export function getPortableSystemSessionDataPath(
   const cacheId = readOrCreatePortableSessionCacheId(portableStateDir);
   const cacheIdentity = cacheId ? `portable-id:${cacheId}` : appRoot.toLowerCase();
   const rootHash = createHash('sha256').update(cacheIdentity).digest('hex').slice(0, 16);
-  return join(getSystemCacheRoot(platform, env), 'U-Claw', 'portable-chromium-session', rootHash);
+  return join(getSystemCacheRoot(platform, env), 'U-ClawX', 'portable-chromium-session', rootHash);
 }
 
 export function resolvePortableSessionDataDecision(

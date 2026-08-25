@@ -66,7 +66,7 @@ async function emitAcpSessionUpdates(app: ElectronApplication, updates: AcpSessi
   );
 }
 
-test.describe('ClawX chat LaTeX rendering', () => {
+test.describe('U-ClawX chat LaTeX rendering', () => {
   test('renders KaTeX markup for $...$, $$...$$, \\(...\\) and \\[...\\] delimiters', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 

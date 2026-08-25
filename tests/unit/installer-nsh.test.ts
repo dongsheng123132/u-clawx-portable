@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 const installerNsh = readFileSync(join(process.cwd(), 'scripts/installer.nsh'), 'utf8');
 
 describe('installer.nsh running-app guard', () => {
-  it('fails closed when ClawX.exe remains alive during overwrite install', () => {
+  it('fails closed when U-ClawX.exe remains alive during overwrite install', () => {
     const guardStart = installerNsh.indexOf('Do not continue while the old UI process is still alive');
     const guardEnd = installerNsh.indexOf('!ifndef BUILD_UNINSTALLER', guardStart);
     const guard = installerNsh.slice(guardStart, guardEnd);
@@ -20,7 +20,7 @@ describe('installer.nsh running-app guard', () => {
     expect(guard).toContain('wmic process where "name=\'${APP_EXECUTABLE_FILENAME}\'" call terminate');
     expect(guard).toContain('SetErrorLevel 2');
     expect(guard).toContain('Quit');
-    expect(guard).toContain('ClawX is still running and cannot be replaced safely');
+    expect(guard).toContain('U-ClawX is still running and cannot be replaced safely');
     expect(guard).not.toContain('${nsProcess::FindProcess}');
   });
 });

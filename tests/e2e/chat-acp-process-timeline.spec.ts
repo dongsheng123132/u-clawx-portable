@@ -124,7 +124,7 @@ const longRunProcessSegments = Array.from({ length: 9 }, (_, index) => `Checked 
 const longRunSummary = 'Here is the summary.';
 const longRunReplyText = `${longRunProcessSegments.join(' ')} ${longRunSummary}`;
 
-test.describe('ClawX ACP chat timeline', () => {
+test.describe('U-ClawX ACP chat timeline', () => {
   test('renders inline ACP thought, tool, permission, and plan blocks from mocked IPC', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 

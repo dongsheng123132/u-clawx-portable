@@ -7,8 +7,8 @@ export type UclawCloudEndpointCandidate = {
 };
 
 /**
- * U-Claw cloud endpoint policy — the single bundled source of truth.
- * The portable packager copies this same JSON next to U-Claw.exe so an
+ * U-ClawX cloud endpoint policy — the single bundled source of truth.
+ * The portable packager copies this same JSON next to U-ClawX.exe so an
  * operator can change the ordered endpoints without rebuilding the app.
  */
 export const UCLAW_CLOUD_ENDPOINTS = bundledConfig.endpoints as UclawCloudEndpointCandidate[];

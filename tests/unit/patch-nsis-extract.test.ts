@@ -55,18 +55,18 @@ describe('patch-nsis-extract', () => {
     expect(patchNsisExtractTemplate(target)).toBe(true);
 
     const result = readFileSync(target, 'utf8');
-    expect(result).toContain('ClawX-patched-v2');
+    expect(result).toContain('U-ClawX-patched-v2');
     expect(result).not.toContain('CopyFiles /SILENT');
     expect(result).not.toContain('$(appCannotBeClosed)');
     expect(result).toContain('$(decompressionFailed)');
     expect(result).toContain('Quit');
     expect(result).toContain('SetErrorLevel 2');
-    expect(result).toContain('Restoring previous ClawX installation after failed update');
+    expect(result).toContain('Restoring previous U-ClawX installation after failed update');
     expect(result).not.toContain('continuing overwrite install anyway');
     expect(patchNsisExtractTemplate(target)).toBe(true);
   });
 
-  it('upgrades stale ClawX extract patches that used to continue after extract failure', () => {
+  it('upgrades stale U-ClawX extract patches that used to continue after extract failure', () => {
     tempDir = mkdtempSync(join(tmpdir(), 'clawx-patch-nsis-'));
     const target = join(tempDir, 'extractAppPackage.nsh');
     writeFileSync(
@@ -74,7 +74,7 @@ describe('patch-nsis-extract', () => {
       SAMPLE_FILE.replace(
         SAMPLE_EXTRACT_MACRO,
         `!macro extractUsing7za FILE
-  ; ClawX-patched: extract directly to $INSTDIR.
+  ; U-ClawX-patched: extract directly to $INSTDIR.
   ClearErrors
   Nsis7z::Extract "\${FILE}"
   DetailPrint "Extract reported file locks; continuing overwrite install anyway..."
@@ -86,12 +86,12 @@ describe('patch-nsis-extract', () => {
     expect(patchNsisExtractTemplate(target)).toBe(true);
 
     const result = readFileSync(target, 'utf8');
-    expect(result).toContain('ClawX-patched-v2');
-    expect(result).toContain('Failed to extract ClawX files after multiple attempts.');
+    expect(result).toContain('U-ClawX-patched-v2');
+    expect(result).toContain('Failed to extract U-ClawX files after multiple attempts.');
     expect(result).toContain('$(decompressionFailed)');
     expect(result).toContain('Quit');
     expect(result).toContain('SetErrorLevel 2');
-    expect(result).toContain('Restoring previous ClawX installation after failed update');
+    expect(result).toContain('Restoring previous U-ClawX installation after failed update');
     expect(result).not.toContain('continuing overwrite install anyway');
   });
 

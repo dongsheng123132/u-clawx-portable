@@ -38,7 +38,7 @@ export function createAgentsApi(_ctx: AgentsApiContext): CompleteHostServiceRegi
         console.warn('[agents] Failed to sync provider auth after agent creation:', err);
       });
       void ensureClawXContext({ waitForAllConfiguredWorkspaces: true }).catch((err) => {
-        console.warn('[agents] Failed to ensure ClawX context after agent creation:', err);
+        console.warn('[agents] Failed to ensure U-ClawX context after agent creation:', err);
       });
       return { success: true, ...snapshot };
     },

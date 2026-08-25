@@ -5,7 +5,7 @@
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 
-// The desktop/U-Claw launch shell may export host OpenClaw paths globally.
+// The desktop/U-ClawX launch shell may export host OpenClaw paths globally.
 // Unit tests must never read or write that live state; tests that exercise
 // explicit overrides set their own isolated values after this setup runs.
 for (const key of ['OPENCLAW_HOME', 'OPENCLAW_STATE_DIR', 'OPENCLAW_CONFIG_PATH']) {

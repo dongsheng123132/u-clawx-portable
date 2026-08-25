@@ -14,7 +14,7 @@ export const PROVIDER_TYPES = [
   'zai-global',
   'modelstudio',
   'ollama',
-  // U-Claw 薄壳：内置虾盘云 provider，key 由设备钱包签发，
+  // U-ClawX 薄壳：内置虾盘云 provider，key 由设备钱包签发，
   // 不可从 provider 设置里删除或改写。
   'uclaw-cloud',
   'custom',
@@ -66,7 +66,7 @@ export const OPENCLAW_API_PROTOCOLS = [
 
 export type OpenClawApiProtocol = (typeof OPENCLAW_API_PROTOCOLS)[number];
 
-/** Legacy api values ClawX previously wrote that OpenClaw no longer accepts. */
+/** Legacy api values U-ClawX previously wrote that OpenClaw no longer accepts. */
 export const LEGACY_OPENCLAW_API_PROTOCOL_MIGRATIONS = {
   'openai-codex-responses': 'openai-chatgpt-responses',
 } as const satisfies Record<string, OpenClawApiProtocol>;

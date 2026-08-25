@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="src/assets/logo.svg" width="128" height="128" alt="U-Claw Logo" />
+  <img src="src/assets/logo.svg" width="128" height="128" alt="U-ClawX Logo" />
 </p>
 
-<h1 align="center">U-Claw · ClawX Portable（ClawX 便携版）</h1>
+<h1 align="center">U-ClawX · U-ClawX Portable（U-ClawX 便携版）</h1>
 
 <p align="center">
   <strong>解压即用的 OpenClaw 图形界面 AI 助手 —— 拷进 U 盘，插哪用哪</strong><br>
@@ -12,7 +12,7 @@
 <p align="center">
   <a href="#-quick-start--快速开始">Quick Start</a> •
   <a href="#-features--功能特性">Features</a> •
-  <a href="#-why-u-claw--为什么选-u-claw">Why U-Claw</a> •
+  <a href="#-why-u-claw--为什么选-u-claw">Why U-ClawX</a> •
   <a href="#-device-wallet--设备钱包">Device Wallet</a> •
   <a href="#-documentation--文档">Docs</a>
 </p>
@@ -34,7 +34,7 @@
 
 ---
 
-**U-Claw** is a portable (green/portable software) build of [ClawX](https://github.com/ValueCell-ai/ClawX) — the desktop GUI for the [OpenClaw](https://github.com/OpenClaw) AI agent runtime. Copy it to a USB drive, plug it into any Windows PC, and run. No installer, no Node.js, no admin rights, nothing written to the host system.
+**U-ClawX** is a portable (green/portable software) build of [U-ClawX](https://github.com/ValueCell-ai/ClawX) — the desktop GUI for the [OpenClaw](https://github.com/OpenClaw) AI agent runtime. Copy it to a USB drive, plug it into any Windows PC, and run. No installer, no Node.js, no admin rights, nothing written to the host system.
 
 > 中文用户请直接看 [README.zh-CN.md](README.zh-CN.md)，内容更全。
 
@@ -44,14 +44,14 @@
 - 🖥️ **Full GUI for OpenClaw** — chat, agents, channels (WeChat/DingTalk/Feishu/QQ/Telegram), cron jobs, skills — no terminal required
 - 💰 **Built-in device wallet + one-click top-up** — keys are issued by Xiapan Cloud; recharge opens a pre-authenticated payment page; balance errors in chat offer a direct "Top up" button
 - 🖼️ **Image generation out of the box** — wired to a default image model, ready on first launch
-- 🔄 **Tracks upstream ClawX** — rebuilt from the latest stable upstream release so you keep official improvements
+- 🔄 **Tracks upstream U-ClawX** — rebuilt from the latest stable upstream release so you keep official improvements
 - 🌍 **UI in EN / 简体中文 / 日本語 / Русский**
 
 ## 📦 Quick Start / 快速开始
 
-1. Download `U-Claw-portable.zip` from [Releases](../../releases)
+1. Download `U-ClawX-portable.zip` from [Releases](../../releases)
 2. Unzip **onto your USB drive** (or any folder)
-3. Double-click `U-Claw.exe`
+3. Double-click `U-ClawX.exe`
 4. On first run the device wallet is provisioned automatically — sign in to the cloud panel to top up
 
 Requirements: Windows 10+ (x64). No installation, no admin rights, no runtime downloads.
@@ -69,9 +69,9 @@ Requirements: Windows 10+ (x64). No installation, no admin rights, no runtime do
 | 💰 Wallet | Server-issued device key, one-click recharge, legacy wallet import |
 | 🖼️ Images | Default image-generation model prewired |
 
-## ❓ Why U-Claw / 为什么选 U-Claw
+## ❓ Why U-ClawX / 为什么选 U-ClawX
 
-The upstream ClawX installer targets a single PC. U-Claw answers a different question: **"Can my AI assistant live in my pocket?"**
+The upstream U-ClawX installer targets a single PC. U-ClawX answers a different question: **"Can my AI assistant live in my pocket?"**
 
 - **Zero footprint** — unplug the drive and the host PC keeps nothing but disposable cache
 - **Zero setup** — wallet, gateway, and provider wiring are automatic on first launch
@@ -79,7 +79,7 @@ The upstream ClawX installer targets a single PC. U-Claw answers a different que
 
 ## 🔑 Device Wallet / 设备钱包
 
-Your API key is generated server-side and bound to this copy of U-Claw — not to your hardware fingerprint. Key semantics (sharing across copies, rotation, importing an older paid wallet) are documented in [docs/device-wallet.md](docs/device-wallet.md).
+Your API key is generated server-side and bound to this copy of U-ClawX — not to your hardware fingerprint. Key semantics (sharing across copies, rotation, importing an older paid wallet) are documented in [docs/device-wallet.md](docs/device-wallet.md).
 
 ## 📚 Documentation / 文档
 
@@ -100,7 +100,7 @@ Node.js 22.22.3+/24 LTS and pnpm 9+. See [docs/en-US/development.md](docs/en-US/
 
 ## 🙏 Acknowledgments
 
-Built on the shoulders of [OpenClaw](https://github.com/OpenClaw), [ClawX](https://github.com/ValueCell-ai/ClawX), [Electron](https://www.electronjs.org/), and [React](https://react.dev/).
+Built on the shoulders of [OpenClaw](https://github.com/OpenClaw), [U-ClawX](https://github.com/ValueCell-ai/ClawX), [Electron](https://www.electronjs.org/), and [React](https://react.dev/).
 
 ## License
 
@@ -109,5 +109,5 @@ Built on the shoulders of [OpenClaw](https://github.com/OpenClaw), [ClawX](https
 ---
 
 <p align="center">
-  <sub>虾盘 U-Claw · Plug-and-play AI, in your pocket.</sub>
+  <sub>虾盘 U-ClawX · Plug-and-play AI, in your pocket.</sub>
 </p>

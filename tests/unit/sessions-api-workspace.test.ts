@@ -219,7 +219,7 @@ describe('sessions API workspace summaries', () => {
   });
 
   it('returns OpenClaw ACP cwd as workspacePath when available', async () => {
-    seedAcpCwd('agent:main:session-a', '/Users/alex/workspace/ClawX');
+    seedAcpCwd('agent:main:session-a', '/Users/alex/workspace/U-ClawX');
     const { createSessionsApi } = await import('@electron/services/sessions-api');
     const api = createSessionsApi();
 
@@ -228,7 +228,7 @@ describe('sessions API workspace summaries', () => {
     expect(result.success).toBe(true);
     expect(result.summaries?.[0]).toMatchObject({
       sessionKey: 'agent:main:session-a',
-      workspacePath: '/Users/alex/workspace/ClawX',
+      workspacePath: '/Users/alex/workspace/U-ClawX',
     });
   });
 

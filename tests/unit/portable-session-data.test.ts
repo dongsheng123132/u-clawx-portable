@@ -25,14 +25,14 @@ describe('portable Chromium session data', () => {
     const portableStateDir = await createTempDir('uclaw-portable-state-');
 
     const decision = resolvePortableSessionDataDecision({
-      appRoot: 'D:\\U-Claw',
+      appRoot: 'D:\\U-ClawX',
       portableStateDir,
       platform: 'win32',
       env: { LOCALAPPDATA: 'C:\\Users\\alice\\AppData\\Local' },
     });
 
     expect(decision.enabled).toBe(true);
-    expect(decision.path).toContain('C:\\Users\\alice\\AppData\\Local\\U-Claw\\portable-chromium-session');
+    expect(decision.path).toContain('C:\\Users\\alice\\AppData\\Local\\U-ClawX\\portable-chromium-session');
   });
 
   it('stays on the portable drive when the setting is explicitly disabled', async () => {
@@ -42,7 +42,7 @@ describe('portable Chromium session data', () => {
     }), 'utf8');
 
     expect(resolvePortableSessionDataDecision({
-      appRoot: 'D:\\U-Claw',
+      appRoot: 'D:\\U-ClawX',
       portableStateDir,
       platform: 'win32',
       env: { LOCALAPPDATA: 'C:\\Users\\alice\\AppData\\Local' },
@@ -59,22 +59,22 @@ describe('portable Chromium session data', () => {
     }), 'utf8');
 
     const decision = resolvePortableSessionDataDecision({
-      appRoot: 'D:\\U-Claw',
+      appRoot: 'D:\\U-ClawX',
       portableStateDir,
       platform: 'win32',
       env: { LOCALAPPDATA: 'C:\\Users\\alice\\AppData\\Local' },
     });
 
     expect(decision.enabled).toBe(true);
-    expect(decision.path).toContain('C:\\Users\\alice\\AppData\\Local\\U-Claw\\portable-chromium-session');
-    expect(decision.path).not.toContain('D:\\U-Claw');
+    expect(decision.path).toContain('C:\\Users\\alice\\AppData\\Local\\U-ClawX\\portable-chromium-session');
+    expect(decision.path).not.toContain('D:\\U-ClawX');
   });
 
   it('uses a stable path for the same app root', () => {
-    const first = getPortableSystemSessionDataPath('D:\\U-Claw', 'win32', {
+    const first = getPortableSystemSessionDataPath('D:\\U-ClawX', 'win32', {
       LOCALAPPDATA: 'C:\\Users\\alice\\AppData\\Local',
     });
-    const second = getPortableSystemSessionDataPath('d:\\u-claw', 'win32', {
+    const second = getPortableSystemSessionDataPath('d:\\u-clawx', 'win32', {
       LOCALAPPDATA: 'C:\\Users\\alice\\AppData\\Local',
     });
 
@@ -85,8 +85,8 @@ describe('portable Chromium session data', () => {
     const portableStateDir = await createTempDir('uclaw-portable-state-');
     const env = { LOCALAPPDATA: 'C:\\Users\\alice\\AppData\\Local' };
 
-    const first = getPortableSystemSessionDataPath('D:\\U-Claw', 'win32', env, portableStateDir);
-    const second = getPortableSystemSessionDataPath('E:\\U-Claw', 'win32', env, portableStateDir);
+    const first = getPortableSystemSessionDataPath('D:\\U-ClawX', 'win32', env, portableStateDir);
+    const second = getPortableSystemSessionDataPath('E:\\U-ClawX', 'win32', env, portableStateDir);
 
     expect(first).toBe(second);
   });
@@ -96,8 +96,8 @@ describe('portable Chromium session data', () => {
     const secondStateDir = await createTempDir('uclaw-portable-state-b-');
     const env = { LOCALAPPDATA: 'C:\\Users\\alice\\AppData\\Local' };
 
-    const first = getPortableSystemSessionDataPath('D:\\U-Claw', 'win32', env, firstStateDir);
-    const second = getPortableSystemSessionDataPath('D:\\U-Claw', 'win32', env, secondStateDir);
+    const first = getPortableSystemSessionDataPath('D:\\U-ClawX', 'win32', env, firstStateDir);
+    const second = getPortableSystemSessionDataPath('D:\\U-ClawX', 'win32', env, secondStateDir);
 
     expect(first).not.toBe(second);
   });
@@ -107,7 +107,7 @@ describe('portable Chromium session data', () => {
     const env = { LOCALAPPDATA: 'C:\\Users\\alice\\AppData\\Local' };
 
     const first = resolvePortableSessionDataDecision({
-      appRoot: 'D:\\U-Claw',
+      appRoot: 'D:\\U-ClawX',
       portableStateDir,
       platform: 'win32',
       env,
@@ -115,7 +115,7 @@ describe('portable Chromium session data', () => {
     const firstId = await readFile(join(portableStateDir, 'portable-session-cache-id'), 'utf8');
 
     const second = resolvePortableSessionDataDecision({
-      appRoot: 'E:\\U-Claw',
+      appRoot: 'E:\\U-ClawX',
       portableStateDir,
       platform: 'win32',
       env,

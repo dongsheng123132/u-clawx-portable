@@ -22,13 +22,13 @@ export {
 
 // ── 便携模式 ─────────────────────────────────────────────────────
 //
-// U-Claw 薄壳的唯一目的：让 ClawX 从 U 盘 / 移动硬盘 / 任意目录绿色运行，
+// U-ClawX 薄壳的唯一目的：让 U-ClawX 从 U 盘 / 移动硬盘 / 任意目录绿色运行，
 // **业务数据与凭证不落宿主机**。整个便携层就是这里的三个探测函数 +
 // 下面几个路径解析器里的分支；其余代码一律走这些 helper，不要自己拼
 // `homedir()`（上游没有便携约束，它那样写对它是对的，对我们不是）。
 //
 // 例外（有意取舍，2026-08-24）：可丢弃的本机性能缓存——Chromium sessionData、
-// NODE_COMPILE_CACHE——刻意写到宿主机缓存根（%LOCALAPPDATA%\U-Claw\ 等）。
+// NODE_COMPILE_CACHE——刻意写到宿主机缓存根（%LOCALAPPDATA%\U-ClawX\ 等）。
 // 它们不含任何用户数据，换盘用 UUID 隔离，见 portable-session-data.ts /
 // portable-compile-cache.ts。
 
@@ -82,7 +82,7 @@ export function getOpenClawPortableEnv(): Record<string, string> {
     env.NODE_COMPILE_CACHE = compileCache;
     // 🔴 必须与 NODE_COMPILE_CACHE 同时注入：openclaw 打包版启动器发现编译缓存
     // 目录与其期望子目录不一致时会 respawn 自己；utilityProcess 里 execPath 是
-    // U-Claw.exe 且无 ELECTRON_RUN_AS_NODE，spawn 出来的是完整 GUI 第二实例 →
+    // U-ClawX.exe 且无 ELECTRON_RUN_AS_NODE，spawn 出来的是完整 GUI 第二实例 →
     // 抢单实例锁失败 exit(0) → 网关被判定异常退出 → 无限重启循环。此标记让
     // 内核跳过 respawn、在进程内直接启用编译缓存（build/openclaw/openclaw.mjs:253）。
     env.OPENCLAW_PACKAGED_COMPILE_CACHE_RESPAWNED = '1';
@@ -211,7 +211,7 @@ export function getOpenClawSkillsDir(): string {
 }
 
 /**
- * Get ClawX config directory
+ * Get U-ClawX config directory
  */
 export function getClawXConfigDir(): string {
   if (isPortableMode()) {
@@ -221,14 +221,14 @@ export function getClawXConfigDir(): string {
 }
 
 /**
- * Get ClawX logs directory
+ * Get U-ClawX logs directory
  */
 export function getLogsDir(): string {
   return join(getElectronApp().getPath('userData'), 'logs');
 }
 
 /**
- * Get ClawX data directory
+ * Get U-ClawX data directory
  */
 export function getDataDir(): string {
   if (isPortableMode()) {

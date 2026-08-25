@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 const repoRoot = process.cwd();
 
-describe('ClawX OpenAI image plugin request shape', () => {
+describe('U-ClawX OpenAI image plugin request shape', () => {
   it('does not force deprecated OpenAI Images response_format', async () => {
     const pluginSource = await readFile(
       join(repoRoot, 'resources/openclaw-plugins/clawx-openai-image/index.mjs'),

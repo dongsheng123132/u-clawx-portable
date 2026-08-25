@@ -142,7 +142,7 @@ async function emitSessionSnapshot(
   }, input);
 }
 
-test.describe('ClawX sidebar session attention', () => {
+test.describe('U-ClawX sidebar session attention', () => {
   test('projects Gateway busy and unread state through Chat mount, key changes, and unmount', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 

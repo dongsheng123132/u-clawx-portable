@@ -17,7 +17,7 @@
   "contactLabel": "連絡先（任意）",
   "contactPlaceholder": "WeChat、メールなどの連絡方法",
   "privacyTitle": "入力した内容のみ送信されます",
-  "privacyBody": "チャット履歴、API Key、ウォレットの秘密情報、ファイルパス、ログは自動添付されません。調査用に U-Claw のバージョンと OS 種別のみ追加します。",
+  "privacyBody": "チャット履歴、API Key、ウォレットの秘密情報、ファイルパス、ログは自動添付されません。調査用に U-ClawX のバージョンと OS 種別のみ追加します。",
   "privacyWarning": "パスワード、キー、身分証明書などの機密情報をフィードバックや画像に含めないでください。",
   "sendFeedback": "フィードバックを送信",
   "copyFeedback": "フィードバックをコピー",

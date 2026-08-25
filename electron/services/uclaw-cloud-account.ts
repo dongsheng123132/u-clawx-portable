@@ -131,7 +131,7 @@ async function applyKeyToProvider(apiKey: string | null, gatewayManager?: Gatewa
       );
     }
     await providerService._deleteProviderApiKeyInternal(UCLAW_CLOUD_PROVIDER_ID);
-    // 图像生成使用独立的 ClawX-owned provider，也持有同一把钱包 key。
+    // 图像生成使用独立的 U-ClawX-owned provider，也持有同一把钱包 key。
     await applyOpenAiImageRelaySettings({ enabled: false });
     return;
   }

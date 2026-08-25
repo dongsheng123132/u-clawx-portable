@@ -134,7 +134,7 @@ async function copyTree(
 }
 
 /**
- * Creates a one-time pre-migration snapshot before ClawX first starts the
+ * Creates a one-time pre-migration snapshot before U-ClawX first starts the
  * OpenClaw 2026.7.1 Gateway. SQLite databases are copied together with their
  * WAL/SHM sidecars; channel credentials under `credentials/` are intentionally
  * excluded because this migration does not rewrite them.

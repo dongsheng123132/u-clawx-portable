@@ -17,7 +17,7 @@
   "contactLabel": "Your contact details (optional)",
   "contactPlaceholder": "WeChat, email, or another way to reach you",
   "privacyTitle": "Only your typed content is sent",
-  "privacyBody": "Chat history, API keys, wallet secrets, file paths, and logs are never attached automatically. Only the U-Claw version and operating system are added for troubleshooting.",
+  "privacyBody": "Chat history, API keys, wallet secrets, file paths, and logs are never attached automatically. Only the U-ClawX version and operating system are added for troubleshooting.",
   "privacyWarning": "Do not include passwords, keys, identity documents, or other sensitive information in feedback or screenshots.",
   "sendFeedback": "Send feedback",
   "copyFeedback": "Copy feedback",

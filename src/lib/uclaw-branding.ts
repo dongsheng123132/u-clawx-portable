@@ -29,7 +29,7 @@ export function getUclawMaskedMobile(mobile?: unknown): string {
 
 export function getUclawSidebarBrandName(dealer?: DealerBrandInfo | null): string {
   const shortName = getUclawDealerShortName(dealer);
-  return shortName ? `U-Claw (${shortName})` : 'U-Claw';
+  return shortName ? `U-ClawX (${shortName})` : 'U-ClawX';
 }
 
 export function getUclawAboutTagline(

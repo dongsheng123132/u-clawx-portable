@@ -159,7 +159,7 @@ async function openChat(app: ElectronApplication) {
   return page;
 }
 
-test.describe('ClawX chat run state events', () => {
+test.describe('U-ClawX chat run state events', () => {
   test('renders ACP tool run-state updates inline', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 

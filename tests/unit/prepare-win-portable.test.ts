@@ -35,7 +35,7 @@ describe('prepare-win-portable script', () => {
 
     await mkdir(join(sourceDir, 'resources'), { recursive: true });
     await mkdir(join(projectRootDir, 'electron', 'shared', 'providers'), { recursive: true });
-    await writeFile(join(sourceDir, 'U-Claw.exe'), '');
+    await writeFile(join(sourceDir, 'U-ClawX.exe'), '');
     await writeFile(join(projectRootDir, 'license.clawx.txt'), licenseContent, 'utf8');
     await writeFile(
       join(projectRootDir, 'electron', 'shared', 'providers', 'uclaw-cloud-endpoints.json'),
@@ -61,12 +61,12 @@ describe('prepare-win-portable script', () => {
     await expect(readFile(join(sourceDir, 'uclaw-cloud-endpoints.json'), 'utf8')).resolves.toContain('"version":1');
     const resetScript = await readFile(result.resetScriptPath, 'utf8');
     expect(resetScript).toContain('Press any key to continue, or close this window to cancel.');
-    expect(resetScript).toContain('taskkill /F /T /IM "U-Claw.exe"');
-    expect(resetScript).toContain('set "CHROMIUM_CACHE_DIR=%LOCALAPPDATA%\\U-Claw\\portable-chromium-session"');
+    expect(resetScript).toContain('taskkill /F /T /IM "U-ClawX.exe"');
+    expect(resetScript).toContain('set "CHROMIUM_CACHE_DIR=%LOCALAPPDATA%\\U-ClawX\\portable-chromium-session"');
     expect(resetScript).toContain('rmdir /S /Q "%CHROMIUM_CACHE_DIR%"');
     expect(resetScript).not.toContain('%ERRORLEVEL%');
     expect(resetScript).toContain('if not errorlevel 1 (');
-    expect(resetScript).not.toContain('Please close U-Claw before resetting');
+    expect(resetScript).not.toContain('Please close U-ClawX before resetting');
     const visibleLines = visibleResetScriptLines(resetScript).join('\n');
     expect(visibleLines).not.toContain('%APP_ROOT%');
     expect(visibleLines).not.toContain('%CHROMIUM_CACHE_DIR%');
@@ -94,7 +94,7 @@ describe('prepare-win-portable script', () => {
     const projectRootDir = process.cwd();
     const sourceDir = await createTempDir('portable-source-presets-');
 
-    await writeFile(join(sourceDir, 'U-Claw.exe'), '');
+    await writeFile(join(sourceDir, 'U-ClawX.exe'), '');
 
     await preparePortableOutput({
       sourceDir,
@@ -182,11 +182,11 @@ describe('prepare-win-portable script', () => {
     expect(pkg.scripts['publish:portable:oss']).toBeUndefined();
   });
 
-  it('fails when the required ClawX license file is missing', async () => {
+  it('fails when the required U-ClawX license file is missing', async () => {
     const projectRootDir = await createTempDir('portable-project-no-license-');
     const sourceDir = await createTempDir('portable-source-no-license-');
 
-    await writeFile(join(sourceDir, 'U-Claw.exe'), '');
+    await writeFile(join(sourceDir, 'U-ClawX.exe'), '');
 
     await expect(
       preparePortableOutput({

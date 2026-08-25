@@ -248,7 +248,7 @@ async function openChanges(page: Page) {
   return panel;
 }
 
-test.describe('ClawX chat file changes', () => {
+test.describe('U-ClawX chat file changes', () => {
   test('opens HTML file activity in the Preview tab from its primary action', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
     try {

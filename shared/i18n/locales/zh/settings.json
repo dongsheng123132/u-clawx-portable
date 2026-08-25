@@ -1,6 +1,6 @@
 {
   "title": "设置",
-  "subtitle": "配置您的 ClawX 体验",
+  "subtitle": "配置您的 U-ClawX 体验",
   "appearance": {
     "title": "通用",
     "description": "自定义外观和风格",
@@ -11,7 +11,7 @@
     "language": "语言",
     "menuLanguageUpdated": "菜单语言已更新",
     "launchAtStartup": "开机自动启动",
-    "launchAtStartupDesc": "登录系统后自动启动 ClawX"
+    "launchAtStartupDesc": "登录系统后自动启动 U-ClawX"
   },
   "aiProviders": {
     "title": "AI 模型提供商",
@@ -38,7 +38,7 @@
     "notRequired": "非必填",
     "empty": {
       "title": "未配置提供商",
-      "desc": "添加 AI 提供商以开始使用 ClawX",
+      "desc": "添加 AI 提供商以开始使用 U-ClawX",
       "cta": "添加您的第一个提供商"
     },
     "dialog": {
@@ -62,7 +62,7 @@
       "protocol": "协议",
       "advancedConfig": "高级配置",
       "userAgent": "User-Agent",
-      "userAgentPlaceholder": "ClawX/1.0",
+      "userAgentPlaceholder": "U-ClawX/1.0",
       "fallbackModels": "回退模型",
       "fallbackProviders": "跨 Provider 回退",
       "fallbackModelIds": "同 Provider 回退模型 ID",
@@ -138,7 +138,7 @@
     "appLogs": "应用日志",
     "openFolder": "打开文件夹",
     "autoStart": "自动启动网关",
-    "autoStartDesc": "ClawX 启动时自动启动网关",
+    "autoStartDesc": "U-ClawX 启动时自动启动网关",
     "proxyTitle": "代理",
     "proxyDesc": "让 Electron 和 Gateway 的网络请求都走本地代理客户端。",
     "proxyServer": "代理服务器",
@@ -159,7 +159,7 @@
   },
   "updates": {
     "title": "更新",
-    "description": "保持 ClawX 最新",
+    "description": "保持 U-ClawX 最新",
     "autoCheck": "自动检查更新",
     "autoCheckDesc": "启动时检查更新",
     "autoDownload": "更新提示",
@@ -189,13 +189,13 @@
     "whatsNew": "更新内容：",
     "errorDetails": "错误详情：",
     "toast": {
-      "availableTitle": "ClawX 有新版本可用",
+      "availableTitle": "U-ClawX 有新版本可用",
       "availableDescription": "v{{version}} 已可下载。准备好后可开始下载。",
-      "downloadedTitle": "ClawX 更新已就绪",
+      "downloadedTitle": "U-ClawX 更新已就绪",
       "downloadedDescription": "v{{version}} 已下载完成。重启即可安装。",
       "unknownVersion": "新版本"
     },
-    "help": "ClawX 会自动检查更新，并在下载或安装前提示您确认。"
+    "help": "U-ClawX 会自动检查更新，并在下载或安装前提示您确认。"
   },
   "advanced": {
     "title": "高级",
@@ -203,7 +203,7 @@
     "devMode": "开发者模式",
     "devModeDesc": "显示开发者工具和快捷方式",
     "telemetry": "匿名使用数据",
-    "telemetryDesc": "允许提供匿名的基础使用数据，用于改进 ClawX"
+    "telemetryDesc": "允许提供匿名的基础使用数据，用于改进 U-ClawX"
   },
   "developer": {
     "title": "开发者",
@@ -278,7 +278,7 @@
       "invalid": "检测到旧钱包文件，但无法安全读取，已暂停自动创建。请先备份文件并联系技术支持。",
       "importDialog": {
         "title": "导入这个旧钱包？",
-        "message": "将导入 {{key}}（可用余额 {{balance}}），并把它配置给 U-Claw。旧文件仍会保留，服务端余额不会变化。",
+        "message": "将导入 {{key}}（可用余额 {{balance}}），并把它配置给 U-ClawX。旧文件仍会保留，服务端余额不会变化。",
         "confirm": "确认导入"
       },
       "freshDialog": {
@@ -332,7 +332,7 @@
   },
   "about": {
     "title": "关于",
-    "appName": "ClawX",
+    "appName": "U-ClawX",
     "tagline": "图形化 AI 助手",
     "basedOn": "基于 OpenClaw",
     "version": "版本 {{version}}",

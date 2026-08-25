@@ -310,7 +310,7 @@ export class AppUpdater extends EventEmitter {
   /**
    * Set auto-download preference.
    *
-   * ClawX uses a prompt-first update flow: finding an update shows a UI prompt,
+   * U-ClawX uses a prompt-first update flow: finding an update shows a UI prompt,
    * and downloads/installations only start after the user chooses an action.
    * Keep this legacy IPC method as a no-op-compatible setter so stale renderer
    * settings cannot re-enable electron-updater's implicit auto-download path.

@@ -148,7 +148,7 @@ export function fixupPluginManifest(targetDir: string): void {
     // OpenClaw 2026.7.1 treats configured channel plugins without a static
     // channelConfigs descriptor as stale/missing and invokes its npm repair
     // flow. The WeCom package has no descriptor upstream, so provide a
-    // permissive schema that preserves ClawX's existing channel config fields.
+    // permissive schema that preserves U-ClawX's existing channel config fields.
     if (manifest.id === 'wecom' && !manifest.channelConfigs?.wecom) {
       manifest.channelConfigs = {
         ...(manifest.channelConfigs ?? {}),
@@ -177,10 +177,10 @@ export function fixupPluginManifest(targetDir: string): void {
     const pkg = JSON.parse(raw);
     let modified = false;
 
-    // Keep the real upstream npm package name/spec even though ClawX patches
+    // Keep the real upstream npm package name/spec even though U-ClawX patches
     // the effective plugin id. Rewriting these to the non-existent
     // `@wecom/wecom` package makes OpenClaw's repair planner fail before the
-    // Gateway starts. Restore metadata previously rewritten by older ClawX
+    // Gateway starts. Restore metadata previously rewritten by older U-ClawX
     // compatibility code.
     if (pkg.name === '@wecom/wecom') {
       pkg.name = '@wecom/wecom-openclaw-plugin';
@@ -265,7 +265,7 @@ const PLUGIN_NPM_NAMES: Record<string, string> = {
 };
 
 /**
- * Channel plugins whose ClawX-managed mirrors need synchronized install
+ * Channel plugins whose U-ClawX-managed mirrors need synchronized install
  * metadata. OpenClaw 2026.6+ reads these records from SQLite for trust checks;
  * OpenClaw 2026.7.1 also uses them to decide whether startup migrations should
  * update an installed plugin.
@@ -274,14 +274,14 @@ type TrustedOfficialExtensionPlugin = {
   npmName: string;
   /** Effective manifest/config id when it differs from the mirror directory. */
   pluginId?: string;
-  /** Path records keep OpenClaw from replacing a ClawX-patched mirror. */
+  /** Path records keep OpenClaw from replacing a U-ClawX-patched mirror. */
   recordSource?: 'npm' | 'path';
   legacyPluginIds?: string[];
 };
 
 const TRUSTED_OFFICIAL_EXTENSION_PLUGINS: Record<string, TrustedOfficialExtensionPlugin> = {
   dingtalk: { npmName: '@soimy/dingtalk' },
-  // WeCom intentionally runs under ClawX's legacy-compatible `wecom` id even
+  // WeCom intentionally runs under U-ClawX's legacy-compatible `wecom` id even
   // though the upstream package manifest still declares
   // `wecom-openclaw-plugin`. Keep it path-owned so startup migration does not
   // replace the compatibility-patched mirror with the raw npm package.
@@ -292,7 +292,7 @@ const TRUSTED_OFFICIAL_EXTENSION_PLUGINS: Record<string, TrustedOfficialExtensio
   },
   // @larksuite/openclaw-lark 2026.7.9 declares ./dist/index.js as `main`, but
   // publishes its runtime entry as ./index.js. OpenClaw 2026.7.1 rejects old
-  // managed npm records during its post-core smoke check. Make ClawX's complete
+  // managed npm records during its post-core smoke check. Make U-ClawX's complete
   // mirror the canonical path-owned payload instead.
   'feishu-openclaw-plugin': {
     npmName: '@larksuite/openclaw-lark',
@@ -685,7 +685,7 @@ function persistTrustedOfficialPluginInstallRecordsToSqlite(
 }
 
 /**
- * Persist a ClawX-mirrored plugin install record in OpenClaw's canonical SQLite
+ * Persist a U-ClawX-mirrored plugin install record in OpenClaw's canonical SQLite
  * index. OpenClaw 2026.7.1 treats config-level plugins.installs as legacy
  * migration input, so remove that transient copy instead of recreating it.
  * Safe to call repeatedly; no-ops when metadata is already current.
@@ -717,7 +717,7 @@ export async function syncTrustedOfficialPluginInstallRecord(
     logger.warn(`[plugin] Failed to remove legacy install metadata for ${pluginDirName}:`, error);
   }
 
-  // Remove aliases left by older ClawX/OpenClaw ownership conventions, but do
+  // Remove aliases left by older U-ClawX/OpenClaw ownership conventions, but do
   // not delete the canonical id first: upsert can replace npm/path ownership
   // atomically without creating a missing-record window.
   const staleRecordIds = recordIds.filter((pluginId) => pluginId !== expected.pluginId);
@@ -729,7 +729,7 @@ export async function syncTrustedOfficialPluginInstallRecord(
 }
 
 /**
- * Remove metadata for a ClawX mirror that is no longer configured. This must
+ * Remove metadata for a U-ClawX mirror that is no longer configured. This must
  * run even when its extension directory is already missing: stale records are
  * themselves enough to fail OpenClaw's post-core payload smoke check.
  */
@@ -1083,7 +1083,7 @@ export function ensureClawXOpenAiImagePluginInstalled(): Promise<PluginInstallRe
   return ensurePluginInstalled(
     'clawx-openai-image',
     buildCandidateSources('clawx-openai-image'),
-    'ClawX OpenAI Image',
+    'U-ClawX OpenAI Image',
   );
 }
 
@@ -1101,7 +1101,7 @@ const ALL_BUNDLED_PLUGINS = [
   { fn: ensureDiscordPluginInstalled, label: 'Discord' },
   { fn: ensureQQBotPluginInstalled, label: 'QQBot' },
   { fn: ensureWhatsAppPluginInstalled, label: 'WhatsApp' },
-  { fn: ensureClawXOpenAiImagePluginInstalled, label: 'ClawX OpenAI Image' },
+  { fn: ensureClawXOpenAiImagePluginInstalled, label: 'U-ClawX OpenAI Image' },
 ] as const;
 
 /**

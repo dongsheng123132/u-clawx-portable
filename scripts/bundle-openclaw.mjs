@@ -249,7 +249,7 @@ while (queue.length > 0) {
 echo`   Found ${collected.size} total packages (direct + transitive)`;
 echo`   Skipped ${skippedDevCount} dev-only package references`;
 
-// 4b. Collect extra packages required by ClawX's Electron main process that are
+// 4b. Collect extra packages required by U-ClawX's Electron main process that are
 //     NOT deps of openclaw.  These are resolved from openclaw's context at runtime
 //     (via createRequire from the openclaw directory) so they must live in the
 //     bundled openclaw/node_modules/.
@@ -793,7 +793,7 @@ function patchBrokenModules(nodeModulesDir) {
               const patched = [
                 original,
                 '',
-                '// ClawX patch: add LRUCache named export for Node.js 22+ ESM interop',
+                '// U-ClawX patch: add LRUCache named export for Node.js 22+ ESM interop',
                 'if (typeof module.exports === "function" && !module.exports.LRUCache) {',
                 '  module.exports.LRUCache = module.exports;',
                 '}',
@@ -868,7 +868,7 @@ function patchBundledRuntime(outputDir) {
   // OpenClaw 2026.7.1 routes ordinary child-process execution through
   // resolveChildProcessInvocation(), which already sets windowsHide=true.
   // PTY execution remains patched below because node-pty follows a separate
-  // launch path and is disabled on Windows in ClawX packaged builds.
+  // launch path and is disabled on Windows in U-ClawX packaged builds.
   const replacePatches = [];
 
   let count = 0;

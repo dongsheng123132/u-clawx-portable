@@ -34,7 +34,7 @@ const channelsResponse = {
   ],
 };
 
-test.describe('ClawX supported channel catalog', () => {
+test.describe('U-ClawX supported channel catalog', () => {
   test('does not expose unsupported runtime channels as configurable integrations', async ({ electronApp, page }) => {
     await electronApp.evaluate(({ ipcMain }, response) => {
       const originalHostInvoke = (ipcMain as unknown as {

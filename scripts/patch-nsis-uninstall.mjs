@@ -3,7 +3,7 @@
  * Patch electron-builder's uninstallOldVersion to skip the legacy uninstaller on
  * upgrades. customCheckAppRunning already kills processes and moves $INSTDIR
  * aside; running the old uninstaller often fails on locked openclaw bundles and
- * shows a misleading "app cannot be closed" dialog even when ClawX is not running.
+ * shows a misleading "app cannot be closed" dialog even when U-ClawX is not running.
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -23,10 +23,10 @@ export const INSTALL_UTIL_NSH = join(
   'installUtil.nsh',
 );
 
-const PATCH_MARKER = 'ClawX-patched: skip legacy uninstaller';
+const PATCH_MARKER = 'U-ClawX-patched: skip legacy uninstaller';
 
 const SKIP_LEGACY_UNINSTALLER = [
-  '  ; ClawX-patched: skip legacy uninstaller on upgrades.',
+  '  ; U-ClawX-patched: skip legacy uninstaller on upgrades.',
   '  ; customCheckAppRunning already killed processes and moved $INSTDIR aside.',
   '  DetailPrint "Skipping legacy uninstaller; continuing with overwrite install..."',
   '  ClearErrors',

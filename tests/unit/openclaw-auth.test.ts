@@ -489,7 +489,7 @@ describe('sanitizeOpenClawConfig', () => {
 
   it('properly sanitizes a genuinely empty {} config (fresh install)', async () => {
     // A fresh install with {} is a valid config — sanitize should proceed
-    // and enforce the ClawX tool and skill defaults.
+    // and enforce the U-ClawX tool and skill defaults.
     await writeOpenClawJson({});
 
     const { sanitizeOpenClawConfig } = await import('@electron/utils/openclaw-auth');
@@ -550,7 +550,7 @@ describe('sanitizeOpenClawConfig', () => {
     logSpy.mockRestore();
   });
 
-  it('preserves existing denied tools while adding ClawX-required deny entries', async () => {
+  it('preserves existing denied tools while adding U-ClawX-required deny entries', async () => {
     await writeOpenClawJson({
       tools: {
         deny: ['browser'],
@@ -2375,7 +2375,7 @@ describe('syncOpenAiCompatibleImageRelay', () => {
     await rm(testUserData, { recursive: true, force: true });
   });
 
-  it('writes a ClawX-owned provider with a custom image base URL without changing OpenAI chat config', async () => {
+  it('writes a U-ClawX-owned provider with a custom image base URL without changing OpenAI chat config', async () => {
     await writeOpenClawJson({
       models: {
         providers: {
@@ -2442,7 +2442,7 @@ describe('syncOpenAiCompatibleImageRelay', () => {
     ]);
   });
 
-  it('removes only the ClawX image provider when relay is disabled', async () => {
+  it('removes only the U-ClawX image provider when relay is disabled', async () => {
     await writeOpenClawJson({
       models: {
         providers: {

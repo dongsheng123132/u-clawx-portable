@@ -94,7 +94,7 @@ describe('openclaw-auth-sqlite', () => {
 
   it('便携模式下凭证不许落到宿主机 home —— SQLite 侧必须跟 JSON 侧同一个目录', async () => {
     // 这个文件是上游 bf038f5c 带进来的，原文 getAgentAuthDir 写死 homedir()。
-    // 上游没有便携约束所以对他们没问题；对 U-Claw 则意味着从 U 盘运行时
+    // 上游没有便携约束所以对他们没问题；对 U-ClawX 则意味着从 U 盘运行时
     // openclaw-agent.sqlite（**里面存着 API key**）写进宿主机用户目录，
     // 插到谁的电脑上就在谁硬盘里留一份凭证。
     // 而 JSON 侧走的是便携 helper —— 两边不一致时 readAuthProfiles 先读 SQLite，

@@ -71,7 +71,7 @@ const PLUGINS = [
   { npmName: '@openclaw/qqbot', pluginId: 'qqbot' },
   { npmName: '@tencent-weixin/openclaw-weixin', pluginId: 'openclaw-weixin' },
   // @openclaw/qwen-provider is deliberately NOT here. It is not a channel, and
-  // this directory is a *ClawX* plugin mirror — OpenClaw does not look in it, so
+  // this directory is a *U-ClawX* plugin mirror — OpenClaw does not look in it, so
   // a copy here would not stop OpenClaw from npm-installing the provider (the
   // install that fails on exFAT). It is bundled into the runtime's own
   // dist/extensions/ by scripts/after-pack.cjs instead; see the comment there.

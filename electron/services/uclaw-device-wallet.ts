@@ -196,7 +196,7 @@ export function parseLegacyWallet(raw: string): LegacyWalletDiscovery {
     // 文件在、但一把凭证都没有 —— 没东西可导入，也没有余额会被抢走，所以按
     // “没有旧钱包”处理，让首启照常绑一把新的。
     //
-    // 这不是吹毛求疵：任何跑过一次非便携版 ClawX 的电脑，都会在
+    // 这不是吹毛求疵：任何跑过一次非便携版 U-ClawX 的电脑，都会在
     // `%APPDATA%/clawx/uclaw-device.json` 留下一个只有 `device` 空壳、没有 key
     // 的文件。之前把它也算作“发现旧钱包”，便携版就永远停在等用户确认的状态 ——
     // 既不绑新的，又根本没有东西可导入，用户看到的就是“密钥用不了”。
@@ -242,7 +242,7 @@ async function discoverLegacyForEnsure(deps: WalletDeps): Promise<LegacyWalletDi
  * 首启收敛：有钱包就用，没有就绑一个；顺带把上次没走完的 rotate 收尾。
  *
  * **绝不抛异常**：拿不到凭证时返回空串，调用方照旧放行（用户还能手动配模型）。
- * 一个联网抖动不该让 ClawX 起不来。
+ * 一个联网抖动不该让 U-ClawX 起不来。
  */
 export function ensureDeviceKey(deps: WalletDeps = {}): Promise<WalletResult> {
   // C4：首启可能被状态页、模型页和 Gateway 启动链并发触发。它们必须共用

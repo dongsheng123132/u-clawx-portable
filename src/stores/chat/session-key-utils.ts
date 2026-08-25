@@ -8,7 +8,7 @@ import { isCronSessionKey } from './cron-session-utils';
 import type { ChatSession } from './types';
 
 const CHANNEL_SESSION_SEGMENTS = new Set<string>(Object.keys(CHANNEL_NAMES));
-const NON_USER_SESSION_LABELS = new Set(['clawx', 'main']);
+const NON_USER_SESSION_LABELS = new Set(['clawx', 'u-clawx', 'main']);
 
 function stripHeartbeatSentinel(value: string | undefined): string {
   return (value ?? '').replaceAll(OPENCLAW_HEARTBEAT_POLL_SENTINEL, '').trim();
@@ -38,7 +38,7 @@ export function isClawXDesktopSessionKey(sessionKey: string): boolean {
 
 /**
  * Gateway may register channel sessions before any real user message (e.g. bot
- * added to a group, webhook ping). Hide those placeholder entries from ClawX
+ * added to a group, webhook ping). Hide those placeholder entries from U-ClawX
  * sidebar — they have no preview text, no derived title, and no display name.
  */
 export function isPlaceholderChannelSession(session: ChatSession): boolean {

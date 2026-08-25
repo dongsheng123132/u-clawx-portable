@@ -83,8 +83,8 @@ if (isE2EMode && requestedUserDataDir) {
 // electron-store 在构造时就把路径定死了，晚一步就写到宿主机去。
 //
 // 不做这一句的后果（实测踩过）：utils/paths.ts 的便携 helper 都对，但没人调
-// app.setPath，于是 ClawX 自己的状态 —— **包括带 API key 的 uclaw-device.json**
-// —— 全落进 %APPDATA%/ClawX。U 盘上看不到自己的钱包，却在每台插过的电脑上
+// app.setPath，于是 U-ClawX 自己的状态 —— **包括带 API key 的 uclaw-device.json**
+// —— 全落进 %APPDATA%/U-ClawX。U 盘上看不到自己的钱包，却在每台插过的电脑上
 // 留一份能花钱的凭证。
 //
 // 教训：便携层不只是「提供路径 helper」，还得有人真的去用它。
@@ -121,7 +121,7 @@ if (process.platform === 'linux') {
 // The losing process must exit immediately so it never reaches Gateway startup.
 const gotElectronLock = isE2EMode ? true : app.requestSingleInstanceLock();
 if (!gotElectronLock) {
-  console.info('[ClawX] Another instance already holds the single-instance lock; exiting duplicate process');
+  console.info('[U-ClawX] Another instance already holds the single-instance lock; exiting duplicate process');
   app.exit(0);
 }
 let releaseProcessInstanceFileLock: () => void = () => {};
@@ -142,12 +142,12 @@ if (gotElectronLock && !isE2EMode) {
           ? 'unknown lock format/content'
           : 'unknown owner';
       console.info(
-        `[ClawX] Another instance already holds process lock (${fileLock.lockPath}, ${ownerDescriptor}); exiting duplicate process`,
+        `[U-ClawX] Another instance already holds process lock (${fileLock.lockPath}, ${ownerDescriptor}); exiting duplicate process`,
       );
       app.exit(0);
     }
   } catch (error) {
-    console.warn('[ClawX] Failed to acquire process instance file lock; continuing with Electron single-instance lock only', error);
+    console.warn('[U-ClawX] Failed to acquire process instance file lock; continuing with Electron single-instance lock only', error);
   }
 }
 const gotTheLock = gotElectronLock && gotFileLock;
@@ -341,7 +341,7 @@ function createMainWindow(): BrowserWindow {
 async function initialize(): Promise<void> {
   // Initialize logger first
   logger.init();
-  logger.info('=== ClawX Application Starting ===');
+  logger.info('=== U-ClawX Application Starting ===');
   logger.debug(
     `Runtime: platform=${process.platform}/${process.arch}, electron=${process.versions.electron}, node=${process.versions.node}, packaged=${app.isPackaged}, pid=${process.pid}, ppid=${process.ppid}`
   );
@@ -440,14 +440,14 @@ async function initialize(): Promise<void> {
   // so it respects the user's "Auto-check for updates" setting.
 
   // Seed a stable default IDENTITY.md before the Gateway initializes the
-  // workspace so ClawX desktop sessions skip OpenClaw's chat-first bootstrap.
+  // workspace so U-ClawX desktop sessions skip OpenClaw's chat-first bootstrap.
   if (!isE2EMode) {
     void ensureClawXDefaultIdentity().catch((error) => {
-      logger.warn('Failed to seed default ClawX identity:', error);
+      logger.warn('Failed to seed default U-ClawX identity:', error);
     });
   }
 
-  // Repair any bootstrap files that only contain ClawX markers (no OpenClaw
+  // Repair any bootstrap files that only contain U-ClawX markers (no OpenClaw
   // template content). This fixes a race condition where ensureClawXContext()
   // previously created the file before the gateway could seed the full template.
   if (!isE2EMode) {
@@ -502,7 +502,7 @@ async function initialize(): Promise<void> {
       // 用户点第一条消息不再等 U 盘冷加载。fire-and-forget，失败静默。
       prewarmGatewayModels(gatewayManager);
       void ensureClawXContext().catch((error) => {
-        logger.warn('Failed to re-merge ClawX context after gateway reconnect:', error);
+        logger.warn('Failed to re-merge U-ClawX context after gateway reconnect:', error);
       });
     }
   });
@@ -593,12 +593,12 @@ async function initialize(): Promise<void> {
     logger.info('Gateway auto-start disabled in settings');
   }
 
-  // Merge ClawX context snippets into the workspace bootstrap files.
+  // Merge U-ClawX context snippets into the workspace bootstrap files.
   // The gateway seeds workspace files asynchronously after its HTTP server
   // is ready, so ensureClawXContext will retry until the target files appear.
   if (!isE2EMode) {
     void ensureClawXContext().catch((error) => {
-      logger.warn('Failed to merge ClawX context into workspace:', error);
+      logger.warn('Failed to merge U-ClawX context into workspace:', error);
     });
   }
 
@@ -649,7 +649,7 @@ if (gotTheLock) {
 
   // When a second instance is launched, focus the existing window instead.
   app.on('second-instance', () => {
-    logger.info('Second ClawX instance detected; redirecting to the existing window');
+    logger.info('Second U-ClawX instance detected; redirecting to the existing window');
 
     const focusRequest = requestSecondInstanceFocus(
       mainWindowFocusState,
@@ -678,7 +678,7 @@ if (gotTheLock) {
       // 用户面前什么都没有，正是首屏要消灭的那种困惑。弹框明示后退出。
       try {
         dialog.showErrorBox(
-          'U-Claw 启动失败',
+          'U-ClawX 启动失败',
           '应用初始化失败，请拔出 U 盘重新插入后再试。\n\n'
           + `错误信息：${error instanceof Error ? error.message : String(error)}`,
         );

@@ -1,5 +1,5 @@
 /**
- * Persist ClawX-managed plugin install records into OpenClaw's SQLite
+ * Persist U-ClawX-managed plugin install records into OpenClaw's SQLite
  * installed_plugin_index store (openclaw.sqlite).
  *
  * OpenClaw 2026.6+ reads trusted install metadata from SQLite at runtime,
@@ -80,7 +80,7 @@ function openStateDatabase(sqlitePath: string): DatabaseSync {
 
 /**
  * Upsert trusted install records into openclaw.sqlite.
- * ClawX-authored records win over stale SQLite entries for the same plugin id.
+ * U-ClawX-authored records win over stale SQLite entries for the same plugin id.
  */
 export function upsertPluginInstallRecordsIntoSqlite(
   records: Record<string, Record<string, unknown>>,
@@ -162,9 +162,9 @@ export function upsertPluginInstallRecordsIntoSqlite(
 }
 
 /**
- * Remove install records that must remain ClawX-managed rather than updated
+ * Remove install records that must remain U-ClawX-managed rather than updated
  * from their raw upstream npm package. Also clean the legacy root-level DB
- * previously written by ClawX before OpenClaw 2026.7.1 moved state to state/.
+ * previously written by U-ClawX before OpenClaw 2026.7.1 moved state to state/.
  */
 export function removePluginInstallRecordsFromSqlite(pluginIds: string[]): boolean {
   if (pluginIds.length === 0) return false;

@@ -26,12 +26,12 @@ const DEFAULT_ACCOUNT_ID = 'default';
 // Channels whose top-level schema (additionalProperties:false) does NOT
 // include `defaultAccount`.  We still use the multi-account `accounts`
 // map, but strip `defaultAccount` before persisting to avoid plugin
-// schema validation errors.  ClawX falls back to DEFAULT_ACCOUNT_ID
+// schema validation errors.  U-ClawX falls back to DEFAULT_ACCOUNT_ID
 // when `defaultAccount` is absent.
 const CHANNELS_OMIT_DEFAULT_ACCOUNT_KEY = new Set(['dingtalk']);
 
 // Channels whose schema accepts a top-level default account and account map,
-// but whose account payload contains nested strict-schema objects that ClawX
+// but whose account payload contains nested strict-schema objects that U-ClawX
 // can accidentally make invalid by adding UI convenience fields.  Keep this
 // sanitization narrowly scoped to known nested maps so local config remains
 // OpenClaw-compatible after a save.
@@ -62,7 +62,7 @@ const LEGACY_WECHAT_SYNC_DIR = join(OPENCLAW_DIR, 'agents', 'default', 'sessions
 // configuration remains exclusively under channels.<id>.
 const PLUGIN_CHANNELS: string[] = ['discord', 'qqbot', 'whatsapp'];
 const LEGACY_BUILTIN_CHANNEL_PLUGIN_IDS = new Set<string>();
-// OpenClaw 2026.7.1 bundles only these channel extensions. All other ClawX
+// OpenClaw 2026.7.1 bundles only these channel extensions. All other U-ClawX
 // channels must retain their explicit external plugin allowlist entries.
 const BUILTIN_CHANNEL_IDS = new Set(['telegram', 'imessage']);
 
@@ -94,7 +94,7 @@ function sanitizeDiscordGuildChannelConfig(channelConfig: unknown): void {
 
     const record = channelConfig as Record<string, unknown>;
 
-    // Backward compatibility for the older ClawX-generated shape:
+    // Backward compatibility for the older U-ClawX-generated shape:
     //   channels: { "123": { allow: true, requireMention: true } }
     // OpenClaw's current DiscordGuildChannelConfig does not include `allow`;
     // represent deny/allow using `enabled` instead.
@@ -358,7 +358,7 @@ function ensurePluginRegistration(currentConfig: OpenClawConfig, pluginId: strin
     }
     const pluginEntry = currentConfig.plugins.entries[pluginId];
     // PluginEntryConfig contains plugin activation/config metadata, not channel
-    // accounts. Older ClawX versions mirrored credentials here, which OpenClaw
+    // accounts. Older U-ClawX versions mirrored credentials here, which OpenClaw
     // 2026.7.1 rejects as an invalid plugins.entries.<id> shape.
     delete pluginEntry.accounts;
     delete pluginEntry.defaultAccount;
@@ -1274,7 +1274,7 @@ export async function deleteAgentChannelAccounts(agentId: string, ownedChannelAc
         const currentConfig = snapshot as OpenClawConfig;
         const channels = currentConfig.channels ?? {};
 
-        // Older ClawX releases could leave the only copy of Discord, QQBot,
+        // Older U-ClawX releases could leave the only copy of Discord, QQBot,
         // or WhatsApp account credentials under plugins.entries.<id>. Migrate
         // that invalid legacy shape into channels.<id> before deleting the
         // owned account, so sibling accounts survive while PluginEntryConfig

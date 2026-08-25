@@ -636,7 +636,7 @@ describe('ACP timeline reducer', () => {
     });
   });
 
-  it('preserves resource link metadata and accepts ClawX staging ownership only from user content', () => {
+  it('preserves resource link metadata and accepts U-ClawX staging ownership only from user content', () => {
     const resource = {
       type: 'resource_link' as const,
       uri: 'file:///tmp/budget.xlsx',

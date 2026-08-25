@@ -132,11 +132,11 @@ describe('Channels page status refresh', () => {
     });
   });
 
-  it('defines exactly the eight ClawX-supported channel integrations', () => {
+  it('defines exactly the eight U-ClawX-supported channel integrations', () => {
     expect(Object.keys(CHANNEL_META).sort()).toEqual([...SUPPORTED_CHANNEL_TYPES].sort());
   });
 
-  it('filters runtime channel groups that ClawX does not support', async () => {
+  it('filters runtime channel groups that U-ClawX does not support', async () => {
     subscribeHostEventMock.mockImplementation(() => vi.fn());
     const unsupportedChannelTypes = [
       'signal',

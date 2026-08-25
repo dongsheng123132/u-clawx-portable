@@ -40,16 +40,16 @@ describe('getPortableNodeCompileCachePath', () => {
 
     const winPath = getPortableNodeCompileCachePath('win32', WIN_ENV, stateDir);
     expect(winPath?.startsWith('C:\\host-cache')).toBe(true);
-    expect(winPath).toContain(join('U-Claw', 'node-compile-cache'));
+    expect(winPath).toContain(join('U-ClawX', 'node-compile-cache'));
 
     const macPath = getPortableNodeCompileCachePath('darwin', MAC_ENV, stateDir);
     expect(macPath?.startsWith(join('/Users/tester', 'Library', 'Caches'))).toBe(true);
-    expect(macPath).toContain(join('U-Claw', 'node-compile-cache'));
+    expect(macPath).toContain(join('U-ClawX', 'node-compile-cache'));
 
     const linuxPath = getPortableNodeCompileCachePath('linux', LINUX_ENV, stateDir);
     // 测试机可能是 Windows：path.join 会按 win32 规范化前缀，这里只认段。
     expect(linuxPath).toContain('xdg-cache');
-    expect(linuxPath).toContain(join('U-Claw', 'node-compile-cache'));
+    expect(linuxPath).toContain(join('U-ClawX', 'node-compile-cache'));
   });
 
   it('同一 UUID 身份 → 同一路径；不同身份 → 不同路径', () => {

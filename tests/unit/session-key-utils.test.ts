@@ -15,7 +15,7 @@ describe('session-key-utils', () => {
     expect(isChannelSessionKey('agent:main:whatsapp:dm:abc')).toBe(true);
   });
 
-  it('treats ClawX desktop session keys as non-channel', () => {
+  it('treats U-ClawX desktop session keys as non-channel', () => {
     expect(isChannelSessionKey('agent:main:main')).toBe(false);
     expect(isChannelSessionKey('agent:main:session-1710000000000')).toBe(false);
     expect(isChannelSessionKey('agent:main:cron:heartbeat')).toBe(false);
@@ -100,7 +100,7 @@ describe('session-key-utils', () => {
   it('hides OpenClaw heartbeat-only desktop sessions from the sidebar', () => {
     const heartbeatOnly: ChatSession = {
       key: 'agent:main:main',
-      displayName: 'ClawX',
+      displayName: 'U-ClawX',
       lastMessagePreview: '[OpenClaw heartbeat poll]',
     };
 
@@ -123,12 +123,12 @@ describe('session-key-utils', () => {
     const sessions: ChatSession[] = [
       {
         key: 'agent:main:main',
-        displayName: 'ClawX',
+        displayName: 'U-ClawX',
         lastMessagePreview: '[OpenClaw heartbeat poll]',
       },
       {
         key: 'agent:main:session-1710000000000',
-        displayName: 'ClawX',
+        displayName: 'U-ClawX',
         lastMessagePreview: 'Summarize the repository structure',
       },
     ];
@@ -138,15 +138,15 @@ describe('session-key-utils', () => {
   });
 
   it('does not treat missing metadata as proof of a hidden heartbeat session', () => {
-    const sessions: ChatSession[] = [{ key: 'agent:main:main', displayName: 'ClawX' }];
+    const sessions: ChatSession[] = [{ key: 'agent:main:main', displayName: 'U-ClawX' }];
 
     expect(findHiddenOpenClawHeartbeatSession('agent:main:main', sessions)).toBeNull();
   });
 
-  it('does not hide a real conversation only because it is titled ClawX', () => {
+  it('does not hide a real conversation only because it is titled U-ClawX', () => {
     const realConversation: ChatSession = {
       key: 'agent:main:session-1710000000000',
-      label: 'ClawX',
+      label: 'U-ClawX',
       lastMessagePreview: 'Summarize the repository structure',
     };
 

@@ -459,13 +459,13 @@ export function createFilesApi(dependencies: FilesApiDependencies = {}): Complet
         entryStat = await fsP.lstat(lexicalPath);
       }
       if (entryStat.isSymbolicLink() || !entryStat.isDirectory()) {
-        throw new Error('Invalid ClawX staging directory');
+        throw new Error('Invalid U-ClawX staging directory');
       }
       const canonicalPath = await fsP.realpath(lexicalPath);
       const canonicalStat = await fsP.stat(canonicalPath);
       if (!canonicalStat.isDirectory()
         || (parent && !isPathInside(canonicalPath, parent.canonicalPath))) {
-        throw new Error('Invalid ClawX staging directory');
+        throw new Error('Invalid U-ClawX staging directory');
       }
       const pinned = {
         lexicalPath,
@@ -494,14 +494,14 @@ export function createFilesApi(dependencies: FilesApiDependencies = {}): Complet
     const fsP = await import('node:fs/promises');
     for (const directory of area.directories) {
       const entryStat = await fsP.lstat(directory.lexicalPath);
-      if (entryStat.isSymbolicLink()) throw new Error('Invalid ClawX staging directory');
+      if (entryStat.isSymbolicLink()) throw new Error('Invalid U-ClawX staging directory');
       const currentPath = await fsP.realpath(directory.lexicalPath);
       const currentStat = await fsP.stat(currentPath);
       if (!currentStat.isDirectory()
         || !isSamePath(currentPath, directory.canonicalPath)
         || currentStat.dev !== directory.dev
         || currentStat.ino !== directory.ino) {
-        throw new Error('Invalid ClawX staging directory');
+        throw new Error('Invalid U-ClawX staging directory');
       }
     }
   };
@@ -551,7 +551,7 @@ export function createFilesApi(dependencies: FilesApiDependencies = {}): Complet
       if (!isPathInside(canonicalDestination, area.stagingDir)
         || pathStat.dev !== openedStat.dev
         || pathStat.ino !== openedStat.ino) {
-        throw new Error('Invalid ClawX staging destination');
+        throw new Error('Invalid U-ClawX staging destination');
       }
 
       await write(handle);
@@ -562,7 +562,7 @@ export function createFilesApi(dependencies: FilesApiDependencies = {}): Complet
       if (!isSamePath(finalPath, canonicalDestination)
         || finalPathStat.dev !== finalStat.dev
         || finalPathStat.ino !== finalStat.ino) {
-        throw new Error('Invalid ClawX staging destination');
+        throw new Error('Invalid U-ClawX staging destination');
       }
       await handle.close();
       handle = undefined;
@@ -572,7 +572,7 @@ export function createFilesApi(dependencies: FilesApiDependencies = {}): Complet
       if (!isSamePath(registrationPath, finalPath)
         || registrationStat.dev !== finalStat.dev
         || registrationStat.ino !== finalStat.ino) {
-        throw new Error('Invalid ClawX staging destination');
+        throw new Error('Invalid U-ClawX staging destination');
       }
       return { path: registrationPath, stat: finalStat };
     } catch (error) {

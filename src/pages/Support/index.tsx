@@ -33,7 +33,7 @@ export function Support() {
     feedback.trim(),
     '',
     `${t('contactField')}: ${contact.trim() || t('notProvided')}`,
-    `${t('versionField')}: U-Claw ${currentVersion}`,
+    `${t('versionField')}: U-ClawX ${currentVersion}`,
     `${t('platformField')}: ${platform}`,
     '',
     t('manualOnlyFooter'),
@@ -58,7 +58,7 @@ export function Support() {
       return;
     }
 
-    const subject = `${t('emailSubject')} · U-Claw ${currentVersion}`;
+    const subject = `${t('emailSubject')} · U-ClawX ${currentVersion}`;
     const mailto = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(buildFeedbackText())}`;
     try {
       await hostApi.shell.openExternal(mailto);

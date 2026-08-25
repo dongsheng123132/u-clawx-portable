@@ -3,7 +3,7 @@ import { closeElectronApp, expect, getStableWindow, test } from './fixtures/elec
 const alphaModelRef = 'custom-alpha123/model-alpha';
 const betaModelRef = 'custom-beta5678/provider/model-beta';
 
-test.describe('ClawX chat model picker', () => {
+test.describe('U-ClawX chat model picker', () => {
   test('switches the current agent model without requesting a gateway refresh', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 

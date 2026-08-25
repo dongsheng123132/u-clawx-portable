@@ -173,14 +173,14 @@ describe('AcpChatService', () => {
         windowsHide: true,
         env: expect.objectContaining({
           OPENCLAW_NO_RESPAWN: '1',
-          OPENCLAW_EMBEDDED_IN: 'ClawX',
+          OPENCLAW_EMBEDDED_IN: 'U-ClawX',
           OPENCLAW_EXEC_SHELL_SNAPSHOT: '0',
         }),
       }),
     );
   });
 
-  it('passes the authoritative ClawX Gateway token to the ACP child environment', async () => {
+  it('passes the authoritative U-ClawX Gateway token to the ACP child environment', async () => {
     const { service } = await createSpawnedService();
 
     await expect(service.loadSession({ sessionKey: 'agent:pi:s1', workspaceRoot: '/repo', cwd: '/repo' })).resolves.toEqual({
@@ -293,7 +293,7 @@ describe('AcpChatService', () => {
     });
   });
 
-  it('rewrites fresh-session ACP updates to the ClawX session key for the renderer', async () => {
+  it('rewrites fresh-session ACP updates to the U-ClawX session key for the renderer', async () => {
     const { service, send } = await createService();
 
     await service.loadSession({ sessionKey: 'agent:pi:session-123', workspaceRoot: '/repo', cwd: '/repo', createIfMissing: true });

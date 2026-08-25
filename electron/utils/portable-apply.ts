@@ -7,7 +7,7 @@ export interface PortableFileMapping {
   stagingRelPath: string;
   /** Destination path relative to appRoot */
   targetRelPath: string;
-  /** Expected sha256 after copy, required for atomic ClawX commit files */
+  /** Expected sha256 after copy, required for atomic U-ClawX commit files */
   expectedSha256?: string | null;
 }
 
@@ -17,7 +17,7 @@ export interface PortableApplyOptions {
   executableName: string;
   processId: number;
   stateFilePath: string;
-  /** Per-file copy mappings for ClawX files (staging -> appRoot) */
+  /** Per-file copy mappings for U-ClawX files (staging -> appRoot) */
   fileMappings: PortableFileMapping[];
   /** Absolute path of the prepared OpenClaw directory, or null */
   preparedOpenClawDir: string | null;

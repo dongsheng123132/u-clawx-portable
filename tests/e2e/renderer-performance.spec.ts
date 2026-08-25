@@ -300,7 +300,7 @@ test('profiles a populated timeline during a growing Markdown stream', {
       writeArtifact(testInfo, 'renderer.cpuprofile', rendererProfile),
       writeArtifact(testInfo, 'main.cpuprofile', mainProfile),
     ]);
-    console.log(`ClawX chat performance: ${JSON.stringify(benchmark)}`);
+    console.log(`U-ClawX chat performance: ${JSON.stringify(benchmark)}`);
 
     expect(liveUpdates).toHaveLength(STREAM_CHUNKS + 1);
     const streamedMessage = page.getByTestId('acp-assistant-message').filter({ hasText: STREAM_SENTINEL });
@@ -430,7 +430,7 @@ test('profiles sidebar animation and scrolling with rich static Markdown', {
       writeArtifact(testInfo, 'renderer-interaction.cpuprofile', rendererProfile),
       writeArtifact(testInfo, 'main-interaction.cpuprofile', mainProfile),
     ]);
-    console.log(`ClawX interaction performance: ${JSON.stringify(benchmark)}`);
+    console.log(`U-ClawX interaction performance: ${JSON.stringify(benchmark)}`);
 
     expect(markdown.length).toBeGreaterThan(10_000);
     expect(sidebarCollapseFrames.count).toBeGreaterThan(0);

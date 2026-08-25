@@ -398,10 +398,10 @@ describe('host services', () => {
       restart: vi.fn(),
     } as never);
 
-    await expect(api.set({ key: 'chatWorkspacePath', value: '/Users/alex/workspace/ClawX' })).resolves.toEqual({ success: true });
-    await expect(api.set({ key: 'recentWorkspacePaths', value: ['/Users/alex/workspace/ClawX'] })).resolves.toEqual({ success: true });
-    expect(setSettingMock).toHaveBeenCalledWith('chatWorkspacePath', '/Users/alex/workspace/ClawX');
-    expect(setSettingMock).toHaveBeenCalledWith('recentWorkspacePaths', ['/Users/alex/workspace/ClawX']);
+    await expect(api.set({ key: 'chatWorkspacePath', value: '/Users/alex/workspace/U-ClawX' })).resolves.toEqual({ success: true });
+    await expect(api.set({ key: 'recentWorkspacePaths', value: ['/Users/alex/workspace/U-ClawX'] })).resolves.toEqual({ success: true });
+    expect(setSettingMock).toHaveBeenCalledWith('chatWorkspacePath', '/Users/alex/workspace/U-ClawX');
+    expect(setSettingMock).toHaveBeenCalledWith('recentWorkspacePaths', ['/Users/alex/workspace/U-ClawX']);
   });
 
   it('routes validated generic gateway rpc directly to the manager', async () => {

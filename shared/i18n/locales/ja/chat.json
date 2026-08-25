@@ -2,7 +2,7 @@
     "gatewayNotRunning": "ゲートウェイが停止中",
     "gatewayRequired": "チャットを利用するには OpenClaw ゲートウェイが実行されている必要があります。自動的に起動するか、設定から起動できます。",
     "welcome": {
-        "title": "ClawX チャット",
+        "title": "U-ClawX チャット",
         "subtitle": "お手伝いできることはありますか？",
         "askQuestions": "タスク対応",
         "askQuestionsDesc": "タスク指向の依頼に対応します",
@@ -32,7 +32,7 @@
     "fileCard": {
         "openWith": "アプリで開く",
         "openWithFile": "{{name}} をアプリで開く",
-        "openInBuiltInBrowser": "ClawX プレビューで開く",
+        "openInBuiltInBrowser": "U-ClawX プレビューで開く",
         "openInSystemBrowser": "システムブラウザで開く",
         "searchingApplications": "アプリを検索中",
         "showInFinder": "Finder に表示",
@@ -129,7 +129,7 @@
         "errors": {
             "outsideSandbox": "サンドボックス外のパスのため拒否しました",
             "outsideSandboxTitle": "このファイルを読み取れません",
-            "outsideSandboxHint": "ClawX はこのパスを読み取れませんでした。ファイルが移動または削除されたか、現在のアカウントにアクセス権がない可能性があります。ファイルマネージャーで表示できます。",
+            "outsideSandboxHint": "U-ClawX はこのパスを読み取れませんでした。ファイルが移動または削除されたか、現在のアカウントにアクセス権がない可能性があります。ファイルマネージャーで表示できます。",
             "readOnlyRoot": "このファイルは読み取り専用領域（内蔵スキルなど）にあり、変更できません",
             "tooLarge": "ファイルが大きすぎます（{{size}}）。プレビューを無効化しました",
             "binary": "バイナリファイルのためテキストプレビューはできません",
@@ -139,7 +139,7 @@
             "unsupportedFormatTitle": "このファイル形式は内蔵プレビューに未対応です",
             "unsupportedFormatHint": "現在、内蔵プレビューは直接読み取れるテキスト/Markdown 系ファイルのみ対応しています。ファイルマネージャーで開いてください。",
             "largeBinaryOpenTitle": "このファイルは大きいため内蔵プレビューできません",
-            "largeBinaryOpenHint": "このファイルは {{size}} です。ClawX では内蔵プレビューできませんが、確認後にシステム既定のアプリで開けます。",
+            "largeBinaryOpenHint": "このファイルは {{size}} です。U-ClawX では内蔵プレビューできませんが、確認後にシステム既定のアプリで開けます。",
             "openInFinderFailed": "ファイルマネージャーで表示できません",
             "openFailed": "開けませんでした: {{error}}",
             "htmlLoadFailed": "HTML プレビューを読み込めませんでした",

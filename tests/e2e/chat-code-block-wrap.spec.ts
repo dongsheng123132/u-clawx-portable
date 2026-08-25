@@ -70,7 +70,7 @@ async function emitAcpSessionUpdates(app: ElectronApplication, updates: AcpSessi
   );
 }
 
-test.describe('ClawX chat code block wrapping', () => {
+test.describe('U-ClawX chat code block wrapping', () => {
   test('soft-wraps long lines inside fenced code blocks instead of overflowing', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 

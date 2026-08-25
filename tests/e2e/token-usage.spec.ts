@@ -99,7 +99,7 @@ async function seedTokenUsageTranscripts(homeDir: string): Promise<void> {
   );
 }
 
-test.describe('ClawX token usage history', () => {
+test.describe('U-ClawX token usage history', () => {
 
   async function validateUsageHistory(page: Page): Promise<void> {
     const usageHistory = await page.evaluate(async () => {

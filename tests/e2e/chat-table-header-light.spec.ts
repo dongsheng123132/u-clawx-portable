@@ -83,7 +83,7 @@ async function emitAcpSessionUpdates(app: ElectronApplication, updates: AcpSessi
 
 const CLOUD_ARTIFACT_PATH = '/opt/cursor/artifacts/chat_table_header_light.png';
 
-test.describe('ClawX chat table header styling', () => {
+test.describe('U-ClawX chat table header styling', () => {
   test('renders transparent light and muted dark Markdown table headers', async ({ launchElectronApp }, testInfo) => {
     const app = await launchElectronApp({ skipSetup: true });
 

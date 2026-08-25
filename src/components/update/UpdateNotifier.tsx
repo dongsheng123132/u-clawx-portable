@@ -12,7 +12,7 @@ const DOWNLOADED_TOAST_ID = 'clawx-update-downloaded';
  *
  * The update store owns IPC communication; this component only reacts to
  * store state changes and presents user-facing actions via a custom
- * Sonner toast (`UpdateToast`) that follows the active ClawX theme.
+ * Sonner toast (`UpdateToast`) that follows the active U-ClawX theme.
  */
 export function UpdateNotifier() {
   const { t } = useTranslation('settings');

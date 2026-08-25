@@ -1,6 +1,6 @@
 {
     "name": "clawx",
-    "version": "0.5.7",
+    "version": "0.5.8",
     "pnpm": {
         "onlyBuiltDependencies": [
             "@discordjs/opus",
@@ -28,9 +28,9 @@
             ]
         }
     },
-    "description": "U-Claw 虾盘 — 便携版 ClawX，插上即用的 AI 助手",
+    "description": "U-ClawX 虾盘 — 便携版 U-ClawX，插上即用的 AI 助手",
     "main": "dist-electron/main/index.js",
-    "author": "U-Claw Team",
+    "author": "U-ClawX Team",
     "license": "MIT",
     "private": true,
     "scripts": {

@@ -267,7 +267,7 @@ function WelcomeContent() {
   return (
     <div data-testid="setup-welcome-step" className="text-center space-y-4">
       <div className="mb-4 flex justify-center">
-        <img src={uclawIcon} alt="U-Claw" className="h-16 w-16" />
+        <img src={uclawIcon} alt="U-ClawX" className="h-16 w-16" />
       </div>
       <h2 className="text-xl font-serif font-normal tracking-tight">{t('welcome.title')}</h2>
       <p className="text-muted-foreground">

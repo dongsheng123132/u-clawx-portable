@@ -13,8 +13,8 @@ import { tmpdir } from 'node:os';
  *
  * 设计完全对齐 portable-session-data.ts 的既有约定：
  * - 盘符隔离用 UUID（portable-compile-cache-id），换 USB 口/盘符仍命中同一份缓存；
- * - 本机缓存根：win %LOCALAPPDATA%\U-Claw\ / mac ~/Library/Caches/U-Claw/
- *   / linux $XDG_CACHE_HOME/U-Claw；
+ * - 本机缓存根：win %LOCALAPPDATA%\U-ClawX\ / mac ~/Library/Caches/U-ClawX/
+ *   / linux $XDG_CACHE_HOME/U-ClawX；
  * - 任何一步失败都返回 null，启动流程照常（退化为现状：无编译缓存），绝不阻塞。
  */
 
@@ -70,7 +70,7 @@ export function getPortableNodeCompileCachePath(
   const cacheId = readOrCreateCompileCacheId(portableStateDir);
   if (!cacheId) return null;
   const rootHash = createHash('sha256').update(cacheId).digest('hex').slice(0, 16);
-  return join(getSystemCacheRoot(platform, env), 'U-Claw', 'node-compile-cache', rootHash);
+  return join(getSystemCacheRoot(platform, env), 'U-ClawX', 'node-compile-cache', rootHash);
 }
 
 /**

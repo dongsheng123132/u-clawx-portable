@@ -1,5 +1,5 @@
 /**
- * 真机端到端：驱动 U 盘上打包好的 ClawX，走一遍设备钱包。
+ * 真机端到端：驱动 U 盘上打包好的 U-ClawX，走一遍设备钱包。
  *
  * 用法：node drive-wallet-cdp.mjs <U盘应用目录> <要填入的key>
  * 依赖仓库里的 playwright-core（用 connectOverCDP 附加到已启动的 Electron 渲染进程）。
@@ -20,7 +20,7 @@ if (!appDir || !keyToAdopt) {
 }
 
 const PORT = 9222;
-const exe = path.join(appDir, 'U-Claw.exe');
+const exe = path.join(appDir, 'U-ClawX.exe');
 
 console.log('[e2e] 启动', exe);
 // 应用日志走 stdout —— 丢掉它就等于卡死时没有证据可查。

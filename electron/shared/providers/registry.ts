@@ -83,7 +83,7 @@ export const PROVIDER_DEFINITIONS: ProviderDefinition[] = [
       apiKeyEnv: 'OPENROUTER_API_KEY',
       headers: {
         'HTTP-Referer': 'https://claw-x.com',
-        'X-OpenRouter-Title': 'ClawX',
+        'X-OpenRouter-Title': 'U-ClawX',
       },
     },
   },
@@ -201,7 +201,7 @@ export const PROVIDER_DEFINITIONS: ProviderDefinition[] = [
     },
   },
   {
-    // U-Claw 薄壳：内置的虾盘云聚合网关。key 由设备钱包签发，
+    // U-ClawX 薄壳：内置的虾盘云聚合网关。key 由设备钱包签发，
     // 不可从 provider 设置里删除或改写。
     //
     // 这里**故意不写 models 清单**。三件事、三个源，别混：

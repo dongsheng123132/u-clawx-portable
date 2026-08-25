@@ -18,7 +18,7 @@ describe('stripAcpWorkingDirectoryPrefix', () => {
   it('removes a leading Windows working-directory marker', () => {
     expect(
       stripAcpWorkingDirectoryPrefix(
-        '[Working directory: C:\\Users\\alex\\workspace\\ClawX]\r\n\r\nFix the test',
+        '[Working directory: C:\\Users\\alex\\workspace\\U-ClawX]\r\n\r\nFix the test',
       ),
     ).toBe('Fix the test')
   })

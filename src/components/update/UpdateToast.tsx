@@ -6,7 +6,7 @@
  * fully own the look (no Sonner default chrome) while still inheriting
  * Sonner's stacking, animation, and dismissal behaviour.
  *
- * Uses ClawX semantic tokens (`bg-popover`, `text-foreground`,
+ * Uses U-ClawX semantic tokens (`bg-popover`, `text-foreground`,
  * `border-border`, …) so the card automatically tracks the active
  * theme — no per-mode hardcoding required.
  */

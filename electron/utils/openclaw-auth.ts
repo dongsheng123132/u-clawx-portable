@@ -493,7 +493,7 @@ function getApiKeyFromAuthProfilesStore(
 /**
  * Read the API key OpenClaw will use for a runtime provider key.
  *
- * This intentionally reads auth-profiles.json rather than ClawX's provider
+ * This intentionally reads auth-profiles.json rather than U-ClawX's provider
  * cache, so UI status can reflect providers imported or preserved by the
  * OpenClaw runtime across overwrite installs.
  */
@@ -870,7 +870,7 @@ function ensureCompactionSafeguardDefault(config: Record<string, unknown>): bool
 }
 
 /**
- * Backfill `reserveTokensFloor` on compaction configs that ClawX or OpenClaw
+ * Backfill `reserveTokensFloor` on compaction configs that U-ClawX or OpenClaw
  * seeded without one. OpenClaw's built-in default (20k) is too low once
  * contextWindow backfill activates safeguard compaction on 200k+ models.
  */
@@ -900,7 +900,7 @@ function backfillCompactionReserveTokensFloor(config: Record<string, unknown>): 
 /**
  * Self-heal helper: walk `models.providers.custom-*` entries and fill in an
  * inferred `contextWindow` on model rows that have neither `contextWindow`
- * nor `contextTokens`. Rows written by older ClawX versions only carried
+ * nor `contextTokens`. Rows written by older U-ClawX versions only carried
  * `{ id, name, input }`, which disables OpenClaw's preemptive compaction and
  * context-window guard for custom providers.
  *
@@ -1029,7 +1029,7 @@ export async function saveProviderKeyToOpenClaw(
     // 🔴 已经是这个值就别再写一遍。
     //
     // 每次 writeAuthProfiles 是**两次 I/O**（SQLite 同步写 + JSON 写），而这个
-    // 循环跑遍所有 agent。U-Claw 便携包出厂带 18 个预置人格，一次
+    // 循环跑遍所有 agent。U-ClawX 便携包出厂带 18 个预置人格，一次
     // `syncAllProviderAuthToRuntime()` 就是 18×N 次写；它又挂在 Gateway
     // ready 后的 first-turn prewarm 上，于是「Gateway 一起来就被自己的主进程
     // 砸一轮写入」，实测能把 Gateway 打到 exit(1)、然后重启、再 prewarm，
@@ -1677,7 +1677,7 @@ function mergeProviderModels(
 /**
  * OpenClaw 2026.5+ requires a positive `maxTokens` on each model (and can
  * fall back to provider-level `maxTokens`) when `api` is `anthropic-messages`.
- * ClawX-written entries historically only included `{ id, name }`.
+ * U-ClawX-written entries historically only included `{ id, name }`.
  *
  * Generic Anthropic-compatible providers should not be capped at 8k by
  * default: OpenClaw's native Anthropic transport caps default requests at 32k
@@ -1858,7 +1858,7 @@ export async function ensureAnthropicMessagesModelMaxTokens(): Promise<string[]>
  *
  * OpenClaw 2026.5+ auto-routes OpenAI providers (`openai`, `openai-codex`) to the
  * external `codex` agent harness, which expects a separate codex plugin install.
- * The bundled OpenClaw distribution ClawX ships does not register that harness,
+ * The bundled OpenClaw distribution U-ClawX ships does not register that harness,
  * so without pinning both keys chat fails with
  * `Requested agent harness "codex" is not registered.`
  */
@@ -2000,9 +2000,9 @@ function upsertOpenClawProviderEntry(
  *
  * Mirrors {@link pruneInvalidApiProviderEntries} — invoked opportunistically
  * before a default-provider switch so that pre-existing on-disk entries
- * (written by earlier ClawX builds that did not pin the runtime) get
+ * (written by earlier U-ClawX builds that did not pin the runtime) get
  * repaired before the next Gateway reload picks them up. Without this, users
- * who upgrade ClawX while still pointing at an OpenAI provider would keep
+ * who upgrade U-ClawX while still pointing at an OpenAI provider would keep
  * hitting `Requested agent harness "codex" is not registered.` until they
  * re-saved the provider manually.
  *
@@ -2184,7 +2184,7 @@ function ensurePluginRegistrationEnabled(config: Record<string, unknown>, plugin
 }
 
 /**
- * Configure a ClawX-owned OpenAI-compatible image provider.
+ * Configure a U-ClawX-owned OpenAI-compatible image provider.
  * This intentionally uses a separate provider key from `openai` so chat model
  * routing and OpenAI API/OAuth credentials remain untouched.
  */
@@ -2281,8 +2281,8 @@ export function readOpenAiCompatibleImageRelayState(
     return { enabled: true, baseUrl: relayBaseUrl, providerKey: CLAWX_OPENAI_IMAGE_PROVIDER_KEY };
   }
 
-  // Backward compatibility for ClawX builds that used models.providers.openai
-  // for image relay. New saves move to the ClawX-owned provider above.
+  // Backward compatibility for U-ClawX builds that used models.providers.openai
+  // for image relay. New saves move to the U-ClawX-owned provider above.
   const openai = readModelsProvidersOpenAi(config);
   const baseUrl = typeof openai?.baseUrl === 'string' ? openai.baseUrl.trim() : '';
   if (!baseUrl || baseUrl === OFFICIAL_OPENAI_API_BASE_URL) {
@@ -2381,7 +2381,7 @@ export async function getActiveOpenClawProviders(): Promise<Set<string>> {
 
 /**
  * Read models.providers entries and agents.defaults.model from openclaw.json.
- * Used by ClawX to seed the provider store when it's empty but providers are
+ * Used by U-ClawX to seed the provider store when it's empty but providers are
  * configured externally (e.g. via CLI or by editing openclaw.json directly).
  */
 export async function getOpenClawProvidersConfig(): Promise<{
@@ -2442,7 +2442,7 @@ function applyControlUiAllowedOrigins(controlUi: Record<string, unknown>, port: 
 }
 
 /**
- * Write the ClawX gateway token into ~/.openclaw/openclaw.json.
+ * Write the U-ClawX gateway token into ~/.openclaw/openclaw.json.
  */
 export async function syncGatewayTokenToConfig(token: string): Promise<void> {
   const gatewayPort = (await getSetting('gatewayPort')) || PORTS.OPENCLAW_GATEWAY;
@@ -2575,7 +2575,7 @@ export async function syncBrowserConfigToOpenClaw(): Promise<void> {
  * Ensure session idle-reset is configured in ~/.openclaw/openclaw.json.
  *
  * By default OpenClaw resets the "main" session daily at 04:00 local time,
- * which means conversations disappear after roughly one day.  ClawX sets
+ * which means conversations disappear after roughly one day.  U-ClawX sets
  * `session.idleMinutes` to 10 080 (7 days) so that conversations are
  * preserved for a week unless the user has explicitly configured their own
  * value.  When `idleMinutes` is set without `session.reset` /
@@ -2727,7 +2727,7 @@ export async function batchSyncConfigFields(token: string): Promise<void> {
 
     // ── Memory search default ──
     // OpenClaw 2026.7.1 supports provider=none as an explicit FTS-only mode.
-    // Migrate ClawX's exact legacy disabled default once, and otherwise seed
+    // Migrate U-ClawX's exact legacy disabled default once, and otherwise seed
     // FTS only when the user has no memorySearch config or OpenAI embedding key.
     memorySearchDefaultResult = shouldMigrateLegacyMemorySearch
       && hasUserMemorySearchConfig(config)
@@ -2891,7 +2891,7 @@ export async function updateSingleAgentModelProvider(
  * Removes known-invalid keys that cause OpenClaw's strict Zod validation
  * to reject the entire config on startup.  Uses a conservative **blocklist**
  * approach: only strips keys that are KNOWN to be misplaced by older
- * OpenClaw/ClawX versions or external tools.
+ * OpenClaw/U-ClawX versions or external tools.
  *
  * Why blocklist instead of allowlist?
  *   • Allowlist (e.g. `VALID_SKILLS_KEYS`) would strip any NEW valid keys
@@ -3113,7 +3113,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
 
     // ── tools.profile & sessions.visibility ───────────────────────
     // OpenClaw 3.8+ requires tools.profile = 'full' and tools.sessions.visibility = 'all'
-    // for ClawX to properly integrate with its updated tool system.
+    // for U-ClawX to properly integrate with its updated tool system.
     const toolsConfig = (config.tools as Record<string, unknown> | undefined) || {};
     let toolsModified = false;
 
@@ -3130,7 +3130,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
     }
 
     // OpenClaw 6.5+ routes durable skill edits through the Skill Workshop tool.
-    // ClawX keeps direct skill-creator authoring instead, so deny the workshop
+    // U-ClawX keeps direct skill-creator authoring instead, so deny the workshop
     // tool even under tools.profile="full".
     const denyResult = ensureToolDenyIncludes(
       normalizeToolDenyList(toolsConfig.deny),
@@ -3139,13 +3139,13 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
     if (denyResult.modified) {
       toolsConfig.deny = denyResult.deny;
       toolsModified = true;
-      console.log('[sanitize] Added "skill_workshop" to tools.deny for ClawX desktop');
+      console.log('[sanitize] Added "skill_workshop" to tools.deny for U-ClawX desktop');
     } else if (!Array.isArray(toolsConfig.deny) || toolsConfig.deny.length !== denyResult.deny.length) {
       toolsConfig.deny = denyResult.deny;
       toolsModified = true;
     }
 
-    // ClawX uses the managed browser and web_fetch for explicit navigation,
+    // U-ClawX uses the managed browser and web_fetch for explicit navigation,
     // but does not expose general-purpose internet search to agents.
     const webSearchDenyResult = ensureToolDenyIncludes(
       normalizeToolDenyList(toolsConfig.deny),
@@ -3154,7 +3154,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
     if (webSearchDenyResult.modified) {
       toolsConfig.deny = webSearchDenyResult.deny;
       toolsModified = true;
-      console.log('[sanitize] Added "web_search" to tools.deny for ClawX desktop');
+      console.log('[sanitize] Added "web_search" to tools.deny for U-ClawX desktop');
     } else if (
       !Array.isArray(toolsConfig.deny)
       || toolsConfig.deny.length !== webSearchDenyResult.deny.length
@@ -3170,7 +3170,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
     if (controlPlaneToolDenyResult.modified) {
       toolsConfig.deny = controlPlaneToolDenyResult.deny;
       toolsModified = true;
-      console.log('[sanitize] Added control-plane tools to tools.deny for ClawX desktop');
+      console.log('[sanitize] Added control-plane tools to tools.deny for U-ClawX desktop');
     } else if (
       !Array.isArray(toolsConfig.deny)
       || toolsConfig.deny.length !== controlPlaneToolDenyResult.deny.length
@@ -3180,7 +3180,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
     }
 
     // ── tools.exec approvals (OpenClaw 3.28+) ──────────────────────
-    // ClawX is a local desktop app where the user is the trusted operator.
+    // U-ClawX is a local desktop app where the user is the trusted operator.
     // Exec approval prompts add unnecessary friction in this context, so we
     // set security="full" (allow all commands) and ask="off" (never prompt).
     // If a user has manually configured a stricter ~/.openclaw/exec-approvals.json,
@@ -3191,7 +3191,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
       execConfig.ask = 'off';
       toolsConfig.exec = execConfig;
       toolsModified = true;
-      console.log('[sanitize] Set tools.exec.security="full" and tools.exec.ask="off" to disable exec approvals for ClawX desktop');
+      console.log('[sanitize] Set tools.exec.security="full" and tools.exec.ask="off" to disable exec approvals for U-ClawX desktop');
     }
 
     if (toolsModified) {
@@ -3201,7 +3201,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
 
     // ── session.dmScope ─────────────────────────────────────────────
     // OpenClaw defaults DM session routing to "main" (all channels share
-    // agent:main:main), which makes ClawX sidebar conflate feishu, dingtalk,
+    // agent:main:main), which makes U-ClawX sidebar conflate feishu, dingtalk,
     // and other channel DMs into one entry. Set "per-channel-peer" so each
     // channel+peer gets its own session key (agent:main:feishu:direct:ou_xxx),
     // letting the sidebar show them as separate conversations with channel badges.
@@ -3214,7 +3214,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
       sessionConfig.dmScope = 'per-channel-peer';
       config.session = sessionConfig;
       modified = true;
-      console.log('[sanitize] Set session.dmScope="per-channel-peer" so channel DMs appear as separate sessions in ClawX');
+      console.log('[sanitize] Set session.dmScope="per-channel-peer" so channel DMs appear as separate sessions in U-ClawX');
     }
 
     // ── Skill Workshop hard-disable (OpenClaw 6.10+) ─────────────────
@@ -3235,7 +3235,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
     let gatewayModified = gatewayDenyResult.modified;
     if (gatewayDenyResult.modified) {
       gatewayTools.deny = gatewayDenyResult.deny;
-      console.log('[sanitize] Added "skill_workshop" to gateway.tools.deny for ClawX desktop');
+      console.log('[sanitize] Added "skill_workshop" to gateway.tools.deny for U-ClawX desktop');
     } else if (!Array.isArray(gatewayTools.deny) || gatewayTools.deny.length !== gatewayDenyResult.deny.length) {
       gatewayTools.deny = gatewayDenyResult.deny;
       gatewayModified = true;
@@ -3247,7 +3247,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
     if (gatewayWebSearchDenyResult.modified) {
       gatewayTools.deny = gatewayWebSearchDenyResult.deny;
       gatewayModified = true;
-      console.log('[sanitize] Added "web_search" to gateway.tools.deny for ClawX desktop');
+      console.log('[sanitize] Added "web_search" to gateway.tools.deny for U-ClawX desktop');
     } else if (
       !Array.isArray(gatewayTools.deny)
       || gatewayTools.deny.length !== gatewayWebSearchDenyResult.deny.length
@@ -3263,7 +3263,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
     if (gatewayControlPlaneToolDenyResult.modified) {
       gatewayTools.deny = gatewayControlPlaneToolDenyResult.deny;
       gatewayModified = true;
-      console.log('[sanitize] Added control-plane tools to gateway.tools.deny for ClawX desktop');
+      console.log('[sanitize] Added control-plane tools to gateway.tools.deny for U-ClawX desktop');
     } else if (
       !Array.isArray(gatewayTools.deny)
       || gatewayTools.deny.length !== gatewayControlPlaneToolDenyResult.deny.length
@@ -3300,7 +3300,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
       workshop.autonomous = autonomous;
       skillsObj.workshop = workshop;
       skillsModified = true;
-      console.log('[sanitize] Disabled skills.workshop.autonomous for ClawX desktop');
+      console.log('[sanitize] Disabled skills.workshop.autonomous for U-ClawX desktop');
     }
 
     const skillEntries = (
@@ -3316,7 +3316,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
       };
       skillsObj.entries = skillEntries;
       skillsModified = true;
-      console.log('[sanitize] Enabled bundled skill-creator for direct skill authoring in ClawX desktop');
+      console.log('[sanitize] Enabled bundled skill-creator for direct skill authoring in U-ClawX desktop');
     }
 
     if (skillsModified) {
@@ -3507,7 +3507,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
 
       // ── external channel plugin registration cleanup ────────────
       // Channel account configuration belongs under channels.<id>. OpenClaw's
-      // PluginEntryConfig rejects ClawX's legacy accounts/defaultAccount mirror.
+      // PluginEntryConfig rejects U-ClawX's legacy accounts/defaultAccount mirror.
       // Migrate first: some older configs have no channels.<id> copy, and
       // deleting the plugin account map directly would lose their credentials.
       for (const pluginId of ['discord', 'whatsapp', 'qqbot'] as const) {
@@ -3638,7 +3638,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
 
 
       // ── Remove legacy built-in 'feishu' registration ───────────────
-      // ClawX bundles Feishu via the official @larksuite/openclaw-lark
+      // U-ClawX bundles Feishu via the official @larksuite/openclaw-lark
       // plugin and removes the old built-in dist/extensions/feishu tree.
       // Keeping plugins.entries.feishu={enabled:false} looks harmless, but
       // OpenClaw's channel startup planner treats it as an explicit blocker
@@ -3679,7 +3679,7 @@ export async function sanitizeOpenClawConfig(): Promise<void> {
 
       // Discover all bundled extension IDs so we can clean stale bundled
       // allowlist entries from older OpenClaw versions. Re-add only the
-      // ClawX-critical bundled plugins, active provider plugins, and explicitly
+      // U-ClawX-critical bundled plugins, active provider plugins, and explicitly
       // enabled bundled plugins — not every enabledByDefault provider plugin.
       const bundled = discoverBundledPlugins();
       const installedExtensionIds = await discoverInstalledExtensionPluginIds();

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * U-Claw brand icon generator.
+ * U-ClawX brand icon generator.
  *
  * Two hand-authored sources, everything else derived and never hand-edited:
  *
@@ -21,7 +21,7 @@
  * Why this exists instead of `pnpm icons` (scripts/generate-icons.mjs): that
  * script's source is `icon.svg`, which upstream ships as the 🦞 emoji rendered
  * as text, so regenerating from it silently restores OpenClaw's lobster over the
- * U-Claw brand. This script also drops the png2icons dependency (sharp alone)
+ * U-ClawX brand. This script also drops the png2icons dependency (sharp alone)
  * and can verify instead of overwrite.
  *
  * Usage:
@@ -237,7 +237,7 @@ async function buildTrayTemplate(scale) {
 async function main() {
   if (!existsSync(masterPath)) {
     throw new Error(
-      `U-Claw master icon not found: ${masterPath}\n` +
+      `U-ClawX master icon not found: ${masterPath}\n` +
         'This file is the brand source of truth and must be committed.',
     );
   }
@@ -331,9 +331,9 @@ async function main() {
   } else {
     for (const r of results) log(`  ${r.status.padEnd(9)} ${r.file} (${r.bytes} B)`);
     if (checkOnly) {
-      log(ok ? '\nicons match the U-Claw master.' : `\n${bad.length} icon(s) no longer derive from the U-Claw master.`);
+      log(ok ? '\nicons match the U-ClawX master.' : `\n${bad.length} icon(s) no longer derive from the U-ClawX master.`);
     } else {
-      log('\nicons regenerated from the U-Claw master.');
+      log('\nicons regenerated from the U-ClawX master.');
     }
   }
 

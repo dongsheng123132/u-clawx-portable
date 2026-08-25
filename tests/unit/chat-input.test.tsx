@@ -319,8 +319,8 @@ describe('ChatInput agent targeting', () => {
       <TooltipProvider>
         <ChatInput
           onSend={vi.fn()}
-          workspaceLabel="~/workspace/ClawX"
-          workspacePath="/Users/alex/workspace/ClawX"
+          workspaceLabel="~/workspace/U-ClawX"
+          workspacePath="/Users/alex/workspace/U-ClawX"
           workspaceReadOnly={false}
           onSelectWorkspace={vi.fn()}
         />
@@ -328,8 +328,8 @@ describe('ChatInput agent targeting', () => {
     );
 
     const button = screen.getByTestId('chat-workspace-selector');
-    expect(button).toHaveTextContent('~/workspace/ClawX');
-    expect(button).toHaveAttribute('title', '/Users/alex/workspace/ClawX');
+    expect(button).toHaveTextContent('~/workspace/U-ClawX');
+    expect(button).toHaveAttribute('title', '/Users/alex/workspace/U-ClawX');
     expect(button).not.toHaveAttribute('aria-disabled', 'true');
   });
 
@@ -338,8 +338,8 @@ describe('ChatInput agent targeting', () => {
       <TooltipProvider>
         <ChatInput
           onSend={vi.fn()}
-          workspaceLabel="~/workspace/ClawX"
-          workspacePath="/Users/alex/workspace/ClawX"
+          workspaceLabel="~/workspace/U-ClawX"
+          workspacePath="/Users/alex/workspace/U-ClawX"
           workspaceReadOnly={false}
           onSelectWorkspace={vi.fn()}
         />
@@ -438,8 +438,8 @@ describe('ChatInput agent targeting', () => {
       <TooltipProvider>
         <ChatInput
           onSend={vi.fn()}
-          workspaceLabel="~/workspace/ClawX"
-          workspacePath="/Users/alex/workspace/ClawX"
+          workspaceLabel="~/workspace/U-ClawX"
+          workspacePath="/Users/alex/workspace/U-ClawX"
           workspaceReadOnly={false}
           onSelectWorkspace={vi.fn()}
         />
@@ -461,8 +461,8 @@ describe('ChatInput agent targeting', () => {
       <TooltipProvider>
         <ChatInput
           onSend={vi.fn()}
-          workspaceLabel="~/workspace/ClawX"
-          workspacePath="/Users/alex/workspace/ClawX"
+          workspaceLabel="~/workspace/U-ClawX"
+          workspacePath="/Users/alex/workspace/U-ClawX"
           workspaceReadOnly={false}
           onSelectWorkspace={vi.fn()}
         />
@@ -484,8 +484,8 @@ describe('ChatInput agent targeting', () => {
       <TooltipProvider>
         <ChatInput
           onSend={vi.fn()}
-          workspaceLabel="~/workspace/ClawX"
-          workspacePath="/Users/alex/workspace/ClawX"
+          workspaceLabel="~/workspace/U-ClawX"
+          workspacePath="/Users/alex/workspace/U-ClawX"
           workspaceReadOnly={false}
           onSelectWorkspace={vi.fn()}
         />
@@ -558,8 +558,8 @@ describe('ChatInput agent targeting', () => {
       <TooltipProvider>
         <ChatInput
           onSend={vi.fn()}
-          workspaceLabel="~/workspace/ClawX"
-          workspacePath="/Users/alex/workspace/ClawX"
+          workspaceLabel="~/workspace/U-ClawX"
+          workspacePath="/Users/alex/workspace/U-ClawX"
           workspaceReadOnly={false}
           onSelectWorkspace={onSelectWorkspace}
         />
@@ -579,8 +579,8 @@ describe('ChatInput agent targeting', () => {
       <TooltipProvider>
         <ChatInput
           onSend={vi.fn()}
-          workspaceLabel="~/workspace/ClawX"
-          workspacePath="/Users/alex/workspace/ClawX"
+          workspaceLabel="~/workspace/U-ClawX"
+          workspacePath="/Users/alex/workspace/U-ClawX"
           workspaceReadOnly={false}
           onSelectWorkspace={vi.fn()}
         />
@@ -626,8 +626,8 @@ describe('ChatInput agent targeting', () => {
       <TooltipProvider>
         <ChatInput
           onSend={vi.fn()}
-          workspaceLabel="~/workspace/ClawX"
-          workspacePath="/Users/alex/workspace/ClawX"
+          workspaceLabel="~/workspace/U-ClawX"
+          workspacePath="/Users/alex/workspace/U-ClawX"
           workspaceReadOnly={false}
           onSelectWorkspace={vi.fn()}
         />

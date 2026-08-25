@@ -36,7 +36,7 @@ const GATEWAY_FETCH_PRELOAD_SOURCE = `'use strict';
       delete flat['x-openrouter-title'];
       delete flat['X-OpenRouter-Title'];
       flat['HTTP-Referer'] = 'https://claw-x.com';
-      flat['X-OpenRouter-Title'] = 'ClawX';
+      flat['X-OpenRouter-Title'] = 'U-ClawX';
       init.headers = flat;
     }
     return _f.call(globalThis, input, init);
@@ -99,9 +99,9 @@ const GATEWAY_FETCH_PRELOAD_SOURCE = `'use strict';
  * CLI) breaks; the identical drive on a clean machine works. Inheriting these
  * would also silently spend the host owner's API credits.
  *
- * ClawX never configured providers through the environment anyway — provider
+ * U-ClawX never configured providers through the environment anyway — provider
  * credentials are passed explicitly at launch (see `loadedProviderKeyCount`),
- * so nothing that ClawX supports is lost by dropping them.
+ * so nothing that U-ClawX supports is lost by dropping them.
  *
  * Kept honest by `scripts/check-provider-env-catalog-drift.mjs`, which
  * re-derives this list from the bundled OpenClaw runtime and fails when an
@@ -156,7 +156,7 @@ export function buildGatewayRuntimeEnv(
 
   return {
     ...sanitized,
-    // ClawX does not expose LAN discovery, so keep Bonjour disabled even if
+    // U-ClawX does not expose LAN discovery, so keep Bonjour disabled even if
     // the parent process inherited an explicit opt-in value.
     OPENCLAW_DISABLE_BONJOUR: '1',
     // OpenClaw's built-in trace contains stage names and timings only. Keep it
@@ -217,13 +217,13 @@ export async function launchGatewayProcess(options: {
   // The OpenClaw gateway advertises `_openclaw-gw._tcp.local` on every
   // active network interface using a hardcoded `openclaw.local` hostname,
   // which causes:
-  //   - cross-machine name collisions when multiple OpenClaw/ClawX peers
+  //   - cross-machine name collisions when multiple OpenClaw/U-ClawX peers
   //     share a LAN (each falls back to "<name> (OpenClaw) (2)")
   //   - self-collisions on multi-homed hosts (Wi-Fi + Tailscale + utun ...)
-  //   - "ghost" record collisions after an unclean ClawX exit, because
+  //   - "ghost" record collisions after an unclean U-ClawX exit, because
   //     SIGKILL prevents ciao from emitting the mDNS goodbye record.
   //
-  // ClawX has no UI for LAN gateway discovery today, so the advertiser is
+  // U-ClawX has no UI for LAN gateway discovery today, so the advertiser is
   // pure log noise.  `OPENCLAW_DISABLE_BONJOUR=1` short-circuits
   // `startGatewayBonjourAdvertiser()` (openclaw `src/infra/bonjour.ts`,
   // `isDisabledByEnv()`).  Set after the `forkEnv` spread so any

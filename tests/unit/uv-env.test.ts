@@ -44,7 +44,7 @@ afterEach(() => {
 });
 
 describe('uv mirror environment', () => {
-  it('writes a ClawX-managed uv.toml under ~/.openclaw and exposes it via UV_CONFIG_FILE', async () => {
+  it('writes a U-ClawX-managed uv.toml under ~/.openclaw and exposes it via UV_CONFIG_FILE', async () => {
     const { getUvMirrorEnv } = await import('@electron/utils/uv-env');
 
     const env = await getUvMirrorEnv();

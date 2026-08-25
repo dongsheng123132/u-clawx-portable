@@ -1,6 +1,6 @@
 import { expect, test, completeSetup } from './fixtures/electron';
 
-test.describe('ClawX update notifications', () => {
+test.describe('U-ClawX update notifications', () => {
   test('prompts when a new version is available', async ({ electronApp, page }) => {
     await completeSetup(page);
 

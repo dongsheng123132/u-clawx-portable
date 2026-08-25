@@ -31,7 +31,7 @@ export function resolveDefaultTargetDir(options = {}) {
   ];
 
   for (const candidate of directCandidates) {
-    if (existsSync(path.join(candidate, 'U-Claw.exe'))) {
+    if (existsSync(path.join(candidate, 'U-ClawX.exe'))) {
       return candidate;
     }
   }
@@ -43,7 +43,7 @@ export function resolveDefaultTargetDir(options = {}) {
   const discovered = readdirSync(rootReleaseDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => path.join(rootReleaseDir, entry.name))
-    .find((candidate) => existsSync(path.join(candidate, 'U-Claw.exe')));
+    .find((candidate) => existsSync(path.join(candidate, 'U-ClawX.exe')));
 
   return discovered ?? directCandidates[0];
 }
@@ -74,7 +74,7 @@ export function resolveBrand(rootDir = projectRoot) {
  * The portable build passes `--config.win.signAndEditExecutable=false` to
  * electron-builder (it has no signing certificate), and that flag disables
  * electron-builder's *own* rcedit pass — which is what would normally stamp
- * these strings. So without this, the shipped U-Claw.exe reports
+ * these strings. So without this, the shipped U-ClawX.exe reports
  * ProductName=Electron, CompanyName=GitHub, Inc., version 40.8.4: that is what
  * a customer sees in right-click → Properties, in Task Manager, and in the
  * SmartScreen prompt on first launch. An app that introduces itself as someone
@@ -183,7 +183,7 @@ async function runRcedit(rceditPath, args) {
 export async function patchWinExeIcon(options = {}) {
   const rootDir = options.projectRootDir ?? projectRoot;
   const targetDir = options.targetDir ?? resolveDefaultTargetDir({ releaseDir: path.join(rootDir, 'release') });
-  const exePath = path.join(targetDir, 'U-Claw.exe');
+  const exePath = path.join(targetDir, 'U-ClawX.exe');
   const iconPath = path.join(rootDir, 'resources', 'icons', 'icon.ico');
 
   if (!existsSync(exePath)) {

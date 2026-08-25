@@ -338,7 +338,7 @@ async function sanitizeConfig(
     }
 
     // Mirror production logic: bundled provider plugins are only preserved when
-    // the provider is actually active, while ClawX-critical bundled plugins are
+    // the provider is actually active, while U-ClawX-critical bundled plugins are
     // preserved via a small explicit list.
     const bundledAll = new Set(bundledPlugins?.all ?? []);
     const providersByPluginId = bundledPlugins?.providersByPluginId ?? {};
@@ -401,7 +401,7 @@ async function sanitizeConfig(
     }
   }
 
-  // Mirror: ClawX keeps Skill Workshop disabled even when OpenClaw exposes it
+  // Mirror: U-ClawX keeps Skill Workshop disabled even when OpenClaw exposes it
   // as a built-in tool under permissive tool profiles.
   const toolsConfig = (config.tools as Record<string, unknown> | undefined) || {};
   let toolsModified = false;

@@ -12,13 +12,13 @@ import { getUvMirrorEnv } from './uv-env';
 /** Browser Control UI client id used in OpenClaw 2026.5.x connect frames. */
 export const CONTROL_UI_BROWSER_CLIENT_ID = 'openclaw-control-ui';
 
-/** ClawX Gateway WebSocket client id used in connect frames. */
+/** U-ClawX Gateway WebSocket client id used in connect frames. */
 export const GATEWAY_UI_CLIENT_ID = 'gateway-client';
 
 /** OpenClaw embedded CLI client id (ACP bridge, doctor, etc.). */
 export const OPENCLAW_CLI_CLIENT_ID = 'cli';
 
-/** Loopback-only clients that ClawX auto-approves without user interaction. */
+/** Loopback-only clients that U-ClawX auto-approves without user interaction. */
 export const LOCAL_AUTO_APPROVE_CLIENT_IDS = new Set([
   CONTROL_UI_BROWSER_CLIENT_ID,
   GATEWAY_UI_CLIENT_ID,
@@ -159,7 +159,7 @@ async function approveViaOpenClawCli(requestId: string, _port: number): Promise<
         // 便携：不注入会去读宿主机 ~/.openclaw
         ...getOpenClawPortableEnv(),
         OPENCLAW_NO_RESPAWN: '1',
-        OPENCLAW_EMBEDDED_IN: 'ClawX',
+        OPENCLAW_EMBEDDED_IN: 'U-ClawX',
       } as NodeJS.ProcessEnv,
     });
 

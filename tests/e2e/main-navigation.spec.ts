@@ -13,7 +13,7 @@ async function readNativeMenuLabels(app: ElectronApplication) {
   });
 }
 
-test.describe('ClawX main navigation without setup flow', () => {
+test.describe('U-ClawX main navigation without setup flow', () => {
   test('navigates between core pages with setup bypassed', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 

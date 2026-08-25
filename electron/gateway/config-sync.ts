@@ -79,7 +79,7 @@ const CHANNEL_PLUGIN_MAP: Record<string, { dirName: string; npmName: string }> =
 
 /**
  * OpenClaw ships some channel plugins as bundled extensions under
- * dist/extensions/. If ClawX previously mirrored one of those ids into
+ * dist/extensions/. If U-ClawX previously mirrored one of those ids into
  * ~/.openclaw/extensions/, the stale copy overrides the bundled plugin.
  * Only remove extension copies whose id is actually bundled in the
  * currently resolved OpenClaw runtime (e.g. telegram in 2026.6.10).
@@ -528,7 +528,7 @@ export async function syncGatewayConfigBeforeLaunch(
       },
     ));
     maintenance['plugin-maintenance'] = result;
-    // Always refresh trusted install metadata through ClawX — this must not
+    // Always refresh trusted install metadata through U-ClawX — this must not
     // be skipped when plugin-maintenance is cache-hit, otherwise official
     // external plugins like WhatsApp fail openKeyedStore at runtime.
     await measureAsync(timingsMs, 'trustedPluginInstallSyncMs', async () => {
@@ -641,7 +641,7 @@ export async function prepareGatewayLaunchContext(port: number): Promise<Gateway
       }
     } catch (error) {
       // OpenClaw also maintains migration-specific backups. Keep startup
-      // available if the additional ClawX safety snapshot cannot be written.
+      // available if the additional U-ClawX safety snapshot cannot be written.
       logger.warn('[upgrade] Failed to create OpenClaw 2026.7.1 pre-migration snapshot:', error);
     }
   });

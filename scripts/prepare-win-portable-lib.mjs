@@ -27,9 +27,9 @@ function buildPortableResetScript() {
     '@echo off',
     'setlocal',
     'set "APP_ROOT=%~dp0"',
-    'set "CHROMIUM_CACHE_DIR=%LOCALAPPDATA%\\U-Claw\\portable-chromium-session"',
-    'if not exist "%APP_ROOT%U-Claw.exe" (',
-    '  echo [reset] U-Claw.exe was not found next to this script.',
+    'set "CHROMIUM_CACHE_DIR=%LOCALAPPDATA%\\U-ClawX\\portable-chromium-session"',
+    'if not exist "%APP_ROOT%U-ClawX.exe" (',
+    '  echo [reset] U-ClawX.exe was not found next to this script.',
     '  echo [reset] Move the script back into the packaged portable directory and try again.',
     '  pause',
     '  exit /b 1',
@@ -40,18 +40,18 @@ function buildPortableResetScript() {
     '  pause',
     '  exit /b 1',
     ')',
-    'tasklist /FI "IMAGENAME eq U-Claw.exe" | find /I "U-Claw.exe" >nul',
+    'tasklist /FI "IMAGENAME eq U-ClawX.exe" | find /I "U-ClawX.exe" >nul',
     'if not errorlevel 1 (',
-    '  echo [reset] U-Claw is running; closing it before reset...',
-    '  taskkill /F /T /IM "U-Claw.exe" >nul 2>&1',
+    '  echo [reset] U-ClawX is running; closing it before reset...',
+    '  taskkill /F /T /IM "U-ClawX.exe" >nul 2>&1',
     '  call :waitForUClawExit',
     '  if errorlevel 1 (',
-    '    echo [reset] Failed to close U-Claw. Please close it manually and try again.',
+    '    echo [reset] Failed to close U-ClawX. Please close it manually and try again.',
     '    pause',
     '    exit /b 1',
     '  )',
     ')',
-    'echo This will clear U-Claw portable user data and browser session data.',
+    'echo This will clear U-ClawX portable user data and browser session data.',
     'echo.',
     'echo Press any key to continue, or close this window to cancel.',
     'pause >nul',
@@ -84,7 +84,7 @@ function buildPortableResetScript() {
     '',
     ':waitForUClawExit',
     'for /L %%I in (1,1,10) do (',
-    '  tasklist /FI "IMAGENAME eq U-Claw.exe" | find /I "U-Claw.exe" >nul',
+    '  tasklist /FI "IMAGENAME eq U-ClawX.exe" | find /I "U-ClawX.exe" >nul',
     '  if errorlevel 1 exit /b 0',
     '  timeout /T 1 /NOBREAK >nul',
     ')',
@@ -99,7 +99,7 @@ export function resolvePathArgument(input) {
 
 export function resolveDefaultSourceDir() {
   const directCandidate = finalTargetDir;
-  if (existsSync(path.join(directCandidate, 'U-Claw.exe'))) {
+  if (existsSync(path.join(directCandidate, 'U-ClawX.exe'))) {
     return directCandidate;
   }
   if (!existsSync(releaseDir)) {
@@ -108,7 +108,7 @@ export function resolveDefaultSourceDir() {
   const discovered = readdirSync(releaseDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => path.join(releaseDir, entry.name))
-    .find((candidate) => existsSync(path.join(candidate, 'U-Claw.exe')));
+    .find((candidate) => existsSync(path.join(candidate, 'U-ClawX.exe')));
   return discovered ?? directCandidate;
 }
 
@@ -343,7 +343,7 @@ export async function preparePortableOutput(options = {}) {
   await mkdir(dataDir, { recursive: true });
   await writeFile(
     portableFlagPath,
-    'Portable mode enabled. This file keeps U-Claw data isolated to the app directory.\n',
+    'Portable mode enabled. This file keeps U-ClawX data isolated to the app directory.\n',
     'utf8',
   );
   const copiedRootFiles = await copyPortableRootFiles(targetDir, { projectRootDir });

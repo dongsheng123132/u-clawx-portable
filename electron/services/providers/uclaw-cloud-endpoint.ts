@@ -173,7 +173,7 @@ export async function fetchUclawCloudApiWithFailover(
   }
 
   if (lastResponse) return lastResponse;
-  throw lastError instanceof Error ? lastError : new Error(`No U-Claw cloud endpoint available for ${path}`);
+  throw lastError instanceof Error ? lastError : new Error(`No U-ClawX cloud endpoint available for ${path}`);
 }
 
 function apiOrigin(apiBase: string): string {

@@ -82,7 +82,7 @@ describe('portable path resolution', () => {
     expect(portableEnv.OPENCLAW_HOME).toBe(join(appRoot, 'data'));
     expect(portableEnv.OPENCLAW_STATE_DIR).toBe(join(appRoot, 'data', '.openclaw'));
     expect(portableEnv.OPENCLAW_CONFIG_PATH).toBe(join(appRoot, 'data', '.openclaw', 'openclaw.json'));
-    expect(portableEnv.NODE_COMPILE_CACHE).toContain(join('U-Claw', 'node-compile-cache'));
+    expect(portableEnv.NODE_COMPILE_CACHE).toContain(join('U-ClawX', 'node-compile-cache'));
   });
 
   it('ignores host OpenClaw env overrides in portable mode', async () => {
@@ -119,8 +119,8 @@ describe('portable path resolution', () => {
  * 这一类漏法已经中过两次：
  *   1. getOpenClawPortableEnv() 写好了但零调用方 → Gateway 子进程读宿主机 ~/.openclaw，
  *      界面里冒出别的项目的历史会话。
- *   2. getDataDir() 便携分支写好了但没人 app.setPath('userData') → ClawX 自己的状态，
- *      **包括带 API key 的 uclaw-device.json**，落进 %APPDATA%/ClawX。
+ *   2. getDataDir() 便携分支写好了但没人 app.setPath('userData') → U-ClawX 自己的状态，
+ *      **包括带 API key 的 uclaw-device.json**，落进 %APPDATA%/U-ClawX。
  *
  * 单测跑不到 Electron 主进程的启动顺序，所以这里做源码级断言：
  * 只证明「调用点还在」。删掉任何一处，这个测试红。

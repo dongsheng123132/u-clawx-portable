@@ -19,7 +19,7 @@ vi.mock('@electron/utils/logger', () => ({
 
 const ORIGINAL_FETCH = globalThis.fetch;
 
-describe('U-Claw cloud endpoint failover', () => {
+describe('U-ClawX cloud endpoint failover', () => {
   beforeEach(() => resetEndpointCache());
   afterEach(() => {
     globalThis.fetch = ORIGINAL_FETCH;

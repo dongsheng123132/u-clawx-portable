@@ -1,6 +1,6 @@
 {
   "title": "Settings",
-  "subtitle": "Configure your ClawX experience",
+  "subtitle": "Configure your U-ClawX experience",
   "appearance": {
     "title": "General",
     "description": "Customize the look and feel",
@@ -11,7 +11,7 @@
     "language": "Language",
     "menuLanguageUpdated": "Menu language updated",
     "launchAtStartup": "Launch at system startup",
-    "launchAtStartupDesc": "Automatically launch ClawX when you log in"
+    "launchAtStartupDesc": "Automatically launch U-ClawX when you log in"
   },
   "aiProviders": {
     "title": "AI Providers",
@@ -38,7 +38,7 @@
     "notRequired": "Not required",
     "empty": {
       "title": "No providers configured",
-      "desc": "Add an AI provider to start using ClawX",
+      "desc": "Add an AI provider to start using U-ClawX",
       "cta": "Add Your First Provider"
     },
     "dialog": {
@@ -62,7 +62,7 @@
       "protocol": "Protocol",
       "advancedConfig": "Advanced configuration",
       "userAgent": "User-Agent",
-      "userAgentPlaceholder": "ClawX/1.0",
+      "userAgentPlaceholder": "U-ClawX/1.0",
       "fallbackModels": "Fallback Models",
       "fallbackProviders": "Fallback Providers",
       "fallbackModelIds": "Fallback Model IDs",
@@ -138,7 +138,7 @@
     "appLogs": "Application Logs",
     "openFolder": "Open Folder",
     "autoStart": "Auto-start Gateway",
-    "autoStartDesc": "Start Gateway when ClawX launches",
+    "autoStartDesc": "Start Gateway when U-ClawX launches",
     "proxyTitle": "Proxy",
     "proxyDesc": "Route Electron and Gateway traffic through your local proxy client.",
     "proxyServer": "Proxy Server",
@@ -159,7 +159,7 @@
   },
   "updates": {
     "title": "Updates",
-    "description": "Keep ClawX up to date",
+    "description": "Keep U-ClawX up to date",
     "autoCheck": "Auto-check for updates",
     "autoCheckDesc": "Check for updates on startup",
     "autoDownload": "Update prompts",
@@ -189,13 +189,13 @@
     "whatsNew": "What's New:",
     "errorDetails": "Error Details:",
     "toast": {
-      "availableTitle": "ClawX update available",
+      "availableTitle": "U-ClawX update available",
       "availableDescription": "Version v{{version}} is available. Download it when you're ready.",
-      "downloadedTitle": "ClawX update ready",
+      "downloadedTitle": "U-ClawX update ready",
       "downloadedDescription": "Version v{{version}} has been downloaded. Restart to install it.",
       "unknownVersion": "new"
     },
-    "help": "ClawX checks for updates automatically and prompts you before downloading or installing."
+    "help": "U-ClawX checks for updates automatically and prompts you before downloading or installing."
   },
   "advanced": {
     "title": "Advanced",
@@ -203,7 +203,7 @@
     "devMode": "Developer Mode",
     "devModeDesc": "Show developer tools and shortcuts",
     "telemetry": "Anonymous Usage Data",
-    "telemetryDesc": "Allow providing anonymous basic usage data to improve ClawX"
+    "telemetryDesc": "Allow providing anonymous basic usage data to improve U-ClawX"
   },
   "developer": {
     "title": "Developer",
@@ -278,7 +278,7 @@
       "invalid": "A previous wallet file was found but cannot be read safely. Automatic creation is paused. Back it up and contact support.",
       "importDialog": {
         "title": "Import this previous wallet?",
-        "message": "U-Claw will import {{key}} ({{balance}} available) and configure it locally. The previous file remains in place and the server balance does not change.",
+        "message": "U-ClawX will import {{key}} ({{balance}} available) and configure it locally. The previous file remains in place and the server balance does not change.",
         "confirm": "Import wallet"
       },
       "freshDialog": {
@@ -332,7 +332,7 @@
   },
   "about": {
     "title": "About",
-    "appName": "ClawX",
+    "appName": "U-ClawX",
     "tagline": "Graphical AI Assistant",
     "basedOn": "Based on OpenClaw",
     "version": "Version {{version}}",

@@ -14,7 +14,7 @@ import {
 // Google was removed: OpenClaw's `google-gemini-cli` OAuth integration is an
 // unofficial third-party flow that requires the `gemini` CLI binary to be on
 // PATH and ships with explicit "use at your own risk" warnings about Google
-// account suspensions. ClawX does not bundle that binary, so the only
+// account suspensions. U-ClawX does not bundle that binary, so the only
 // browser-OAuth provider we currently expose end-to-end is OpenAI Codex.
 export type BrowserOAuthProviderType = 'openai';
 

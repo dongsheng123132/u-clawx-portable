@@ -156,7 +156,7 @@ describe('attachment open-with platform service', () => {
     const service = createAttachmentOpenWithService({
       platform: 'win32',
       execFile,
-      resolveHelperPath: () => 'C:\\ClawX\\resources\\scripts\\attachment-open-with.ps1',
+      resolveHelperPath: () => 'C:\\U-ClawX\\resources\\scripts\\attachment-open-with.ps1',
       loadIcon: async () => ({ isEmpty: () => true, toPNG: () => Buffer.alloc(0) }),
     });
 
@@ -480,7 +480,7 @@ describe('attachment open-with platform service', () => {
     const service = createAttachmentOpenWithService({
       platform: 'win32',
       spawn,
-      resolveHelperPath: () => 'C:\\ClawX\\resources\\scripts\\attachment-open-with.ps1',
+      resolveHelperPath: () => 'C:\\U-ClawX\\resources\\scripts\\attachment-open-with.ps1',
     });
     const revalidateFile = vi.fn(async () => {
       events.push('revalidate');
@@ -509,7 +509,7 @@ describe('attachment open-with platform service', () => {
       '-ExecutionPolicy',
       'Bypass',
       '-File',
-      'C:\\ClawX\\resources\\scripts\\attachment-open-with.ps1',
+      'C:\\U-ClawX\\resources\\scripts\\attachment-open-with.ps1',
       'prepare-open',
       'C:\\Users\\Me\\initial report.txt',
       opaqueId,
@@ -652,13 +652,13 @@ describe('attachment open-with platform service', () => {
       electronState.isPackaged = true;
       Object.defineProperty(process, 'resourcesPath', {
         configurable: true,
-        value: 'C:\\Program Files\\ClawX\\resources',
+        value: 'C:\\Program Files\\U-ClawX\\resources',
       });
       const packagedExec = execResult('[]');
       const packaged = createAttachmentOpenWithService({ platform: 'win32', execFile: packagedExec });
       await packaged.list('C:\\report.txt');
       expect((vi.mocked(packagedExec).mock.calls[0]?.[1] as string[])[6]).toBe(
-        join('C:\\Program Files\\ClawX\\resources', 'resources', 'scripts', 'attachment-open-with.ps1'),
+        join('C:\\Program Files\\U-ClawX\\resources', 'resources', 'scripts', 'attachment-open-with.ps1'),
       );
     } finally {
       Object.defineProperty(process, 'resourcesPath', {

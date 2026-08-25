@@ -70,7 +70,7 @@ describe('Gateway startup stderr diagnostics', () => {
       'Rename them by replacing the legacy prefix with OPENCLAW_; the old names are ignored.',
     ).level).toBe('debug');
     expect(classifyGatewayStderrMessage(
-      '(Use `ClawX --trace-deprecation ...` to show where the warning was created)',
+      '(Use `U-ClawX --trace-deprecation ...` to show where the warning was created)',
     ).level).toBe('debug');
   });
 

@@ -400,7 +400,7 @@ export class AcpChatService {
         sessionId: acpSessionId,
         prompt,
         // ACP 1.1 removed messageId from the PromptRequest wire shape. Keep
-        // ClawX correlation metadata in the protocol extension envelope.
+        // U-ClawX correlation metadata in the protocol extension envelope.
         // OpenClaw must receive slash commands without its textual cwd prefix
         // so the Gateway can classify and fold command replies into chat final.
         _meta: { sessionKey: payload.sessionKey, prefixCwd: !isSlashCommand, messageId },
@@ -556,7 +556,7 @@ export class AcpChatService {
     const forked = fork(spec.modulePath, spec.args, {
       ...spec.options,
       // ACP is a local Gateway client, so it must use the token that started
-      // this ClawX-owned Gateway instead of relying on config-file fallback.
+      // this U-ClawX-owned Gateway instead of relying on config-file fallback.
       env: { ...spec.options.env, OPENCLAW_GATEWAY_TOKEN: gatewayToken },
     });
     if (!forked.stdin || !forked.stdout || !forked.stderr) {

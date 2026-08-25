@@ -1,6 +1,6 @@
 /**
  * OpenClaw 2026.6+ persists agent auth in openclaw-agent.sqlite.
- * ClawX historically wrote auth-profiles.json only; gateway runtime reads SQLite.
+ * U-ClawX historically wrote auth-profiles.json only; gateway runtime reads SQLite.
  */
 import { chmodSync, existsSync, mkdirSync } from 'fs';
 import { getOpenClawAgentsDir } from './paths';

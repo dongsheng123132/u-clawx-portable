@@ -60,7 +60,7 @@ async function installQuotaPromptFailureMocks(app: ElectronApplication) {
   });
 }
 
-test.describe('ClawX chat quota recharge prompt', () => {
+test.describe('U-ClawX chat quota recharge prompt', () => {
   test('quota failure shows a top-up banner and opens the wallet recharge page', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({
       skipSetup: true,

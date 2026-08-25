@@ -213,7 +213,7 @@ function getOpenClawEmbeddedExecPath(): { execPath: string; electronRunAsNode: b
   if (app.isPackaged && process.platform === 'darwin') {
     const helperPath = getPackagedMacOSHelperPath();
     if (!helperPath) {
-      throw new Error('ClawX Helper executable not found for embedded OpenClaw launch');
+      throw new Error('U-ClawX Helper executable not found for embedded OpenClaw launch');
     }
     return { execPath: helperPath, electronRunAsNode: true };
   }
@@ -228,7 +228,7 @@ export function getOpenClawEmbeddedForkSpec(args: string[] = []): OpenClawEmbedd
     // 便携：CLI 也是 OpenClaw runtime
     ...getOpenClawPortableEnv(),
     OPENCLAW_NO_RESPAWN: '1',
-    OPENCLAW_EMBEDDED_IN: 'ClawX',
+    OPENCLAW_EMBEDDED_IN: 'U-ClawX',
     OPENCLAW_EXEC_SHELL_SNAPSHOT: '0',
   };
 
@@ -440,8 +440,8 @@ function ensureLocalBinInPath(): void {
     if (content.includes(marker)) return;
 
     const line = shell.includes('fish')
-      ? '\n# Added by ClawX\nfish_add_path "$HOME/.local/bin"\n'
-      : '\n# Added by ClawX\nexport PATH="$HOME/.local/bin:$PATH"\n';
+      ? '\n# Added by U-ClawX\nfish_add_path "$HOME/.local/bin"\n'
+      : '\n# Added by U-ClawX\nexport PATH="$HOME/.local/bin:$PATH"\n';
 
     appendFileSync(profileFile, line);
     logger.info(`Added ~/.local/bin to PATH in ${profileFile}`);
@@ -515,7 +515,7 @@ export function generateCompletionCache(): void {
       ...getOpenClawPortableEnv(),
       ELECTRON_RUN_AS_NODE: '1',
       OPENCLAW_NO_RESPAWN: '1',
-      OPENCLAW_EMBEDDED_IN: 'ClawX',
+      OPENCLAW_EMBEDDED_IN: 'U-ClawX',
     },
     stdio: 'ignore',
     detached: false,
@@ -553,7 +553,7 @@ export function installCompletionToProfile(): void {
         ...getOpenClawPortableEnv(),
         ELECTRON_RUN_AS_NODE: '1',
         OPENCLAW_NO_RESPAWN: '1',
-        OPENCLAW_EMBEDDED_IN: 'ClawX',
+        OPENCLAW_EMBEDDED_IN: 'U-ClawX',
       },
       stdio: 'ignore',
       detached: false,

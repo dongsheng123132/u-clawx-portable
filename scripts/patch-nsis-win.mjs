@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Apply all ClawX NSIS template patches before makensis (package:win).
+ * Apply all U-ClawX NSIS template patches before makensis (package:win).
  */
 
 import { fileURLToPath } from 'node:url';

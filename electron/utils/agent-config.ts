@@ -428,7 +428,7 @@ async function provisionAgentFilesystem(
   // When inheritWorkspace is true, copy the main agent's workspace bootstrap
   // files (SOUL.md, AGENTS.md, etc.) so the new agent inherits the same
   // personality / instructions. Otherwise OpenClaw will seed the missing files
-  // on first use, but ClawX still pre-seeds IDENTITY.md so desktop workspaces
+  // on first use, but U-ClawX still pre-seeds IDENTITY.md so desktop workspaces
   // skip the chat-first bootstrap flow.
   if (options?.inheritWorkspace && targetWorkspace !== sourceWorkspace) {
     await copyBootstrapFiles(sourceWorkspace, targetWorkspace);

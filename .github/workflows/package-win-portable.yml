@@ -51,9 +51,9 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $source = 'release/win-unpacked'
-          $portableRoot = 'release/U-Claw'
+          $portableRoot = 'release/U-ClawX'
           $required = @(
-            "$source/U-Claw.exe",
+            "$source/U-ClawX.exe",
             "$source/portable.flag",
             "$source/data",
             "$source/一键重置.bat",
@@ -72,10 +72,10 @@ jobs:
           Move-Item -LiteralPath $source -Destination $portableRoot
 
           $version = (Get-Content -LiteralPath 'package.json' -Raw | ConvertFrom-Json).version
-          $archiveName = "U-Claw-$version-win-x64-portable.zip"
+          $archiveName = "U-ClawX-$version-win-x64-portable.zip"
           Push-Location release
           try {
-            & 7z a -tzip -mx=5 -mmt=on $archiveName 'U-Claw'
+            & 7z a -tzip -mx=5 -mmt=on $archiveName 'U-ClawX'
             if ($LASTEXITCODE -ne 0) {
               throw "7-Zip failed with exit code $LASTEXITCODE"
             }
@@ -90,9 +90,9 @@ jobs:
 
           $listing = ((& 7z l $archive) -join "`n").Replace('\', '/')
           $archiveEntries = @(
-            'U-Claw/U-Claw.exe',
-            'U-Claw/portable.flag',
-            'U-Claw/uclaw-cloud-endpoints.json'
+            'U-ClawX/U-ClawX.exe',
+            'U-ClawX/portable.flag',
+            'U-ClawX/uclaw-cloud-endpoints.json'
           )
           foreach ($entry in $archiveEntries) {
             if (-not $listing.Contains($entry)) {

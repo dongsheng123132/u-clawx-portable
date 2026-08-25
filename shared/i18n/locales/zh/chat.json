@@ -2,7 +2,7 @@
     "gatewayNotRunning": "网关未运行",
     "gatewayRequired": "OpenClaw 网关需要运行才能使用聊天。它将自动启动，或者您可以从设置中启动。",
     "welcome": {
-        "title": "ClawX 聊天",
+        "title": "U-ClawX 聊天",
         "subtitle": "我能为你做些什么？",
         "askQuestions": "处理任务",
         "askQuestionsDesc": "处理面向任务的请求",
@@ -32,7 +32,7 @@
     "fileCard": {
         "openWith": "打开方式",
         "openWithFile": "选择打开 {{name}} 的应用",
-        "openInBuiltInBrowser": "在 ClawX 预览中打开",
+        "openInBuiltInBrowser": "在 U-ClawX 预览中打开",
         "openInSystemBrowser": "在系统浏览器中打开",
         "searchingApplications": "正在查找应用",
         "showInFinder": "在访达中显示",
@@ -129,7 +129,7 @@
         "errors": {
             "outsideSandbox": "路径越界，已拒绝访问",
             "outsideSandboxTitle": "无法读取此文件",
-            "outsideSandboxHint": "ClawX 无法读取这个路径。文件可能已被移动、删除，或当前账户没有访问权限。可在文件管理器中查看。",
+            "outsideSandboxHint": "U-ClawX 无法读取这个路径。文件可能已被移动、删除，或当前账户没有访问权限。可在文件管理器中查看。",
             "readOnlyRoot": "该文件位于只读位置（如内置技能），无法修改",
             "tooLarge": "文件过大（{{size}}），已禁用预览",
             "binary": "二进制文件不支持文本预览",
@@ -139,7 +139,7 @@
             "unsupportedFormatTitle": "此文件格式暂不支持内置预览",
             "unsupportedFormatHint": "当前仅支持文本/Markdown 等可直接读取的文件进行内置预览。请在文件管理器中打开该文件。",
             "largeBinaryOpenTitle": "该文件较大，暂不支持内置预览",
-            "largeBinaryOpenHint": "当前文件为 {{size}}，ClawX 不提供内置预览。你可以确认后直接使用系统默认应用打开。",
+            "largeBinaryOpenHint": "当前文件为 {{size}}，U-ClawX 不提供内置预览。你可以确认后直接使用系统默认应用打开。",
             "openInFinderFailed": "无法在文件管理器中显示",
             "openFailed": "打开失败：{{error}}",
             "htmlLoadFailed": "无法加载 HTML 预览",

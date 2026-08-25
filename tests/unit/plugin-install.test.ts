@@ -225,8 +225,8 @@ describe('plugin installer diagnostics', () => {
     setPlatform('win32');
     mockHomedir.mockReturnValue('C:\\Users\\test');
 
-    const sourceDir = 'C:\\Program Files\\ClawX\\resources\\openclaw-plugins\\wecom';
-    const sourceManifestSuffix = 'Program Files\\ClawX\\resources\\openclaw-plugins\\wecom\\openclaw.plugin.json';
+    const sourceDir = 'C:\\Program Files\\U-ClawX\\resources\\openclaw-plugins\\wecom';
+    const sourceManifestSuffix = 'Program Files\\U-ClawX\\resources\\openclaw-plugins\\wecom\\openclaw.plugin.json';
 
     mockExistsSync.mockImplementation((input: string) => String(input).includes(sourceManifestSuffix));
     // On win32, cpSyncSafe uses _copyDirSyncRecursive (readdirSync) instead of cpSync.
@@ -278,8 +278,8 @@ describe('plugin installer diagnostics', () => {
     setPlatform('win32');
     mockHomedir.mockReturnValue('C:\\Users\\test');
 
-    const sourceDir = 'C:\\Program Files\\ClawX\\resources\\openclaw-plugins\\wecom';
-    const sourceManifestSuffix = 'Program Files\\ClawX\\resources\\openclaw-plugins\\wecom\\openclaw.plugin.json';
+    const sourceDir = 'C:\\Program Files\\U-ClawX\\resources\\openclaw-plugins\\wecom';
+    const sourceManifestSuffix = 'Program Files\\U-ClawX\\resources\\openclaw-plugins\\wecom\\openclaw.plugin.json';
 
     mockExistsSync.mockImplementation((input: string) => String(input).includes(sourceManifestSuffix));
     // On win32, cpSyncSafe uses _copyDirSyncRecursive (readdirSync) instead of cpSync.
@@ -414,7 +414,7 @@ describe('plugin installer diagnostics', () => {
     });
   });
 
-  it('replaces legacy Feishu npm ownership with the ClawX path mirror', async () => {
+  it('replaces legacy Feishu npm ownership with the U-ClawX path mirror', async () => {
     const targetDir = '/home/test/.openclaw/extensions/feishu-openclaw-plugin';
     configState.authoritative = {
       gatewayOnly: true,

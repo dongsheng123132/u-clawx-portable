@@ -17,7 +17,7 @@
   "contactLabel": "您的联系方式（可选）",
   "contactPlaceholder": "微信、邮箱或其他方便联系的方式",
   "privacyTitle": "只发送您填写的内容",
-  "privacyBody": "不会自动附带聊天记录、API Key、钱包密钥、文件路径或运行日志；仅补充 U-Claw 版本和系统类型，方便定位问题。",
+  "privacyBody": "不会自动附带聊天记录、API Key、钱包密钥、文件路径或运行日志；仅补充 U-ClawX 版本和系统类型，方便定位问题。",
   "privacyWarning": "请勿在反馈或截图中填写密码、密钥、身份证件等敏感信息。",
   "sendFeedback": "发送反馈",
   "copyFeedback": "复制反馈",

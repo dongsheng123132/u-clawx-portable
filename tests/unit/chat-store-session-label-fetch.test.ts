@@ -801,9 +801,9 @@ describe('chat store session label summary hydration', () => {
       if (method === 'sessions.list') {
         return {
           sessions: [
-            { key: 'agent:main:session-a', displayName: 'ClawX', updatedAt: 1000 },
-            { key: 'agent:main:session-b', displayName: 'ClawX', updatedAt: 1001 },
-            { key: 'agent:main:main', displayName: 'ClawX', updatedAt: 1002 },
+            { key: 'agent:main:session-a', displayName: 'U-ClawX', updatedAt: 1000 },
+            { key: 'agent:main:session-b', displayName: 'U-ClawX', updatedAt: 1001 },
+            { key: 'agent:main:main', displayName: 'U-ClawX', updatedAt: 1002 },
           ],
         };
       }
@@ -820,9 +820,9 @@ describe('chat store session label summary hydration', () => {
           success: true,
           result: {
             sessions: [
-              { key: 'agent:main:session-a', displayName: 'ClawX', updatedAt: 1000 },
-              { key: 'agent:main:session-b', displayName: 'ClawX', updatedAt: 1001 },
-              { key: 'agent:main:main', displayName: 'ClawX', updatedAt: 1002 },
+              { key: 'agent:main:session-a', displayName: 'U-ClawX', updatedAt: 1000 },
+              { key: 'agent:main:session-b', displayName: 'U-ClawX', updatedAt: 1001 },
+              { key: 'agent:main:main', displayName: 'U-ClawX', updatedAt: 1002 },
             ],
           },
         };
