@@ -55,10 +55,10 @@ npmRebuild: false
 # Fallback: GitHub Releases (backup, used when OSS is unavailable)
 publish:
   - provider: generic
-    url: https://oss.intelli-spectrum.com/latest
+    url: https://u-claw-updates.oss-cn-shenzhen.aliyuncs.com/latest
     useMultipleRangeRequest: false
   - provider: github
-    owner: ValueCell-ai
+    owner: dongsheng123132
     repo: u-clawx-portable
 
 # macOS Configuration

@@ -369,7 +369,8 @@ jobs:
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
           RELEASE_ID=$(gh api "repos/${{ github.repository }}/releases/tags/$TAG" --jq '.id' 2>/dev/null || true)
-          if [ -n "$RELEASE_ID" ] && [ "$RELEASE_ID" != "null" ]; then
+          # --jq 在 404 时会吐出整个 JSON 错误体（非空且 != null），必须校验是纯数字才可信
+          if [[ "$RELEASE_ID" =~ ^[0-9]+$ ]]; then
             echo "Deleting stale release $RELEASE_ID for tag $TAG (assets will be re-uploaded)"
             gh api -X DELETE "repos/${{ github.repository }}/releases/$RELEASE_ID"
           else
@@ -514,7 +515,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           CHANNEL="${{ steps.version.outputs.channel }}"
-          BASE_URL="https://oss.intelli-spectrum.com/${CHANNEL}"
+          BASE_URL="https://u-claw-updates.oss-cn-shenzhen.aliyuncs.com/${CHANNEL}"
 
           jq -n \
             --arg version "$VERSION" \
@@ -577,7 +578,7 @@ jobs:
           cat > $HOME/.ossutilconfig << EOF
           [Credentials]
           language=EN
-          endpoint=oss-cn-hangzhou.aliyuncs.com
+          endpoint=oss-cn-shenzhen.aliyuncs.com
           accessKeyID=${OSS_ACCESS_KEY_ID}
           accessKeySecret=${OSS_ACCESS_KEY_SECRET}
           EOF
@@ -590,13 +591,13 @@ jobs:
           CHANNEL="${{ steps.version.outputs.channel }}"
 
           # Only clean the current channel's directory — never touch other channels
-          ossutil rm -r -f oss://valuecell-clawx/${CHANNEL}/ || true
+          ossutil rm -r -f oss://u-claw-updates/${CHANNEL}/ || true
 
           # Upload all files with no-cache so clients always get the freshest version
           ossutil cp -r -f \
             --meta="Cache-Control:no-cache,no-store,must-revalidate" \
             staging/${CHANNEL}/ \
-            oss://valuecell-clawx/${CHANNEL}/
+            oss://u-claw-updates/${CHANNEL}/
 
           echo "Uploaded to ${CHANNEL}/"
 
@@ -608,7 +609,7 @@ jobs:
           # Upload to permanent archive (long cache, immutable)
           ossutil cp -r \
             staging/releases/${TAG}/ \
-            oss://valuecell-clawx/releases/${TAG}/ \
+            oss://u-claw-updates/releases/${TAG}/ \
             --meta "Cache-Control:public,max-age=31536000,immutable"
 
           echo "Uploaded to releases/${TAG}/"
@@ -620,15 +621,15 @@ jobs:
           CHANNEL="${{ steps.version.outputs.channel }}"
 
           echo "=== ${CHANNEL}/ ==="
-          ossutil ls oss://valuecell-clawx/${CHANNEL}/ --short
+          ossutil ls oss://u-claw-updates/${CHANNEL}/ --short
 
           echo ""
           echo "=== releases/${TAG}/ ==="
-          ossutil ls oss://valuecell-clawx/releases/${TAG}/ --short
+          ossutil ls oss://u-claw-updates/releases/${TAG}/ --short
 
           echo ""
           echo "=== Verify release-info.json ==="
-          ossutil cp oss://valuecell-clawx/${CHANNEL}/release-info.json /tmp/release-info.json -f
+          ossutil cp oss://u-claw-updates/${CHANNEL}/release-info.json /tmp/release-info.json -f
           jq . /tmp/release-info.json
 
           echo ""
@@ -639,7 +640,7 @@ jobs:
             YML_PREFIX="${CHANNEL}"
           fi
           echo "electron-updater expects ${YML_PREFIX}-mac.yml, ${YML_PREFIX}.yml, etc. in ${CHANNEL}/:"
-          ossutil ls oss://valuecell-clawx/${CHANNEL}/ --short | grep "${YML_PREFIX}.*\\.yml" || echo "(none found)"
+          ossutil ls oss://u-claw-updates/${CHANNEL}/ --short | grep "${YML_PREFIX}.*\\.yml" || echo "(none found)"
           
           echo ""
           echo "All files uploaded and verified successfully!"

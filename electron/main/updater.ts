@@ -14,7 +14,7 @@ import { EventEmitter } from 'events';
 import { setQuitting } from './app-state';
 
 /** Base CDN URL (without trailing channel path) */
-const OSS_BASE_URL = 'https://oss.intelli-spectrum.com';
+const OSS_BASE_URL = 'https://u-claw-updates.oss-cn-shenzhen.aliyuncs.com';
 
 export interface UpdateStatus {
   status:
