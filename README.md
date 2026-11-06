@@ -4,6 +4,8 @@
 
 <h1 align="center">U-ClawX · U-ClawX Portable（U-ClawX 便携版）</h1>
 
+<p align="center">Author / Maintainer：贺去病 (He Fangsheng / Dosen) · <a href="https://www.hequbing.com">hequbing.com</a></p>
+
 <p align="center">
   <strong>解压即用的 OpenClaw 图形界面 AI 助手 —— 拷进 U 盘，插哪用哪</strong><br>
   <sub>Portable OpenClaw GUI assistant for Windows: zero install, zero dependencies, USB-ready.</sub>
