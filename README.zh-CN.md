@@ -5,7 +5,7 @@
 
 <h1 align="center">U-ClawX</h1>
 
-<p align="center">作者 / Author：贺去病（贺方升 / Dosen）· <a href="https://www.hequbing.com">hequbing.com</a></p>
+<p align="center">作者 / Author：He Fangsheng (贺方升 / 贺去病; Dosen)· <a href="https://www.hequbing.com">hequbing.com</a></p>
 
 <p align="center">
   <strong>OpenClaw AI 智能体的桌面客户端</strong>
